@@ -39,9 +39,11 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
   const savedTranslationX = useSharedValue(0);
   const savedTranslationY = useSharedValue(0);
   const mapWidth = useSharedValue(320);
+  const canPan = zoomLevel > MIN_ZOOM;
 
   const gesture = useMemo(() => {
     const pinch = Gesture.Pinch()
+      .cancelsTouchesInView(false)
       .onStart(() => {
         savedScale.set(scale.get());
       })
@@ -63,6 +65,8 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
       });
 
     const pan = Gesture.Pan()
+      .enabled(canPan)
+      .cancelsTouchesInView(false)
       .minDistance(8)
       .onStart(() => {
         savedTranslationX.set(translationX.get());
@@ -79,7 +83,7 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
       });
 
     return Gesture.Simultaneous(pinch, pan);
-  }, [mapWidth, savedScale, savedTranslationX, savedTranslationY, scale, translationX, translationY]);
+  }, [canPan, mapWidth, savedScale, savedTranslationX, savedTranslationY, scale, translationX, translationY]);
 
   const animatedMapStyle = useAnimatedStyle(() => ({
     transform: [

@@ -39,6 +39,8 @@ export function MapRegions({
 }: MapRegionsProps) {
   return PREFECTURES.map((prefecture) => {
     const selectPrefecture = () => onSelect?.(prefecture.code);
+    const shapeInteractionProps =
+      onSelect && process.env.EXPO_OS !== 'web' ? { onPress: selectPrefecture } : undefined;
     const interactionProps = onSelect
       ? process.env.EXPO_OS === 'web'
         ? {
@@ -74,6 +76,7 @@ export function MapRegions({
             stroke,
             strokeWidth,
             strokeLinejoin: 'round' as const,
+            ...shapeInteractionProps,
           };
 
           if (shape.kind === 'rect') {
@@ -93,6 +96,7 @@ export function MapRegions({
           stroke={LABEL_OUTLINE_COLOR}
           strokeWidth={outlineWidth}
           strokeLinejoin="round"
+          pointerEvents="none"
         >
           {label}
         </SvgText>
@@ -103,6 +107,7 @@ export function MapRegions({
           fontSize={fontSize}
           fontWeight="700"
           fill={LABEL_COLOR}
+          pointerEvents="none"
         >
           {label}
         </SvgText>

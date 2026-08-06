@@ -1,4 +1,4 @@
-import { Column, Host, Picker, TextInput, useNativeState } from '@expo/ui';
+import { Host, Picker, Row, Spacer, TextInput, useNativeState } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -49,6 +49,7 @@ export function FlagsScreen() {
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
         contentContainerStyle={styles.content}
+        ItemSeparatorComponent={FlagCardSeparator}
         ListHeaderComponent={
           <View
             style={[
@@ -66,29 +67,36 @@ export function FlagsScreen() {
                 </Text>
               </View>
             </View>
-            <Host seedColor={theme.accent} style={styles.filterHost}>
-              <Column spacing={10} style={{ width: '100%' }}>
-                {process.env.EXPO_OS === 'web' ? (
-                  <TextInput
-                    value={searchValue}
-                    onChangeText={setSearch}
-                    placeholder={t(state.locale, 'searchPlaceholder')}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={{
-                      width: '100%',
-                      height: 48,
-                      paddingHorizontal: 14,
-                      backgroundColor: theme.surface,
-                      borderColor: theme.border,
-                      borderWidth: 1,
-                      borderRadius: 14,
-                    }}
-                  />
-                ) : null}
+            {process.env.EXPO_OS === 'web' ? (
+              <Host matchContents seedColor={theme.accent} style={styles.filterHost}>
+                <TextInput
+                  value={searchValue}
+                  onChangeText={setSearch}
+                  placeholder={t(state.locale, 'searchPlaceholder')}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  style={{
+                    width: '100%',
+                    height: 48,
+                    paddingHorizontal: 14,
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                    borderWidth: 1,
+                    borderRadius: 14,
+                  }}
+                />
+              </Host>
+            ) : null}
+            <Host
+              matchContents={{ vertical: true }}
+              seedColor={theme.accent}
+              style={styles.filterHost}
+            >
+              <Row alignment="center" spacing={12} style={{ width: '100%' }}>
                 <Picker
                   selectedValue={region}
                   onValueChange={(value) => setRegion(value as typeof region)}
+                  testID="region-filter"
                 >
                   <Picker.Item value="all" label={t(state.locale, 'allRegions')} />
                   {REGION_CODES.map((regionCode) => (
@@ -99,9 +107,11 @@ export function FlagsScreen() {
                     />
                   ))}
                 </Picker>
+                <Spacer flexible />
                 <Picker
                   selectedValue={level}
                   onValueChange={(value) => setLevel(value as typeof level)}
+                  testID="level-filter"
                 >
                   <Picker.Item value="all" label={t(state.locale, 'allLevels')} />
                   {([0, 1, 2, 3, 4, 5] as ExperienceLevel[]).map((value) => (
@@ -112,7 +122,7 @@ export function FlagsScreen() {
                     />
                   ))}
                 </Picker>
-              </Column>
+              </Row>
             </Host>
           </View>
         }
@@ -184,6 +194,10 @@ export function FlagsScreen() {
   );
 }
 
+function FlagCardSeparator() {
+  return <View style={styles.cardSeparator} />;
+}
+
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: {
@@ -193,7 +207,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 14,
     paddingBottom: 54,
-    gap: 14,
   },
   columnWrapper: { gap: 14 },
   filterHost: { width: '100%' },
@@ -203,7 +216,7 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: 18,
     gap: 14,
-    marginBottom: 4,
+    marginBottom: 18,
     boxShadow: '0 12px 30px rgba(24, 43, 53, 0.16)',
   },
   filterHeading: {
@@ -215,6 +228,7 @@ const styles = StyleSheet.create({
   filterTitle: { fontSize: 22, fontWeight: '900', letterSpacing: 0.2 },
   countBadge: { borderRadius: 15, paddingHorizontal: 12, paddingVertical: 6 },
   countText: { fontSize: 13, fontWeight: '900', fontVariant: ['tabular-nums'] },
+  cardSeparator: { height: 18 },
   cardCell: { flex: 1 },
   card: {
     flex: 1,
