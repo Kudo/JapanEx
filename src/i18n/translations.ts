@@ -1,0 +1,91 @@
+import type { AppLocale, ExperienceLevel, RegionCode } from '@/data/types';
+
+const strings = {
+  en: {
+    tabsMap: 'Map', tabsFlags: 'Flags', tabsSettings: 'Settings', appName: 'JapanEx',
+    score: 'Japan score', maxScore: 'out of 235', tapPrefecture: 'Tap a prefecture to record your experience.',
+    zoomIn: 'Zoom in', zoomOut: 'Zoom out', resetView: 'Reset view', shareImage: 'Share result image',
+    saveImage: 'Save image', copyStateLink: 'Copy state link', linkCopied: 'Link copied.',
+    imageShared: 'Image ready to share.', imageSaved: 'Image saved.', exportFailed: 'Could not create the image. Please try again.',
+    searchPlaceholder: 'Search prefectures', flagCollection: 'Prefecture collection', allRegions: 'All regions', allLevels: 'All levels', noMatches: 'No prefectures match these filters.',
+    displayName: 'Display name', optionalName: 'Optional name on your result image', language: 'Language',
+    shareState: 'Share state link', resetProgress: 'Reset progress', resetTitle: 'Reset all progress?',
+    resetMessage: 'All 47 prefectures will return to level 0.', cancel: 'Cancel', reset: 'Reset',
+    aboutCredits: 'Credits & licenses', settingsSubtitle: 'Your progress stays on this device.',
+    persistenceError: 'Progress could not be saved on this device.',
+    importTitle: 'Import JapanEx state', importInvalid: 'This state link is invalid or unsupported.',
+    importPreview: 'Import preview', importWarning: 'Importing replaces the progress currently stored on this device.',
+    importConfirm: 'Replace my progress', imported: 'Progress imported.', currentScore: 'Score', name: 'Name',
+    creditsTitle: 'Credits & licenses', projectCredit: 'Based on JapanEx by ukyouz, used under the MIT License.',
+    flagCredit: 'The 47 bundled flag SVGs come from Wikimedia Commons and are available offline.',
+    license: 'License', author: 'Author', source: 'Source file',
+    officialInsigniaNotice: 'These are official government insignia. Laws about official symbols and misuse may apply independently of copyright.',
+    sourceCode: 'Original JapanEx source', commonsCategory: 'Wikimedia Commons flag category',
+    notFound: 'Page not found', returnHome: 'Return to the map', level: 'Experience level',
+    offline: 'Bundled for offline use', publicDomain: 'Public domain', ccBySa: 'CC BY-SA 3.0',
+  },
+  ja: {
+    tabsMap: '地図', tabsFlags: '旗', tabsSettings: '設定', appName: 'JapanEx',
+    score: '日本制県レベル', maxScore: '/ 235', tapPrefecture: '都道府県をタップして経験を記録します。',
+    zoomIn: '拡大', zoomOut: '縮小', resetView: '表示を戻す', shareImage: '結果画像を共有',
+    saveImage: '画像を保存', copyStateLink: '状態リンクをコピー', linkCopied: 'リンクをコピーしました。',
+    imageShared: '共有用画像を作成しました。', imageSaved: '画像を保存しました。', exportFailed: '画像を作成できませんでした。もう一度お試しください。',
+    searchPlaceholder: '都道府県を検索', flagCollection: '都道府県コレクション', allRegions: 'すべての地方', allLevels: 'すべてのレベル', noMatches: '条件に一致する都道府県はありません。',
+    displayName: '表示名', optionalName: '結果画像に表示する任意の名前', language: '言語',
+    shareState: '状態リンクを共有', resetProgress: '進捗をリセット', resetTitle: 'すべての進捗をリセットしますか？',
+    resetMessage: '47都道府県がすべてレベル0に戻ります。', cancel: 'キャンセル', reset: 'リセット',
+    aboutCredits: 'クレジットとライセンス', settingsSubtitle: '進捗はこの端末内に保存されます。',
+    persistenceError: 'この端末に進捗を保存できませんでした。',
+    importTitle: 'JapanExの状態を読み込む', importInvalid: 'この状態リンクは無効、または未対応です。',
+    importPreview: '読み込み内容', importWarning: '読み込むと、この端末に保存されている進捗が置き換わります。',
+    importConfirm: '進捗を置き換える', imported: '進捗を読み込みました。', currentScore: 'レベル', name: '名前',
+    creditsTitle: 'クレジットとライセンス', projectCredit: 'ukyouzのJapanExをMITライセンスに基づき使用しています。',
+    flagCredit: '47点の都道府県旗SVGはWikimedia Commonsから取得し、オフライン用に同梱しています。',
+    license: 'ライセンス', author: '作者', source: '出典ファイル',
+    officialInsigniaNotice: 'これらは政府の公式標章です。著作権とは別に、公式記号や不正使用に関する法律が適用される場合があります。',
+    sourceCode: '元のJapanExソース', commonsCategory: 'Wikimedia Commonsの旗カテゴリ',
+    notFound: 'ページが見つかりません', returnHome: '地図に戻る', level: '経験レベル',
+    offline: 'オフライン用に同梱', publicDomain: 'パブリックドメイン', ccBySa: 'CC BY-SA 3.0',
+  },
+  'zh-Hant': {
+    tabsMap: '地圖', tabsFlags: '旗幟', tabsSettings: '設定', appName: 'JapanEx',
+    score: '日本制縣等級', maxScore: '/ 235', tapPrefecture: '點選都道府縣以記錄你的經驗。',
+    zoomIn: '放大', zoomOut: '縮小', resetView: '重設檢視', shareImage: '分享結果圖片',
+    saveImage: '儲存圖片', copyStateLink: '複製狀態連結', linkCopied: '已複製連結。',
+    imageShared: '已準備分享圖片。', imageSaved: '已儲存圖片。', exportFailed: '無法建立圖片，請再試一次。',
+    searchPlaceholder: '搜尋都道府縣', flagCollection: '都道府縣收藏', allRegions: '所有地區', allLevels: '所有等級', noMatches: '沒有符合篩選條件的都道府縣。',
+    displayName: '顯示名稱', optionalName: '可顯示於結果圖片上的名稱', language: '語言',
+    shareState: '分享狀態連結', resetProgress: '重設進度', resetTitle: '要重設所有進度嗎？',
+    resetMessage: '47個都道府縣都會回到等級0。', cancel: '取消', reset: '重設',
+    aboutCredits: '製作資訊與授權', settingsSubtitle: '你的進度只會儲存在此裝置。',
+    persistenceError: '無法在此裝置上儲存進度。',
+    importTitle: '匯入JapanEx狀態', importInvalid: '此狀態連結無效或不受支援。',
+    importPreview: '匯入預覽', importWarning: '匯入會取代目前儲存在此裝置上的進度。',
+    importConfirm: '取代我的進度', imported: '已匯入進度。', currentScore: '等級', name: '名稱',
+    creditsTitle: '製作資訊與授權', projectCredit: '本程式以MIT授權使用ukyouz的JapanEx。',
+    flagCredit: '47幅都道府縣旗SVG來自Wikimedia Commons，並已內建供離線使用。',
+    license: '授權', author: '作者', source: '來源檔案',
+    officialInsigniaNotice: '這些是政府官方標誌。除著作權外，仍可能適用官方標誌或不當使用相關法律。',
+    sourceCode: '原始JapanEx原始碼', commonsCategory: 'Wikimedia Commons旗幟分類',
+    notFound: '找不到頁面', returnHome: '返回地圖', level: '經驗等級',
+    offline: '已內建供離線使用', publicDomain: '公有領域', ccBySa: 'CC BY-SA 3.0',
+  },
+} as const;
+
+export type TranslationKey = keyof (typeof strings)['en'];
+
+export function t(locale: AppLocale, key: TranslationKey): string {
+  return strings[locale][key];
+}
+
+export const LEVEL_LABELS: Record<AppLocale, Record<ExperienceLevel, string>> = {
+  en: { 0: 'Never been', 1: 'Passed through', 2: 'Alighted', 3: 'Visited', 4: 'Stayed overnight', 5: 'Lived there' },
+  ja: { 0: '未踏（未訪問）', 1: '通過（通過した）', 2: '接地（降り立った）', 3: '訪問（歩いた）', 4: '宿泊（泊まった）', 5: '住居（住んだ）' },
+  'zh-Hant': { 0: '沒去過', 1: '通過（路過）', 2: '接地（休息、轉乘等）', 3: '訪問（遊玩過）', 4: '住宿（住過一晚）', 5: '居住（居住過）' },
+};
+
+export const REGION_LABELS: Record<AppLocale, Record<RegionCode, string>> = {
+  en: { hokkaido: 'Hokkaido', tohoku: 'Tohoku', kanto: 'Kanto', chubu: 'Chubu', kansai: 'Kansai', chugoku: 'Chugoku', shikoku: 'Shikoku', 'kyushu-okinawa': 'Kyushu & Okinawa' },
+  ja: { hokkaido: '北海道', tohoku: '東北', kanto: '関東', chubu: '中部', kansai: '関西', chugoku: '中国', shikoku: '四国', 'kyushu-okinawa': '九州・沖縄' },
+  'zh-Hant': { hokkaido: '北海道', tohoku: '東北', kanto: '關東', chubu: '中部', kansai: '關西', chugoku: '中國', shikoku: '四國', 'kyushu-okinawa': '九州與沖繩' },
+};
