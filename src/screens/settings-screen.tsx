@@ -4,8 +4,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText, View } from 'react-native';
 
+import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { useAppTheme } from '@/constants/app-theme';
-import type { AppLocale } from '@/data/types';
+import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { buildShareUrl } from '@/utils/share-state';
@@ -16,13 +17,21 @@ export function SettingsScreen() {
 
   if (!isReady) {
     return (
-      <View style={[styles.loading, { backgroundColor: theme.background }]}>
-        <ActivityIndicator color={theme.accent} />
-      </View>
+      <>
+        <View style={[styles.loading, { backgroundColor: theme.background }]}>
+          <ActivityIndicator color={theme.accent} />
+        </View>
+        <LanguageStackToolbar />
+      </>
     );
   }
 
-  return <ReadySettingsScreen />;
+  return (
+    <>
+      <ReadySettingsScreen />
+      <LanguageStackToolbar />
+    </>
+  );
 }
 
 function ReadySettingsScreen() {
@@ -57,8 +66,8 @@ function ReadySettingsScreen() {
     >
       <View style={[styles.summary, { backgroundColor: theme.hero }]}>
         <View style={[styles.scoreSeal, { backgroundColor: theme.accent }]}>
-          <RNText style={[styles.score, { color: theme.heroText }]}>{score}</RNText>
-          <RNText style={[styles.scoreMax, { color: theme.heroText }]}>/ 235</RNText>
+          <RNText selectable style={[styles.score, { color: theme.heroText }]}>{score}</RNText>
+          <RNText selectable style={[styles.scoreMax, { color: theme.heroText }]}>/ 235</RNText>
         </View>
         <View style={styles.summaryCopy}>
           <RNText style={[styles.summaryEyebrow, { color: theme.heroMuted }]}>
@@ -77,7 +86,7 @@ function ReadySettingsScreen() {
         ]}
       >
         <RNText style={[styles.sectionTitle, { color: theme.text }]}>
-            {t(state.locale, 'displayName')}
+          {t(state.locale, 'displayName')}
         </RNText>
         <Host matchContents seedColor={theme.accent}>
           <TextInput
@@ -106,13 +115,20 @@ function ReadySettingsScreen() {
         ]}
       >
         <RNText style={[styles.sectionTitle, { color: theme.text }]}>
-            {t(state.locale, 'language')}
+          {t(state.locale, 'language')}
         </RNText>
         <Host matchContents seedColor={theme.accent}>
-          <Picker selectedValue={state.locale} onValueChange={(value) => setLocale(value as AppLocale)}>
-            <Picker.Item value="ja" label="日本語" />
-            <Picker.Item value="zh-Hant" label="繁體中文" />
-            <Picker.Item value="en" label="English" />
+          <Picker
+            selectedValue={state.locale}
+            onValueChange={(value) => {
+              if (isAppLocale(value)) {
+                setLocale(value);
+              }
+            }}
+          >
+            {APP_LOCALE_OPTIONS.map((option) => (
+              <Picker.Item key={option.value} value={option.value} label={option.label} />
+            ))}
           </Picker>
         </Host>
       </View>
@@ -137,7 +153,7 @@ function ReadySettingsScreen() {
         </Host>
       </View>
 
-      {status ? <RNText style={[styles.status, { color: theme.secondaryText }]}>{status}</RNText> : null}
+      {status ? <RNText selectable style={[styles.status, { color: theme.secondaryText }]}>{status}</RNText> : null}
     </ScrollView>
   );
 }

@@ -1,10 +1,11 @@
 import { Column, Host, Picker, TextInput, useNativeState } from '@expo/ui';
 import { Image } from 'expo-image';
-import { useRouter } from 'expo-router';
+import { Link, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { LevelIndicator } from '@/components/level-indicator';
+import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
@@ -14,7 +15,6 @@ import { useTracker } from '@/state/tracker-context';
 
 export function FlagsScreen() {
   const theme = useAppTheme();
-  const router = useRouter();
   const { state } = useTracker();
   const { width } = useWindowDimensions();
   const searchValue = useNativeState('');
@@ -38,8 +38,9 @@ export function FlagsScreen() {
   }, [level, region, search, state.levels]);
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
+    <>
       <FlatList
+        style={[styles.screen, { backgroundColor: theme.background }]}
         key={`flags-${columns}`}
         data={filteredPrefectures}
         numColumns={columns}
@@ -67,22 +68,24 @@ export function FlagsScreen() {
             </View>
             <Host seedColor={theme.accent} style={styles.filterHost}>
               <Column spacing={10} style={{ width: '100%' }}>
-                <TextInput
-                  value={searchValue}
-                  onChangeText={setSearch}
-                  placeholder={t(state.locale, 'searchPlaceholder')}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={{
-                    width: '100%',
-                    height: 48,
-                    paddingHorizontal: 14,
-                    backgroundColor: theme.surface,
-                    borderColor: theme.border,
-                    borderWidth: 1,
-                    borderRadius: 14,
-                  }}
-                />
+                {process.env.EXPO_OS === 'web' ? (
+                  <TextInput
+                    value={searchValue}
+                    onChangeText={setSearch}
+                    placeholder={t(state.locale, 'searchPlaceholder')}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    style={{
+                      width: '100%',
+                      height: 48,
+                      paddingHorizontal: 14,
+                      backgroundColor: theme.surface,
+                      borderColor: theme.border,
+                      borderWidth: 1,
+                      borderRadius: 14,
+                    }}
+                  />
+                ) : null}
                 <Picker
                   selectedValue={region}
                   onValueChange={(value) => setRegion(value as typeof region)}
@@ -120,51 +123,64 @@ export function FlagsScreen() {
         }
         renderItem={({ item }) => (
           <View style={styles.cardCell}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={item.names[state.locale]}
-              onPress={() => router.push(`/prefecture/${item.code}`)}
-              style={({ pressed }) => [
-                styles.card,
-                columns === 1 ? styles.listCard : styles.gridCard,
-                {
-                  backgroundColor: theme.surface,
-                  borderColor: theme.border,
-                  borderTopColor: LEVEL_COLORS[state.levels[item.code]],
-                },
-                pressed && styles.pressed,
-              ]}
-            >
-              <View
-                style={[
-                  styles.flagFrame,
-                  columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
+            <Link href={`/prefecture/${item.code}`} asChild>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={item.names[state.locale]}
+                style={({ pressed }) => [
+                  styles.card,
+                  columns === 1 ? styles.listCard : styles.gridCard,
+                  {
+                    backgroundColor: theme.surface,
+                    borderColor: theme.border,
+                    borderTopColor: LEVEL_COLORS[state.levels[item.code]],
+                  },
+                  pressed && styles.pressed,
                 ]}
               >
-                <Image
-                  source={FLAG_ASSETS[item.code]}
-                  contentFit="contain"
-                  style={styles.flag}
-                  accessibilityLabel={`${item.names[state.locale]} flag`}
-                />
-              </View>
-              <View style={styles.cardBody}>
-                <View style={styles.nameRow}>
-                  <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
-                    {item.names[state.locale]}
-                  </Text>
-                  <Text style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                <View
+                  style={[
+                    styles.flagFrame,
+                    columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
+                  ]}
+                >
+                  <Image
+                    source={FLAG_ASSETS[item.code]}
+                    contentFit="contain"
+                    style={styles.flag}
+                    accessibilityLabel={`${item.names[state.locale]} flag`}
+                  />
                 </View>
-                <Text style={[styles.region, { color: theme.secondaryText }]}>
-                  {REGION_LABELS[state.locale][item.region]}
-                </Text>
-                <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
-              </View>
-            </Pressable>
+                <View style={styles.cardBody}>
+                  <View style={styles.nameRow}>
+                    <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
+                      {item.names[state.locale]}
+                    </Text>
+                    <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                  </View>
+                  <Text style={[styles.region, { color: theme.secondaryText }]}>
+                    {REGION_LABELS[state.locale][item.region]}
+                  </Text>
+                  <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
+                </View>
+              </Pressable>
+            </Link>
           </View>
         )}
       />
-    </View>
+      {process.env.EXPO_OS !== 'web' ? (
+        <Stack.SearchBar
+          autoCapitalize="none"
+          hideWhenScrolling={false}
+          onCancelButtonPress={() => setSearch('')}
+          onChangeText={(event) => setSearch(event.nativeEvent.text)}
+          onClose={() => setSearch('')}
+          placeholder={t(state.locale, 'searchPlaceholder')}
+          placement="stacked"
+        />
+      ) : null}
+      <LanguageStackToolbar />
+    </>
   );
 }
 

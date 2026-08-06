@@ -5,6 +5,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-nat
 import type Svg from 'react-native-svg';
 
 import { JapanMap } from '@/components/japan-map';
+import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { LevelIndicator } from '@/components/level-indicator';
 import { PrefectureSheet } from '@/components/prefecture-sheet';
 import { ResultCard } from '@/components/result-card';
@@ -50,120 +51,133 @@ export function MapScreen() {
   };
 
   return (
-    <View style={[styles.screen, { backgroundColor: theme.background }]}>
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
-        <View style={[styles.heroCard, { backgroundColor: theme.hero }]}>
-          <View style={[styles.heroCircle, { borderColor: theme.heroMuted }]} />
-          <View style={styles.heroTopRow}>
-            <View style={styles.heroCopy}>
-              <Text style={[styles.eyebrow, { color: theme.heroMuted }]}>
-              {t(state.locale, 'score')}
-              </Text>
-              <View style={styles.scoreRow}>
-                <Text style={[styles.score, { color: theme.heroText }]}>{score}</Text>
-                <Text style={[styles.maxScore, { color: theme.heroMuted }]}>
-                {t(state.locale, 'maxScore')}
+    <>
+      <View collapsable={false} style={[styles.screen, { backgroundColor: theme.background }]}>
+        <ScrollView
+          contentInsetAdjustmentBehavior="automatic"
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.content}
+        >
+          <View style={[styles.heroCard, { backgroundColor: theme.hero }]}>
+            <View style={[styles.heroCircle, { borderColor: theme.heroMuted }]} />
+            <View style={styles.heroTopRow}>
+              <View style={styles.heroCopy}>
+                <Text style={[styles.eyebrow, { color: theme.heroMuted }]}>
+                  {t(state.locale, 'score')}
                 </Text>
+                <View style={styles.scoreRow}>
+                  <Text selectable style={[styles.score, { color: theme.heroText }]}>
+                    {score}
+                  </Text>
+                  <Text style={[styles.maxScore, { color: theme.heroMuted }]}>
+                    {t(state.locale, 'maxScore')}
+                  </Text>
+                </View>
+              </View>
+              <View style={[styles.prefectureSeal, { backgroundColor: theme.accent }]}>
+                {isReady ? (
+                  <>
+                    <Text selectable style={[styles.sealCount, { color: theme.heroText }]}>
+                      {markedPrefectures}
+                    </Text>
+                    <Text style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
+                  </>
+                ) : (
+                  <ActivityIndicator color={theme.heroText} />
+                )}
               </View>
             </View>
-            <View style={[styles.prefectureSeal, { backgroundColor: theme.accent }]}>
-              {isReady ? (
-                <>
-                  <Text style={[styles.sealCount, { color: theme.heroText }]}>
-                    {markedPrefectures}
-                  </Text>
-                  <Text style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
-                </>
-              ) : (
-                <ActivityIndicator color={theme.heroText} />
-              )}
+            <View style={[styles.progressTrack, { backgroundColor: theme.heroMuted }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { backgroundColor: theme.gold, width: progressWidth },
+                ]}
+              />
             </View>
           </View>
-          <View style={[styles.progressTrack, { backgroundColor: theme.heroMuted }]}>
-            <View
-              style={[
-                styles.progressFill,
-                { backgroundColor: theme.gold, width: progressWidth },
-              ]}
-            />
+
+          <View
+            style={[
+              styles.paperCard,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <Text style={[styles.helper, { color: theme.secondaryText }]}>
+              {t(state.locale, 'tapPrefecture')}
+            </Text>
+            <JapanMap levels={state.levels} onSelect={setSelectedCode} />
           </View>
+
+          <View
+            style={[
+              styles.legendPanel,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            {([5, 4, 3, 2, 1, 0] as ExperienceLevel[]).map((level) => (
+              <LevelIndicator key={level} level={level} locale={state.locale} />
+            ))}
+          </View>
+
+          <View
+            style={[
+              styles.actionPanel,
+              { backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
+            <Host matchContents seedColor={theme.accent}>
+              <Column spacing={10} style={{ width: '100%' }}>
+                <Button
+                  label={t(state.locale, 'shareImage')}
+                  disabled={isExporting}
+                  onPress={() => handleResultAction('share')}
+                />
+                <Button
+                  label={t(state.locale, 'saveImage')}
+                  variant="outlined"
+                  disabled={isExporting}
+                  onPress={() => handleResultAction('save')}
+                />
+                <Button
+                  label={t(state.locale, 'copyStateLink')}
+                  variant="text"
+                  onPress={copyLink}
+                />
+              </Column>
+            </Host>
+          </View>
+
+          {status ? (
+            <Text selectable style={[styles.status, { color: theme.secondaryText }]}>
+              {status}
+            </Text>
+          ) : null}
+          {hasStorageError ? (
+            <Text
+              selectable
+              accessibilityRole="alert"
+              style={[styles.status, { color: theme.danger }]}
+            >
+              {t(state.locale, 'persistenceError')}
+            </Text>
+          ) : null}
+        </ScrollView>
+
+        <View style={styles.exportSurface}>
+          <ResultCard
+            ref={resultRef}
+            locale={state.locale}
+            displayName={state.displayName}
+            score={score}
+            levels={state.levels}
+          />
         </View>
 
-        <View
-          style={[
-            styles.paperCard,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <Text style={[styles.helper, { color: theme.secondaryText }]}>
-            {t(state.locale, 'tapPrefecture')}
-          </Text>
-          <JapanMap levels={state.levels} onSelect={setSelectedCode} />
-        </View>
-
-        <View
-          style={[
-            styles.legendPanel,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          {([5, 4, 3, 2, 1, 0] as ExperienceLevel[]).map((level) => (
-            <LevelIndicator key={level} level={level} locale={state.locale} />
-          ))}
-        </View>
-
-        <View
-          style={[
-            styles.actionPanel,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <Host matchContents seedColor={theme.accent}>
-            <Column spacing={10} style={{ width: '100%' }}>
-              <Button
-                label={t(state.locale, 'shareImage')}
-                disabled={isExporting}
-                onPress={() => handleResultAction('share')}
-              />
-              <Button
-                label={t(state.locale, 'saveImage')}
-                variant="outlined"
-                disabled={isExporting}
-                onPress={() => handleResultAction('save')}
-              />
-              <Button
-                label={t(state.locale, 'copyStateLink')}
-                variant="text"
-                onPress={copyLink}
-              />
-            </Column>
-          </Host>
-        </View>
-
-        {status ? <Text style={[styles.status, { color: theme.secondaryText }]}>{status}</Text> : null}
-        {hasStorageError ? (
-          <Text accessibilityRole="alert" style={[styles.status, { color: theme.danger }]}>
-            {t(state.locale, 'persistenceError')}
-          </Text>
-        ) : null}
-      </ScrollView>
-
-      <View style={styles.exportSurface}>
-        <ResultCard
-          ref={resultRef}
-          locale={state.locale}
-          displayName={state.displayName}
-          score={score}
-          levels={state.levels}
-        />
+        <PrefectureSheet code={selectedCode} onDismiss={() => setSelectedCode(null)} />
       </View>
-
-      <PrefectureSheet code={selectedCode} onDismiss={() => setSelectedCode(null)} />
-    </View>
+      <LanguageStackToolbar />
+    </>
   );
 }
 

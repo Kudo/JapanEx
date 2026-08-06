@@ -1,4 +1,3 @@
-import { Platform } from 'react-native';
 import { G, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 
 import { LEVEL_COLORS } from '@/constants/app-theme';
@@ -41,8 +40,8 @@ export function MapRegions({
   return PREFECTURES.map((prefecture) => {
     const selectPrefecture = () => onSelect?.(prefecture.code);
     const interactionProps = onSelect
-      ? Platform.select({
-          web: {
+      ? process.env.EXPO_OS === 'web'
+        ? {
             // react-native-svg web otherwise overwrites an explicit onClick with undefined.
             onPress: null as never,
             onClick: selectPrefecture,
@@ -54,13 +53,12 @@ export function MapRegions({
             },
             tabIndex: 0,
             'aria-label': prefecture.names[locale],
-          },
-          default: {
+          }
+        : {
             onPress: selectPrefecture,
             accessible: true,
             accessibilityLabel: prefecture.names[locale],
-          },
-        })
+          }
       : undefined;
     const label = getMapLabel(prefecture.names[locale], locale);
     const labelLayout = LABEL_LAYOUTS[prefecture.code];

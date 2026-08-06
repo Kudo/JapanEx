@@ -7,6 +7,7 @@ JapanEx is an offline-first Expo app for recording how deeply you have experienc
 - Interactive JapanEx map with six experience levels and a score from 0–235.
 - Simultaneous pinch-to-zoom and drag-to-pan powered by Gesture Handler and Reanimated.
 - Searchable, filterable gallery of all 47 official prefecture flags.
+- Native Expo Router tabs with per-tab stacks, native search, and header toolbars.
 - Japanese, Traditional Chinese, and English interfaces.
 - Device-local persistence with `expo-sqlite/kv-store` on native and `localStorage` on web.
 - Versioned state links with validation and import confirmation.
@@ -16,9 +17,9 @@ JapanEx is an offline-first Expo app for recording how deeply you have experienc
 ## Development
 
 ```bash
-npm install
+bun install
 cp .env.example .env.local
-npm start
+bun start
 ```
 
 Set `EXPO_PUBLIC_SHARE_BASE_URL` to the HTTPS origin hosting the web build so shared state links open `/import`. Without it, development builds use the current Expo URL or native `japanex` scheme.
@@ -26,18 +27,18 @@ Set `EXPO_PUBLIC_SHARE_BASE_URL` to the HTTPS origin hosting the web build so sh
 Useful commands:
 
 ```bash
-npm run ios
-npm run android
-npm run web
-npm run verify
-npm run export:web
+bun run ios
+bun run android
+bun run web
+bun run verify
+bun run export:web
 ```
 
-The project intentionally does not include Jest or React Native Testing Library. `npm run verify` runs the dependency-free data validator, TypeScript, and Expo ESLint checks.
+The project intentionally does not include Jest or React Native Testing Library. `bun run verify` runs the dependency-free data validator, TypeScript, and Expo ESLint checks.
 
 ## Project layout
 
-- `src/app` contains Expo Router route files only.
+- `src/app` contains Expo Router route files, native tab groups, and per-tab stacks.
 - `src/screens` contains route screen bodies.
 - `src/components` contains reusable map, flag, level, and export UI.
 - `src/data` contains the JIS-ordered prefecture manifest and original JapanEx map geometry.

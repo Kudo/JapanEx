@@ -19,7 +19,6 @@
     "expo-splash-screen": "~57.0.5",
     "expo-sqlite": "~57.0.1",
     "expo-status-bar": "~57.0.1",
-    "expo-symbols": "~57.0.2",
     "expo-system-ui": "~57.0.2",
     "expo-web-browser": "~57.0.2",
     "react": "19.2.3",
@@ -47,7 +46,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "validate:data": "node scripts/validate-data.mjs",
-    "verify": "npm run validate:data && npm run typecheck && npm run lint",
+    "verify": "node scripts/validate-data.mjs && tsc --noEmit && expo lint",
     "export:web": "expo export --platform web"
   },
   "private": true

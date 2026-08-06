@@ -24,9 +24,9 @@ export function LevelIndicator({ level, locale, compact = false }: LevelIndicato
       ]}
     >
       <View style={[styles.dot, { backgroundColor: LEVEL_COLORS[level] }]} />
-      <Text style={[styles.level, { color: theme.text }]}>{level}</Text>
+      <Text selectable style={[styles.level, { color: theme.text }]}>{level}</Text>
       {!compact && (
-        <Text numberOfLines={1} style={[styles.label, { color: theme.secondaryText }]}>
+        <Text selectable numberOfLines={1} style={[styles.label, { color: theme.secondaryText }]}>
           {LEVEL_LABELS[locale][level]}
         </Text>
       )}
