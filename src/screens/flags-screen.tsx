@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   filterTitle: { fontSize: 22, fontWeight: '900', letterSpacing: 0.2 },
   countBadge: { borderRadius: 15, paddingHorizontal: 12, paddingVertical: 6 },
   countText: { fontSize: 13, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  cardSeparator: { height: 18 },
+  cardSeparator: { height: 24 },
   cardCell: { flex: 1 },
   card: {
     flex: 1,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     borderCurve: 'continuous',
     padding: 13,
-    gap: 14,
+    gap: 20,
     boxShadow: '0 6px 18px rgba(34, 48, 56, 0.08)',
   },
   listCard: { flexDirection: 'row', minHeight: 136, alignItems: 'center' },
@@ -254,6 +254,7 @@ const styles = StyleSheet.create({
   flag: { width: '100%', height: '100%' },
   cardBody: { flex: 1, alignItems: 'flex-start', gap: 5 },
   nameRow: {
+    paddingTop: 8,
     width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
