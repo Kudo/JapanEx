@@ -13,7 +13,6 @@ export function AppStack({ children }: PropsWithChildren) {
         headerBackButtonDisplayMode: 'minimal',
         headerShadowVisible: false,
         headerLargeTitleShadowVisible: false,
-        headerStyle: { backgroundColor: theme.background },
         headerLargeStyle: { backgroundColor: theme.background },
         headerTintColor: theme.text,
         headerRight: process.env.EXPO_OS === 'web' ? () => <LanguageToolbar /> : undefined,

@@ -15,6 +15,7 @@ import { useAppTheme } from '@/constants/app-theme';
 import type { ExperienceLevel, PrefectureCode } from '@/data/types';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
+import { calculatePinchTranslation } from '@/utils/map-camera';
 
 const MAP_X = 318;
 const MAP_Y = -317.5;
@@ -38,17 +39,48 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
   const translationY = useSharedValue(0);
   const savedTranslationX = useSharedValue(0);
   const savedTranslationY = useSharedValue(0);
+  const pinchFocalX = useSharedValue(0);
+  const pinchFocalY = useSharedValue(0);
   const mapWidth = useSharedValue(320);
   const canPan = zoomLevel > MIN_ZOOM;
 
   const gesture = useMemo(() => {
     const pinch = Gesture.Pinch()
       .cancelsTouchesInView(false)
-      .onStart(() => {
+      .onStart((event) => {
         savedScale.set(scale.get());
+        savedTranslationX.set(translationX.get());
+        savedTranslationY.set(translationY.get());
+        pinchFocalX.set(event.focalX - mapWidth.get() / 2);
+        pinchFocalY.set(event.focalY - mapWidth.get() / 2);
       })
       .onUpdate((event) => {
-        scale.set(clampWorklet(savedScale.get() * event.scale, MIN_ZOOM, MAX_ZOOM));
+        const nextScale = clampWorklet(savedScale.get() * event.scale, MIN_ZOOM, MAX_ZOOM);
+        const currentFocalX = event.focalX - mapWidth.get() / 2;
+        const currentFocalY = event.focalY - mapWidth.get() / 2;
+        const maximum = (mapWidth.get() * (nextScale - 1)) / 2;
+
+        scale.set(nextScale);
+        translationX.set(
+          calculatePinchTranslation({
+            currentFocal: currentFocalX,
+            initialFocal: pinchFocalX.get(),
+            initialScale: savedScale.get(),
+            initialTranslation: savedTranslationX.get(),
+            maximumTranslation: maximum,
+            nextScale,
+          }),
+        );
+        translationY.set(
+          calculatePinchTranslation({
+            currentFocal: currentFocalY,
+            initialFocal: pinchFocalY.get(),
+            initialScale: savedScale.get(),
+            initialTranslation: savedTranslationY.get(),
+            maximumTranslation: maximum,
+            nextScale,
+          }),
+        );
       })
       .onEnd(() => {
         const nextScale = clampWorklet(scale.get(), MIN_ZOOM, MAX_ZOOM);
@@ -67,6 +99,7 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
     const pan = Gesture.Pan()
       .enabled(canPan)
       .cancelsTouchesInView(false)
+      .maxPointers(1)
       .minDistance(8)
       .onStart(() => {
         savedTranslationX.set(translationX.get());
@@ -83,7 +116,18 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
       });
 
     return Gesture.Simultaneous(pinch, pan);
-  }, [canPan, mapWidth, savedScale, savedTranslationX, savedTranslationY, scale, translationX, translationY]);
+  }, [
+    canPan,
+    mapWidth,
+    pinchFocalX,
+    pinchFocalY,
+    savedScale,
+    savedTranslationX,
+    savedTranslationY,
+    scale,
+    translationX,
+    translationY,
+  ]);
 
   const animatedMapStyle = useAnimatedStyle(() => ({
     transform: [

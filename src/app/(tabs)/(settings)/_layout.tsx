@@ -15,7 +15,14 @@ export default function SettingsStackLayout() {
 
   return (
     <AppStack>
-      <Stack.Screen name="settings">
+      <Stack.Screen
+        name="settings"
+        options={{
+          headerBlurEffect: 'none',
+          headerLargeStyle: { backgroundColor: 'transparent' },
+          headerTransparent: true,
+        }}
+      >
         <Stack.Title large>{t(state.locale, 'tabsSettings')}</Stack.Title>
       </Stack.Screen>
       <Stack.Screen

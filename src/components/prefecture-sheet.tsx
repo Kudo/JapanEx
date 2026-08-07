@@ -1,7 +1,7 @@
 import { BottomSheet, Button, Column, Picker, RNHostView, Text } from '@expo/ui';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, useWindowDimensions } from 'react-native';
 
 import { useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
@@ -19,7 +19,9 @@ export function PrefectureSheet({ code, onDismiss }: PrefectureSheetProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const { state, setLevel } = useTracker();
+  const { width } = useWindowDimensions();
   const prefecture = code ? PREFECTURES_BY_CODE[code] : null;
+  const contentWidth = Math.min(width - 32, 520);
 
   return (
     <BottomSheet
@@ -29,8 +31,19 @@ export function PrefectureSheet({ code, onDismiss }: PrefectureSheetProps) {
       showDragIndicator
     >
       {prefecture ? (
-        <Column alignment="center" spacing={14} style={{ padding: 20 }}>
-          <Text textStyle={{ fontSize: 24, fontWeight: '700', color: theme.text }}>
+        <Column
+          alignment="center"
+          spacing={14}
+          style={{ width: contentWidth, paddingHorizontal: 20, paddingVertical: 12 }}
+        >
+          <Text
+            textStyle={{
+              fontSize: 24,
+              fontWeight: '700',
+              color: theme.text,
+              textAlign: 'center',
+            }}
+          >
             {prefecture.names[state.locale]}
           </Text>
           <RNHostView matchContents style={{ width: 240, height: 132 }}>
