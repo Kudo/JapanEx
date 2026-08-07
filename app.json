@@ -5,11 +5,11 @@
     "version": "1.0.0",
     "description": "Track how deeply you have experienced Japan's 47 prefectures.",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/app-icon-japanex-v3.png",
     "scheme": "japanex",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/japanex.icon",
       "supportsTablet": true,
       "bundleIdentifier": "dev.expo.kudo.japanex",
       "appleTeamId": "J35SUS5UFB"
@@ -17,10 +17,9 @@
     "android": {
       "package": "dev.expo.kudo.japanex",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#203A47",
+        "foregroundImage": "./assets/images/app-icon-japanex-v3-adaptive-foreground.png",
+        "monochromeImage": "./assets/images/app-icon-japanex-v3-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
@@ -32,16 +31,16 @@
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon-japanex-v3.png"
     },
     "plugins": [
       "expo-router",
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#203A47",
+          "image": "./assets/images/app-icon-japanex-v3-adaptive-foreground.png",
+          "imageWidth": 200
         }
       ],
       "expo-sqlite",
