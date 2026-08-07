@@ -12,7 +12,10 @@
       "icon": "./assets/japanex.icon",
       "supportsTablet": true,
       "bundleIdentifier": "dev.expo.kudo.japanex",
-      "appleTeamId": "J35SUS5UFB"
+      "appleTeamId": "J35SUS5UFB",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "dev.expo.kudo.japanex",
@@ -60,6 +63,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1546cc10-b86a-458f-a750-7d7d263cd20d"
+      }
     }
   }
 }
