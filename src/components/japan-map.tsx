@@ -10,29 +10,30 @@ import Animated, {
 } from 'react-native-reanimated';
 import Svg, { Rect } from 'react-native-svg';
 
+import { MapFlags } from '@/components/map-flags';
 import { MapRegions } from '@/components/map-regions';
 import { useAppTheme } from '@/constants/app-theme';
 import type { ExperienceLevel, PrefectureCode } from '@/data/types';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { calculatePinchTranslation } from '@/utils/map-camera';
+import { MAP_SIZE, MAP_X, MAP_Y } from '@/utils/map-layout';
 
-const MAP_X = 318;
-const MAP_Y = -317.5;
-const MAP_SIZE = 1147.5;
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 2.5;
 const ZOOM_STEP = 0.5;
 
 type JapanMapProps = {
   levels: Record<PrefectureCode, ExperienceLevel>;
+  showFlags: boolean;
   onSelect: (code: PrefectureCode) => void;
 };
 
-export function JapanMap({ levels, onSelect }: JapanMapProps) {
+export function JapanMap({ levels, showFlags, onSelect }: JapanMapProps) {
   const theme = useAppTheme();
   const { state } = useTracker();
   const [zoomLevel, setZoomLevel] = useState(MIN_ZOOM);
+  const [mapFrameWidth, setMapFrameWidth] = useState(0);
   const scale = useSharedValue(MIN_ZOOM);
   const savedScale = useSharedValue(MIN_ZOOM);
   const translationX = useSharedValue(0);
@@ -153,11 +154,16 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
     translationY.set(withTiming(clamp(translationY.get(), -maximum, maximum)));
   };
 
+  const handleMapLayout = (width: number) => {
+    mapWidth.set(width);
+    setMapFrameWidth(width);
+  };
+
   return (
     <View style={styles.wrapper}>
       <GestureDetector gesture={gesture}>
         <View
-          onLayout={(event) => mapWidth.set(event.nativeEvent.layout.width)}
+          onLayout={(event) => handleMapLayout(event.nativeEvent.layout.width)}
           style={[
             styles.mapFrame,
             { backgroundColor: theme.ocean, borderColor: theme.border },
@@ -176,9 +182,11 @@ export function JapanMap({ levels, onSelect }: JapanMapProps) {
                 locale={state.locale}
                 stroke={theme.mapStroke}
                 strokeWidth={zoomLevel > 1 ? 3 : 4}
+                showFlags={showFlags}
                 onSelect={onSelect}
               />
             </Svg>
+            {showFlags ? <MapFlags frameWidth={mapFrameWidth} locale={state.locale} /> : null}
           </Animated.View>
         </View>
       </GestureDetector>

@@ -1,24 +1,23 @@
 import { forwardRef } from 'react';
 import Svg, { G, Rect, Text as SvgText } from 'react-native-svg';
 
+import { ResultMapFlags } from '@/components/map-flags';
+import { MapRegions } from '@/components/map-regions';
 import { LEVEL_COLORS, RESULT_THEME } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 import { LEVEL_LABELS, t } from '@/i18n/translations';
-import { MapRegions } from '@/components/map-regions';
-
-const MAP_X = 318;
-const MAP_Y = -317.5;
-const MAP_SIZE = 1147.5;
+import { MAP_SIZE, MAP_X, MAP_Y } from '@/utils/map-layout';
 
 type ResultCardProps = {
   locale: AppLocale;
   displayName: string;
   score: number;
   levels: Record<PrefectureCode, ExperienceLevel>;
+  showFlags: boolean;
 };
 
 export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
-  { locale, displayName, score, levels },
+  { locale, displayName, score, levels, showFlags },
   ref,
 ) {
   return (
@@ -29,7 +28,14 @@ export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
       viewBox={`${MAP_X} ${MAP_Y} ${MAP_SIZE} ${MAP_SIZE}`}
     >
       <Rect x={MAP_X} y={MAP_Y} width={MAP_SIZE} height={MAP_SIZE} fill={RESULT_THEME.ocean} />
-      <MapRegions levels={levels} locale={locale} stroke={RESULT_THEME.mapStroke} strokeWidth={4} />
+      <MapRegions
+        levels={levels}
+        locale={locale}
+        stroke={RESULT_THEME.mapStroke}
+        strokeWidth={4}
+        showFlags={showFlags}
+      />
+      <ResultMapFlags visible={showFlags} locale={locale} />
 
       <Rect x={342} y={-294} width={735} height={164} rx={26} fill="#FFFFFF" fillOpacity={0.94} />
       <SvgText x={380} y={-242} fontSize={42} fontWeight="700" fill={RESULT_THEME.text}>

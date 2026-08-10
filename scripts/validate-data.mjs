@@ -9,12 +9,17 @@ const prefectures = JSON.parse(readFileSync(join(projectRoot, 'src/data/prefectu
 const mapShapes = JSON.parse(readFileSync(join(projectRoot, 'src/data/map-shapes.json'), 'utf8'));
 const flagsDirectory = join(projectRoot, 'assets/flags');
 const flagFiles = readdirSync(flagsDirectory).filter((file) => file.endsWith('.svg')).sort();
+const flagThumbnailsDirectory = join(projectRoot, 'assets/flag-thumbnails');
+const flagThumbnailFiles = readdirSync(flagThumbnailsDirectory)
+  .filter((file) => file.endsWith('.png'))
+  .sort();
 const expectedCodes = Array.from({ length: 47 }, (_, index) => String(index + 1).padStart(2, '0'));
 
 assert.equal(prefectures.length, 47, 'should define exactly 47 prefectures');
 assert.deepEqual(prefectures.map((item) => item.code), expectedCodes, 'should use unique JIS order');
 assert.equal(new Set(prefectures.map((item) => item.flagAssetKey)).size, 47, 'should use unique flag asset keys');
 assert.equal(flagFiles.length, 47, 'should bundle exactly 47 SVG flags');
+assert.equal(flagThumbnailFiles.length, 47, 'should bundle exactly 47 PNG flag thumbnails');
 
 for (const prefecture of prefectures) {
   assert.equal(typeof prefecture.names.ja, 'string', `${prefecture.code} should have a Japanese name`);
@@ -29,6 +34,18 @@ for (const prefecture of prefectures) {
   assert.ok(flagFiles.includes(expectedFlag), `${prefecture.code} should include ${expectedFlag}`);
   const svg = readFileSync(join(flagsDirectory, expectedFlag), 'utf8');
   assert.match(svg, /<svg[\s>]/i, `${expectedFlag} should contain SVG markup`);
+  assert.ok(
+    flagThumbnailFiles.includes(`${prefecture.flagAssetKey}.png`),
+    `${prefecture.code} should include an export thumbnail`,
+  );
+  const thumbnail = readFileSync(
+    join(flagThumbnailsDirectory, `${prefecture.flagAssetKey}.png`),
+  );
+  assert.deepEqual(
+    [...thumbnail.subarray(0, 8)],
+    [137, 80, 78, 71, 13, 10, 26, 10],
+    `${prefecture.code} should include a valid PNG export thumbnail`,
+  );
 
   const shapes = mapShapes[prefecture.code];
   assert.ok(Array.isArray(shapes) && shapes.length > 0, `${prefecture.code} should have map geometry`);
@@ -51,4 +68,4 @@ const ccBySaCodes = prefectures
   .map((item) => item.code);
 assert.deepEqual(ccBySaCodes, ['34', '37'], 'should retain CC BY-SA attribution for Hiroshima and Kagawa');
 
-console.log('Validated 47 prefectures, 47 offline flags, map geometry, and licensing metadata.');
+console.log('Validated 47 prefectures, offline flags, export thumbnails, map geometry, and licensing metadata.');

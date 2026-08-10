@@ -16,7 +16,12 @@ import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, saveResult, shareResult } from '@/utils/result-export';
 import { buildShareUrl } from '@/utils/share-state';
 
-export function MapScreen() {
+type MapScreenProps = {
+  showFlags: boolean;
+  onToggleFlags: () => void;
+};
+
+export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const theme = useAppTheme();
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
@@ -106,7 +111,7 @@ export function MapScreen() {
           <Text style={[styles.helper, { color: theme.secondaryText }]}>
             {t(state.locale, 'tapPrefecture')}
           </Text>
-          <JapanMap levels={state.levels} onSelect={setSelectedCode} />
+          <JapanMap levels={state.levels} showFlags={showFlags} onSelect={setSelectedCode} />
         </View>
 
         <View
@@ -171,11 +176,12 @@ export function MapScreen() {
           displayName={state.displayName}
           score={score}
           levels={state.levels}
+          showFlags={showFlags}
         />
       </View>
 
       <PrefectureSheet code={selectedCode} onDismiss={() => setSelectedCode(null)} />
-      <LanguageStackToolbar />
+      <LanguageStackToolbar showFlags={showFlags} onToggleFlags={onToggleFlags} />
     </>
   );
 }
