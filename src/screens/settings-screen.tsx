@@ -141,8 +141,8 @@ function ReadySettingsScreen() {
       >
         <Host matchContents seedColor={theme.accent}>
           <Column spacing={10} style={{ width: '100%' }}>
-            <Button label={t(state.locale, 'shareState')} onPress={shareLink} />
-            <Button label={t(state.locale, 'copyStateLink')} variant="outlined" onPress={copyLink} />
+            <Button label={t(state.locale, 'shareView')} onPress={shareLink} />
+            <Button label={t(state.locale, 'copyViewLink')} variant="outlined" onPress={copyLink} />
             <Button
               label={t(state.locale, 'aboutCredits')}
               variant="outlined"

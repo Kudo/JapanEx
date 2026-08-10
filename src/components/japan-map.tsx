@@ -13,9 +13,8 @@ import Svg, { Rect } from 'react-native-svg';
 import { MapFlags } from '@/components/map-flags';
 import { MapRegions } from '@/components/map-regions';
 import { useAppTheme } from '@/constants/app-theme';
-import type { ExperienceLevel, PrefectureCode } from '@/data/types';
+import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 import { t } from '@/i18n/translations';
-import { useTracker } from '@/state/tracker-context';
 import { calculatePinchTranslation } from '@/utils/map-camera';
 import { MAP_SIZE, MAP_X, MAP_Y } from '@/utils/map-layout';
 
@@ -25,13 +24,13 @@ const ZOOM_STEP = 0.5;
 
 type JapanMapProps = {
   levels: Record<PrefectureCode, ExperienceLevel>;
+  locale: AppLocale;
   showFlags: boolean;
   onSelect: (code: PrefectureCode) => void;
 };
 
-export function JapanMap({ levels, showFlags, onSelect }: JapanMapProps) {
+export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps) {
   const theme = useAppTheme();
-  const { state } = useTracker();
   const [zoomLevel, setZoomLevel] = useState(MIN_ZOOM);
   const [mapFrameWidth, setMapFrameWidth] = useState(0);
   const scale = useSharedValue(MIN_ZOOM);
@@ -179,14 +178,14 @@ export function JapanMap({ levels, showFlags, onSelect }: JapanMapProps) {
               <Rect x={MAP_X} y={MAP_Y} width={MAP_SIZE} height={MAP_SIZE} fill={theme.ocean} />
               <MapRegions
                 levels={levels}
-                locale={state.locale}
+                locale={locale}
                 stroke={theme.mapStroke}
                 strokeWidth={zoomLevel > 1 ? 3 : 4}
                 showFlags={showFlags}
                 onSelect={onSelect}
               />
             </Svg>
-            {showFlags ? <MapFlags frameWidth={mapFrameWidth} locale={state.locale} /> : null}
+            {showFlags ? <MapFlags frameWidth={mapFrameWidth} locale={locale} /> : null}
           </Animated.View>
         </View>
       </GestureDetector>
@@ -194,18 +193,18 @@ export function JapanMap({ levels, showFlags, onSelect }: JapanMapProps) {
       <Host matchContents seedColor={theme.accent}>
         <Row spacing={8} alignment="center">
           <Button
-            label={t(state.locale, 'zoomOut')}
+            label={t(locale, 'zoomOut')}
             variant="outlined"
             disabled={zoomLevel <= MIN_ZOOM}
             onPress={() => animateToZoom(zoomLevel - ZOOM_STEP)}
           />
           <Button
-            label={t(state.locale, 'resetView')}
+            label={t(locale, 'resetView')}
             variant="text"
             onPress={() => animateToZoom(MIN_ZOOM)}
           />
           <Button
-            label={t(state.locale, 'zoomIn')}
+            label={t(locale, 'zoomIn')}
             variant="outlined"
             disabled={zoomLevel >= MAX_ZOOM}
             onPress={() => animateToZoom(zoomLevel + ZOOM_STEP)}

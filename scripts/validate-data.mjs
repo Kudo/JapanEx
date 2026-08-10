@@ -7,6 +7,10 @@ const scriptsDirectory = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(scriptsDirectory, '..');
 const prefectures = JSON.parse(readFileSync(join(projectRoot, 'src/data/prefectures.json'), 'utf8'));
 const mapShapes = JSON.parse(readFileSync(join(projectRoot, 'src/data/map-shapes.json'), 'utf8'));
+const appConfig = JSON.parse(readFileSync(join(projectRoot, 'app.json'), 'utf8')).expo;
+const appleAppSiteAssociation = JSON.parse(
+  readFileSync(join(projectRoot, 'public/.well-known/apple-app-site-association'), 'utf8'),
+);
 const flagsDirectory = join(projectRoot, 'assets/flags');
 const flagFiles = readdirSync(flagsDirectory).filter((file) => file.endsWith('.svg')).sort();
 const flagThumbnailsDirectory = join(projectRoot, 'assets/flag-thumbnails');
@@ -62,6 +66,37 @@ for (const prefecture of prefectures) {
 const shareAlphabets = [0, 1, 2, 3, 4, 5];
 assert.ok(shareAlphabets.every((level) => Number.isInteger(level) && level >= 0 && level <= 5), 'should restrict levels to 0 through 5');
 assert.equal('0'.repeat(47), '00000000000000000000000000000000000000000000000', 'should serialize the initial state as 47 zero digits');
+
+assert.deepEqual(
+  appConfig.ios.associatedDomains,
+  ['applinks:japanex.expo.app'],
+  'should associate the iOS app with the production share host',
+);
+assert.ok(
+  appConfig.android.intentFilters.some(
+    (filter) =>
+      filter.action === 'VIEW' &&
+      filter.autoVerify === true &&
+      filter.data?.some(
+        (entry) =>
+          entry.scheme === 'https' &&
+          entry.host === 'japanex.expo.app' &&
+          entry.pathPrefix === '/view',
+      ),
+  ),
+  'should register a verified Android view-link intent filter',
+);
+assert.deepEqual(
+  appleAppSiteAssociation.applinks.details[0].appIDs,
+  ['J35SUS5UFB.dev.expo.kudo.japanex'],
+  'should associate the website with the production iOS app',
+);
+assert.ok(
+  appleAppSiteAssociation.applinks.details[0].components.some(
+    (component) => component['/'] === '/view',
+  ),
+  'should restrict iOS universal links to the shared view route',
+);
 
 const ccBySaCodes = prefectures
   .filter((item) => item.license === 'CC BY-SA 3.0')

@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "J35SUS5UFB.dev.expo.kudo.japanex"
+        ],
+        "components": [
+          {
+            "/": "/view",
+            "comment": "Opens shared JapanEx snapshots in the app."
+          },
+          {
+            "/": "/view/*",
+            "comment": "Supports a trailing path if the hosting layer redirects the view route."
+          }
+        ]
+      }
+    ]
+  }
+}

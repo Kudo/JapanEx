@@ -46,8 +46,9 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test src/utils/*.test.mjs",
     "validate:data": "node scripts/validate-data.mjs",
-    "verify": "node scripts/validate-data.mjs && tsc --noEmit && expo lint",
+    "verify": "node scripts/validate-data.mjs && node --experimental-strip-types --test src/utils/*.test.mjs && tsc --noEmit && expo lint",
     "export:web": "expo export --platform web"
   },
   "private": true

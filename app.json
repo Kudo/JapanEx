@@ -13,12 +13,32 @@
       "supportsTablet": true,
       "bundleIdentifier": "dev.expo.kudo.japanex",
       "appleTeamId": "J35SUS5UFB",
+      "associatedDomains": [
+        "applinks:japanex.expo.app"
+      ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "dev.expo.kudo.japanex",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "japanex.expo.app",
+              "pathPrefix": "/view"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ],
       "adaptiveIcon": {
         "backgroundColor": "#203A47",
         "foregroundImage": "./assets/images/app-icon-japanex-v3-adaptive-foreground.png",

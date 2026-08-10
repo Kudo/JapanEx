@@ -35,6 +35,7 @@ export default function RootLayout() {
         <ThemeProvider value={themedNavigation}>
           <AppStack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="view" options={{ headerRight: () => null }} />
             <Stack.Screen
               name="import"
               options={{

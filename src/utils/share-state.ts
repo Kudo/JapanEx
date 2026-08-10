@@ -1,23 +1,25 @@
-import * as Linking from 'expo-linking';
-
 import {
   PREFECTURE_CODES,
   type AppLocale,
   type ExperienceLevel,
   type TrackerStateV1,
-} from '@/data/types';
-import { calculateScore } from '@/state/tracker-state';
+} from '../data/types.ts';
 
-export type ImportParams = {
+const DEFAULT_SHARE_BASE_URL = 'https://japanex.expo.app';
+
+export type SharedStateParams = {
   v?: string | string[];
   s?: string | string[];
   l?: string | string[];
   n?: string | string[];
 };
 
-export type ImportResult =
+export type SharedStateResult =
   | { ok: true; state: TrackerStateV1; score: number }
   | { ok: false; reason: string };
+
+export type ImportParams = SharedStateParams;
+export type ImportResult = SharedStateResult;
 
 function first(value: string | string[] | undefined): string {
   return Array.isArray(value) ? value[0] ?? '' : value ?? '';
@@ -28,9 +30,7 @@ export function encodeLevels(state: TrackerStateV1): string {
 }
 
 export function buildShareUrl(state: TrackerStateV1): string {
-  const configuredBase = process.env.EXPO_PUBLIC_SHARE_BASE_URL?.replace(/\/$/, '');
-  const fallbackBase = Linking.createURL('/').replace(/\/$/, '');
-  const base = configuredBase || fallbackBase;
+  const base = (process.env.EXPO_PUBLIC_SHARE_BASE_URL || DEFAULT_SHARE_BASE_URL).replace(/\/+$/, '');
   const query = new URLSearchParams({
     v: '1',
     s: encodeLevels(state),
@@ -38,10 +38,10 @@ export function buildShareUrl(state: TrackerStateV1): string {
   });
 
   if (state.displayName) query.set('n', state.displayName);
-  return `${base}/import?${query.toString()}`;
+  return `${base}/view?${query.toString()}`;
 }
 
-export function parseImportParams(params: ImportParams): ImportResult {
+export function parseSharedStateParams(params: SharedStateParams): SharedStateResult {
   const version = first(params.v);
   const digits = first(params.s);
   const locale = first(params.l);
@@ -62,5 +62,8 @@ export function parseImportParams(params: ImportParams): ImportResult {
     displayName,
   };
 
-  return { ok: true, state, score: calculateScore(levels) };
+  const score = PREFECTURE_CODES.reduce((total, code) => total + levels[code], 0);
+  return { ok: true, state, score };
 }
+
+export const parseImportParams = parseSharedStateParams;

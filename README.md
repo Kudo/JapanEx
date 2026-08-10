@@ -10,7 +10,7 @@ JapanEx is an offline-first Expo app for recording how deeply you have experienc
 - Native Expo Router tabs with per-tab stacks, native search, and header toolbars.
 - Japanese, Traditional Chinese, and English interfaces.
 - Device-local persistence with `expo-sqlite/kv-store` on native and `localStorage` on web.
-- Versioned state links with validation and import confirmation.
+- Versioned view-only links that preserve the recipient's saved progress, plus legacy import confirmation.
 - 2048×2048 PNG result export directly from the SVG surface—no screenshot library.
 - Fully bundled flags and data for offline use.
 
@@ -22,7 +22,13 @@ cp .env.example .env.local
 bun start
 ```
 
-Set `EXPO_PUBLIC_SHARE_BASE_URL` to the HTTPS origin hosting the web build so shared state links open `/import`. Without it, development builds use the current Expo URL or native `japanex` scheme.
+Shared links default to `https://japanex.expo.app/view`. Set `EXPO_PUBLIC_SHARE_BASE_URL` only when a development or preview build needs a different HTTPS origin.
+
+The web export includes the Apple App Site Association file for `japanex.expo.app`, and the app config enables iOS Universal Links for `/view`. Android also registers the matching App Link intent filter.
+
+### Android App Link verification TODO
+
+After the production Android signing certificate is available, add `public/.well-known/assetlinks.json` with package `dev.expo.kudo.japanex` and the Play App Signing certificate's SHA-256 fingerprint. Until that file is deployed, Android view links continue to work on the web but are not verified to open the installed app directly.
 
 Useful commands:
 
@@ -34,7 +40,7 @@ bun run verify
 bun run export:web
 ```
 
-The project intentionally does not include Jest or React Native Testing Library. `bun run verify` runs the dependency-free data validator, TypeScript, and Expo ESLint checks.
+The project intentionally does not include Jest or React Native Testing Library. `bun run verify` runs the dependency-free data validator and Node tests, followed by TypeScript and Expo ESLint checks.
 
 ## Project layout
 
