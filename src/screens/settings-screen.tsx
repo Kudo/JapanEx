@@ -1,5 +1,6 @@
 import { Button, Column, Host, Picker, TextInput, useNativeState } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
+import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText, View } from 'react-native';
@@ -161,6 +162,11 @@ function ReadySettingsScreen() {
               label={t(state.locale, 'aboutCredits')}
               variant="outlined"
               onPress={() => router.push('/about')}
+            />
+            <Button
+              label={t(state.locale, 'privacyPolicy')}
+              variant="outlined"
+              onPress={() => Linking.openURL('https://japanex.expo.app/privacy/')}
             />
             <Button label={t(state.locale, 'resetProgress')} variant="text" onPress={confirmReset} />
           </Column>

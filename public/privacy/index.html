@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Privacy Policy for JapanEx, the offline-first Japan prefecture experience tracker."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="canonical" href="https://japanex.expo.app/privacy/" />
+    <title>Privacy Policy | JapanEx</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --background: #f6f3ec;
+        --surface: #fffdf8;
+        --text: #203a47;
+        --muted: #5f7078;
+        --border: #d9dfdc;
+        --accent: #bd4b3f;
+        --hero: #203a47;
+        --hero-text: #fffdf8;
+        --shadow: 0 18px 50px rgb(32 58 71 / 10%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        background: var(--background);
+        color: var(--text);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.65;
+      }
+
+      a {
+        color: var(--accent);
+        text-underline-offset: 0.2em;
+      }
+
+      a:hover {
+        text-decoration-thickness: 2px;
+      }
+
+      a:focus-visible {
+        border-radius: 3px;
+        outline: 3px solid color-mix(in srgb, var(--accent) 35%, transparent);
+        outline-offset: 3px;
+      }
+
+      .hero {
+        background: var(--hero);
+        color: var(--hero-text);
+      }
+
+      .hero-inner,
+      main,
+      footer {
+        width: min(100% - 40px, 760px);
+        margin-inline: auto;
+      }
+
+      .hero-inner {
+        padding-block: 64px 56px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: inherit;
+        font-size: 15px;
+        font-weight: 800;
+        letter-spacing: 0.04em;
+        text-decoration: none;
+      }
+
+      .mark {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background: var(--accent);
+        place-items: center;
+      }
+
+      h1,
+      h2 {
+        line-height: 1.18;
+      }
+
+      h1 {
+        max-width: 650px;
+        margin: 34px 0 12px;
+        font-size: clamp(2.4rem, 8vw, 4.5rem);
+        letter-spacing: -0.045em;
+      }
+
+      .updated {
+        margin: 0;
+        color: rgb(255 253 248 / 72%);
+        font-size: 15px;
+      }
+
+      main {
+        padding-block: 48px 64px;
+      }
+
+      .summary {
+        margin-bottom: 42px;
+        padding: 24px;
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+        font-size: 18px;
+        font-weight: 650;
+      }
+
+      section {
+        scroll-margin-top: 24px;
+      }
+
+      section + section {
+        margin-top: 38px;
+        padding-top: 38px;
+        border-top: 1px solid var(--border);
+      }
+
+      h2 {
+        margin: 0 0 14px;
+        font-size: clamp(1.35rem, 4vw, 1.7rem);
+        letter-spacing: -0.02em;
+      }
+
+      p,
+      ul {
+        margin-block: 0 16px;
+      }
+
+      ul {
+        padding-left: 1.25rem;
+      }
+
+      li + li {
+        margin-top: 8px;
+      }
+
+      .contact-card {
+        padding: 22px;
+        border-left: 4px solid var(--accent);
+        border-radius: 4px 16px 16px 4px;
+        background: var(--surface);
+      }
+
+      .contact-card p:last-child,
+      section p:last-child {
+        margin-bottom: 0;
+      }
+
+      footer {
+        padding-block: 0 48px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --background: #14242c;
+          --surface: #1c313b;
+          --text: #f8f3e9;
+          --muted: #b8c5c8;
+          --border: #36505a;
+          --accent: #ff8d7f;
+          --hero: #0f1d24;
+          --hero-text: #fffdf8;
+          --shadow: 0 18px 50px rgb(0 0 0 / 20%);
+        }
+      }
+
+      @media (max-width: 520px) {
+        .hero-inner,
+        main,
+        footer {
+          width: min(100% - 28px, 760px);
+        }
+
+        .hero-inner {
+          padding-block: 44px 40px;
+        }
+
+        main {
+          padding-block: 32px 48px;
+        }
+
+        .summary {
+          padding: 20px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="hero-inner">
+        <a class="brand" href="/" aria-label="JapanEx home">
+          <span class="mark" aria-hidden="true">日</span>
+          <span>JapanEx</span>
+        </a>
+        <h1>Privacy Policy</h1>
+        <p class="updated">Last updated: August 14, 2026</p>
+      </div>
+    </header>
+
+    <main>
+      <p class="summary">
+        JapanEx is an offline-first app. We do not require an account, and the app does not
+        include advertising or analytics SDKs. Your map progress stays on your device unless
+        you choose to share it.
+      </p>
+
+      <section aria-labelledby="who-we-are">
+        <h2 id="who-we-are">Who we are</h2>
+        <p>
+          This Privacy Policy applies to JapanEx, published by JapanEx contributors. It explains
+          how the JapanEx mobile and web apps access, use, store, and share information.
+        </p>
+      </section>
+
+      <section aria-labelledby="on-device-data">
+        <h2 id="on-device-data">Information stored on your device</h2>
+        <p>JapanEx stores the following information locally on your device:</p>
+        <ul>
+          <li>the experience level you select for each of Japan's 47 prefectures;</li>
+          <li>your selected app language; and</li>
+          <li>an optional display name you enter.</li>
+        </ul>
+        <p>
+          This information is used to display your map, calculate your Japan score, and create
+          result images. JapanEx contributors do not receive it through the app. On Android and
+          iOS, it is stored in the app's local database. On the web, it is stored in your
+          browser's local storage.
+        </p>
+      </section>
+
+      <section aria-labelledby="device-access">
+        <h2 id="device-access">Device settings, photos, and media</h2>
+        <p>
+          JapanEx reads your device's preferred language to select an initial interface language.
+          This is processed on your device.
+        </p>
+        <p>
+          When you choose to save a result image, JapanEx asks the operating system for the access
+          needed to add that generated image to your photo library. The app does not upload your
+          photos or use them for advertising, analytics, or profiling.
+        </p>
+      </section>
+
+      <section aria-labelledby="sharing">
+        <h2 id="sharing">Information you choose to share</h2>
+        <p>
+          JapanEx can create a result image or a view-only link when you request it. A view-only
+          link contains your prefecture experience levels, selected language, and optional display
+          name in the URL. Anyone who receives the link can read that information, so do not add a
+          display name you do not want to share.
+        </p>
+        <p>
+          When you copy, share, save, or open content, your operating system, browser, selected
+          service, and recipients may process that content under their own privacy policies.
+          JapanEx does not maintain an application database of shared result images or view-only
+          link contents.
+        </p>
+      </section>
+
+      <section aria-labelledby="hosting">
+        <h2 id="hosting">Website hosting and external links</h2>
+        <p>
+          The JapanEx website and shared view pages are delivered through Expo Application
+          Services. When you visit them, Expo and its infrastructure providers may automatically
+          process standard request and network information, such as your IP address, browser and
+          operating system, requested URL, interactions, errors, and performance information, to
+          provide, secure, and improve the hosting service. This processing is governed by the
+          <a href="https://expo.dev/privacy" rel="external">Expo Privacy Policy</a>.
+        </p>
+        <p>
+          JapanEx also links to GitHub and Wikimedia Commons for source code, licenses, and
+          attribution. Those services receive standard request information when you choose to open
+          their websites and process it under their own policies.
+        </p>
+      </section>
+
+      <section aria-labelledby="sharing-sale">
+        <h2 id="sharing-sale">Data sharing, sale, and advertising</h2>
+        <p>
+          We do not sell or rent personal information. JapanEx does not include third-party ads,
+          analytics, cross-app tracking, or crash-reporting SDKs. Information is disclosed to
+          others only when you direct the app to share content, when a service provider processes
+          technical information needed to deliver the website, or when required by law.
+        </p>
+      </section>
+
+      <section aria-labelledby="security">
+        <h2 id="security">Security</h2>
+        <p>
+          JapanEx limits its handling of information by keeping app data on your device. The
+          public website and shared links use HTTPS encryption in transit. No internet or storage
+          system can be guaranteed to be completely secure, and view-only links should be treated
+          as shareable information.
+        </p>
+      </section>
+
+      <section aria-labelledby="retention">
+        <h2 id="retention">Retention and deletion</h2>
+        <p>
+          Locally stored information remains on your device until you remove it. You can reset
+          prefecture levels with <strong>Settings → Reset progress</strong> and remove the optional
+          display name by clearing that field. To remove all locally stored JapanEx information,
+          clear the app or website data in your device or browser settings, or uninstall the app.
+          JapanEx has no user accounts and therefore holds no account data to delete. Information
+          processed by Expo or a service you choose to share with may be retained under that
+          service's policy.
+        </p>
+      </section>
+
+      <section aria-labelledby="children">
+        <h2 id="children">Children's privacy</h2>
+        <p>
+          JapanEx is not directed specifically to children, and we do not knowingly collect
+          personal information from children through the app. If you believe a child has sent us
+          personal information, contact us so we can review the request.
+        </p>
+      </section>
+
+      <section aria-labelledby="changes">
+        <h2 id="changes">Changes to this policy</h2>
+        <p>
+          We may update this policy when JapanEx features or information practices change. We will
+          publish the updated policy at this URL and revise the date at the top of the page.
+        </p>
+      </section>
+
+      <section aria-labelledby="contact">
+        <h2 id="contact">Contact</h2>
+        <div class="contact-card">
+          <p><strong>Developer and publisher:</strong> JapanEx contributors</p>
+          <p>
+            For privacy questions or requests, email
+            <a href="mailto:kudo@csie.io">kudo@csie.io</a>.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© 2026 JapanEx contributors</p>
+    </footer>
+  </body>
+</html>
