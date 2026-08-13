@@ -78,6 +78,14 @@
             "photo"
           ]
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true
+          }
+        }
       ]
     ],
     "experiments": {
