@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mapFrame: {
-    alignSelf: 'stretch',
+    width: '100%',
     maxWidth: 680,
     marginHorizontal: 'auto',
     aspectRatio: 1,
