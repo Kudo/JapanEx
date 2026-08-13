@@ -43,11 +43,12 @@ export function FlagsScreen() {
     <>
       <FlatList
         style={[styles.screen, { backgroundColor: theme.background }]}
+        alwaysBounceVertical
         key={`flags-${columns}`}
         data={filteredPrefectures}
         numColumns={columns}
         keyExtractor={(item) => item.code}
-        contentInsetAdjustmentBehavior="automatic"
+        contentInsetAdjustmentBehavior="always"
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
         contentContainerStyle={[styles.content, { width: contentWidth }]}

@@ -18,13 +18,11 @@ export default function SettingsStackLayout() {
       <Stack.Screen
         name="settings"
         options={{
-          headerBlurEffect: 'none',
-          headerLargeStyle: { backgroundColor: 'transparent' },
-          headerTransparent: true,
+          title: t(state.locale, 'tabsSettings'),
+          headerLargeTitle: true,
+          headerLargeTitleEnabled: true,
         }}
-      >
-        <Stack.Title large>{t(state.locale, 'tabsSettings')}</Stack.Title>
-      </Stack.Screen>
+      />
       <Stack.Screen
         name="about"
         options={{

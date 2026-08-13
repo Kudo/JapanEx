@@ -20,13 +20,11 @@ export default function MapFlagsStackLayout({ segment }: { segment: string }) {
       <Stack.Screen
         name={rootScreen}
         options={{
-          headerBlurEffect: 'none',
-          headerLargeStyle: { backgroundColor: 'transparent' },
-          headerTransparent: true,
+          title,
+          headerLargeTitle: true,
+          headerLargeTitleEnabled: true,
         }}
-      >
-        <Stack.Title large>{title}</Stack.Title>
-      </Stack.Screen>
+      />
       <Stack.Screen name="prefecture/[code]" />
     </AppStack>
   );

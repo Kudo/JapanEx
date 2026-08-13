@@ -58,7 +58,8 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
     <>
       <ScrollView
         style={[styles.screen, { backgroundColor: theme.background }]}
-        contentInsetAdjustmentBehavior="automatic"
+        alwaysBounceVertical
+        contentInsetAdjustmentBehavior="always"
         showsVerticalScrollIndicator={false}
         contentContainerStyle={[styles.content, { width: contentWidth }]}
       >
