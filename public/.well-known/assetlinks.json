@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "dev.expo.kudo.japanex",
+      "sha256_cert_fingerprints": [
+        "38:ED:37:63:29:8A:2F:BE:15:95:B3:AA:58:E1:1C:37:B5:D5:04:B8:4B:22:59:BB:F5:7A:40:1E:16:16:64:D5"
+      ]
+    }
+  }
+]

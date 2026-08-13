@@ -11,6 +11,9 @@ const appConfig = JSON.parse(readFileSync(join(projectRoot, 'app.json'), 'utf8')
 const appleAppSiteAssociation = JSON.parse(
   readFileSync(join(projectRoot, 'public/.well-known/apple-app-site-association'), 'utf8'),
 );
+const androidAssetLinks = JSON.parse(
+  readFileSync(join(projectRoot, 'public/.well-known/assetlinks.json'), 'utf8'),
+);
 const flagsDirectory = join(projectRoot, 'assets/flags');
 const flagFiles = readdirSync(flagsDirectory).filter((file) => file.endsWith('.svg')).sort();
 const flagThumbnailsDirectory = join(projectRoot, 'assets/flag-thumbnails');
@@ -96,6 +99,22 @@ assert.ok(
     (component) => component['/'] === '/view',
   ),
   'should restrict iOS universal links to the shared view route',
+);
+assert.deepEqual(
+  androidAssetLinks,
+  [
+    {
+      relation: ['delegate_permission/common.handle_all_urls'],
+      target: {
+        namespace: 'android_app',
+        package_name: 'dev.expo.kudo.japanex',
+        sha256_cert_fingerprints: [
+          '38:ED:37:63:29:8A:2F:BE:15:95:B3:AA:58:E1:1C:37:B5:D5:04:B8:4B:22:59:BB:F5:7A:40:1E:16:16:64:D5',
+        ],
+      },
+    },
+  ],
+  'should associate the website with the Google Play signed Android app',
 );
 
 const ccBySaCodes = prefectures

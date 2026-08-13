@@ -24,11 +24,7 @@ bun start
 
 Shared links default to `https://japanex.expo.app/view`. Set `EXPO_PUBLIC_SHARE_BASE_URL` only when a development or preview build needs a different HTTPS origin.
 
-The web export includes the Apple App Site Association file for `japanex.expo.app`, and the app config enables iOS Universal Links for `/view`. Android also registers the matching App Link intent filter.
-
-### Android App Link verification TODO
-
-After the production Android signing certificate is available, add `public/.well-known/assetlinks.json` with package `dev.expo.kudo.japanex` and the Play App Signing certificate's SHA-256 fingerprint. Until that file is deployed, Android view links continue to work on the web but are not verified to open the installed app directly.
+The web export includes the Apple App Site Association and Android Digital Asset Links files for `japanex.expo.app`. The app config enables iOS Universal Links and verified Android App Links for `/view`.
 
 Useful commands:
 
