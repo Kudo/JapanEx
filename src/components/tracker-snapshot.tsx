@@ -30,7 +30,7 @@ export function TrackerSnapshot({
 }: TrackerSnapshotProps) {
   const theme = useAppTheme();
   const markedPrefectures = Object.values(levels).filter((level) => level > 0).length;
-  const progressWidth = `${(score / 235) * 100}%` as `${number}%`;
+  const remainingProgress = 235 - score;
 
   return (
     <View style={styles.container}>
@@ -60,7 +60,13 @@ export function TrackerSnapshot({
           </View>
         </View>
         <View style={[styles.progressTrack, { backgroundColor: theme.heroMuted }]}>
-          <View style={[styles.progressFill, { backgroundColor: theme.gold, width: progressWidth }]} />
+          <View
+            style={[
+              styles.progressSegment,
+              { backgroundColor: theme.gold, flexGrow: score },
+            ]}
+          />
+          <View style={[styles.progressSegment, { flexGrow: remainingProgress }]} />
         </View>
       </View>
 
@@ -125,8 +131,14 @@ const styles = StyleSheet.create({
   },
   sealCount: { fontSize: 27, lineHeight: 30, fontWeight: '900', fontVariant: ['tabular-nums'] },
   sealTotal: { fontSize: 12, fontWeight: '800', opacity: 0.9 },
-  progressTrack: { height: 5, borderRadius: 3, overflow: 'hidden', opacity: 0.55 },
-  progressFill: { height: '100%', borderRadius: 3 },
+  progressTrack: {
+    height: 5,
+    flexDirection: 'row',
+    borderRadius: 3,
+    overflow: 'hidden',
+    opacity: 0.55,
+  },
+  progressSegment: { flexBasis: 0 },
   paperCard: {
     borderWidth: 1,
     borderRadius: 28,

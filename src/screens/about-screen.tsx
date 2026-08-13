@@ -7,10 +7,12 @@ import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { PREFECTURES } from '@/data/prefectures';
 import { t } from '@/i18n/translations';
+import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 
 export function AboutScreen() {
   const theme = useAppTheme();
+  const contentWidth = useBoundedContentWidth(760);
   const { state } = useTracker();
 
   return (
@@ -19,7 +21,7 @@ export function AboutScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
         data={PREFECTURES}
         keyExtractor={(item) => item.code}
         ListHeaderComponent={
@@ -29,8 +31,12 @@ export function AboutScreen() {
             <Text selectable style={[styles.notice, { color: theme.secondaryText }]}>
               {t(state.locale, 'officialInsigniaNotice')}
             </Text>
-            <Host matchContents seedColor={theme.accent}>
-              <Column spacing={9} style={{ width: '100%' }}>
+            <Host
+              matchContents={{ vertical: true }}
+              seedColor={theme.accent}
+              style={styles.nativeHost}
+            >
+              <Column style={{ width: '100%' }} spacing={9}>
                 <Button
                   label={t(state.locale, 'sourceCode')}
                   variant="outlined"
@@ -67,7 +73,13 @@ export function AboutScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { width: '100%', maxWidth: 760, alignSelf: 'center', padding: 18, paddingBottom: 48, gap: 10 },
+  nativeHost: { alignSelf: 'stretch' },
+  content: {
+    alignSelf: 'center',
+    padding: 18,
+    paddingBottom: 48,
+    gap: 10,
+  },
   header: { gap: 14, paddingBottom: 14 },
   body: { fontSize: 15, lineHeight: 23 },
   notice: { fontSize: 13, lineHeight: 20, fontStyle: 'italic' },

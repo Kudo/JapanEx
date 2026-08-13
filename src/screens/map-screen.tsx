@@ -10,6 +10,7 @@ import { ResultCard } from '@/components/result-card';
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
+import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, saveResult, shareResult } from '@/utils/result-export';
@@ -22,6 +23,7 @@ type MapScreenProps = {
 
 export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const theme = useAppTheme();
+  const contentWidth = useBoundedContentWidth(820);
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');
@@ -58,7 +60,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
         style={[styles.screen, { backgroundColor: theme.background }]}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
       >
         <TrackerSnapshot
           levels={state.levels}
@@ -78,8 +80,12 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
             { backgroundColor: theme.surface, borderColor: theme.border },
           ]}
         >
-          <Host matchContents seedColor={theme.accent}>
-            <Column spacing={10} style={{ width: '100%' }}>
+          <Host
+            matchContents={{ vertical: true }}
+            seedColor={theme.accent}
+            style={styles.nativeHost}
+          >
+            <Column style={{ width: '100%' }} spacing={10}>
               <Button
                 label={t(state.locale, 'shareImage')}
                 disabled={isExporting}
@@ -134,10 +140,9 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  nativeHost: { alignSelf: 'stretch' },
   screen: { flex: 1 },
   content: {
-    width: '100%',
-    maxWidth: 820,
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 14,

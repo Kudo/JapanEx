@@ -5,11 +5,13 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { t } from '@/i18n/translations';
+import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 import { parseImportParams, type ImportParams } from '@/utils/share-state';
 
 export function ImportScreen() {
   const theme = useAppTheme();
+  const cardWidth = useBoundedContentWidth(620, 40);
   const router = useRouter();
   const params = useLocalSearchParams<ImportParams>();
   const { state, replaceState } = useTracker();
@@ -22,7 +24,12 @@ export function ImportScreen() {
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.screen}
       >
-        <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <View
+          style={[
+            styles.card,
+            { width: cardWidth, backgroundColor: theme.surface, borderColor: theme.border },
+          ]}
+        >
           {result.ok ? (
             <>
               <Text style={[styles.heading, { color: theme.text }]}>{t(state.locale, 'importPreview')}</Text>
@@ -37,8 +44,12 @@ export function ImportScreen() {
               <Text selectable style={[styles.warning, { color: theme.danger }]}>
                 {t(state.locale, 'importWarning')}
               </Text>
-              <Host matchContents seedColor={theme.accent}>
-                <Column spacing={10} style={{ width: '100%' }}>
+              <Host
+                matchContents={{ vertical: true }}
+                seedColor={theme.accent}
+                style={styles.nativeHost}
+              >
+                <Column style={{ width: '100%' }} spacing={10}>
                   <Button
                     label={t(state.locale, 'importConfirm')}
                     onPress={() => {
@@ -69,8 +80,16 @@ export function ImportScreen() {
 }
 
 const styles = StyleSheet.create({
+  nativeHost: { alignSelf: 'stretch' },
   screen: { flexGrow: 1, padding: 20, justifyContent: 'center' },
-  card: { width: '100%', maxWidth: 620, alignSelf: 'center', borderWidth: 1, borderRadius: 22, borderCurve: 'continuous', padding: 24, gap: 16 },
+  card: {
+    alignSelf: 'center',
+    borderWidth: 1,
+    borderRadius: 22,
+    borderCurve: 'continuous',
+    padding: 24,
+    gap: 16,
+  },
   heading: { fontSize: 18, fontWeight: '800' },
   detail: { fontSize: 16, lineHeight: 24 },
   warning: { fontSize: 14, lineHeight: 21 },

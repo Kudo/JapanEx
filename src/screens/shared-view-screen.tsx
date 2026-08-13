@@ -7,12 +7,15 @@ import { ReadOnlyPrefectureSheet } from '@/components/read-only-prefecture-sheet
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
+import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { getInitialLocale } from '@/state/tracker-state';
 import { parseSharedStateParams, type SharedStateParams } from '@/utils/share-state';
 
 export function SharedViewScreen() {
   const theme = useAppTheme();
+  const contentWidth = useBoundedContentWidth(820);
+  const errorCardWidth = Math.min(Math.max(0, contentWidth - 36), 620);
   const router = useRouter();
   const params = useLocalSearchParams<SharedStateParams>();
   const result = parseSharedStateParams(params);
@@ -26,7 +29,7 @@ export function SharedViewScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
       >
         {result.ok ? (
           <>
@@ -56,8 +59,12 @@ export function SharedViewScreen() {
             />
 
             <View style={[styles.actions, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-              <Host matchContents seedColor={theme.accent}>
-                <Column spacing={10} style={{ width: '100%' }}>
+              <Host
+                matchContents={{ vertical: true }}
+                seedColor={theme.accent}
+                style={styles.nativeHost}
+              >
+                <Column style={{ width: '100%' }} spacing={10}>
                   <Button
                     label={t(locale, showFlags ? 'hideFlags' : 'showFlags')}
                     variant="outlined"
@@ -73,7 +80,12 @@ export function SharedViewScreen() {
             </View>
           </>
         ) : (
-          <View style={[styles.errorCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <View
+            style={[
+              styles.errorCard,
+              { width: errorCardWidth, backgroundColor: theme.surface, borderColor: theme.border },
+            ]}
+          >
             <Text selectable accessibilityRole="alert" style={[styles.error, { color: theme.danger }]}>
               {t(locale, 'sharedViewInvalid')}
             </Text>
@@ -98,10 +110,9 @@ export function SharedViewScreen() {
 }
 
 const styles = StyleSheet.create({
+  nativeHost: { alignSelf: 'stretch' },
   content: {
     flexGrow: 1,
-    width: '100%',
-    maxWidth: 820,
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 14,
@@ -125,8 +136,6 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   errorCard: {
-    width: '100%',
-    maxWidth: 620,
     alignSelf: 'center',
     marginVertical: 'auto',
     borderWidth: 1,

@@ -10,11 +10,13 @@ import { useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { isPrefectureCode, PREFECTURES_BY_CODE } from '@/data/prefectures';
 import type { ExperienceLevel } from '@/data/types';
+import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
 import { LEVEL_LABELS, REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
 export function PrefectureDetailScreen() {
   const theme = useAppTheme();
+  const contentWidth = useBoundedContentWidth(720);
   const router = useRouter();
   const { code = '' } = useLocalSearchParams<{ code: string }>();
   const { state, setLevel } = useTracker();
@@ -49,7 +51,7 @@ export function PrefectureDetailScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
       >
         <Image
           source={FLAG_ASSETS[prefecture.code]}
@@ -65,8 +67,12 @@ export function PrefectureDetailScreen() {
           <LevelIndicator level={state.levels[prefecture.code]} locale={state.locale} />
         </View>
 
-        <Host matchContents seedColor={theme.accent}>
-          <Column spacing={14} style={{ width: '100%' }}>
+        <Host
+          matchContents={{ vertical: true }}
+          seedColor={theme.accent}
+          style={styles.nativeHost}
+        >
+          <Column style={{ width: '100%' }} spacing={14}>
             <Text textStyle={{ fontSize: 16, fontWeight: '700', color: theme.text }}>
               {t(state.locale, 'level')}
             </Text>
@@ -92,8 +98,12 @@ export function PrefectureDetailScreen() {
           <RNText selectable style={[styles.notice, { color: theme.secondaryText }]}>
             {t(state.locale, 'officialInsigniaNotice')}
           </RNText>
-          <Host matchContents seedColor={theme.accent}>
-            <Column spacing={8} style={{ width: '100%' }}>
+          <Host
+            matchContents={{ vertical: true }}
+            seedColor={theme.accent}
+            style={styles.nativeHost}
+          >
+            <Column style={{ width: '100%' }} spacing={8}>
               <Button
                 label={t(state.locale, 'source')}
                 variant="outlined"
@@ -115,8 +125,14 @@ export function PrefectureDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { width: '100%', maxWidth: 720, alignSelf: 'center', padding: 20, paddingBottom: 50, gap: 22 },
-  flag: { width: '100%', aspectRatio: 1.5, borderWidth: 1, borderRadius: 20 },
+  nativeHost: { alignSelf: 'stretch' },
+  content: {
+    alignSelf: 'center',
+    padding: 20,
+    paddingBottom: 50,
+    gap: 22,
+  },
+  flag: { alignSelf: 'stretch', aspectRatio: 1.5, borderWidth: 1, borderRadius: 20 },
   titleBlock: { alignItems: 'center', gap: 7 },
   region: { fontSize: 15 },
   creditCard: { borderWidth: 1, borderRadius: 18, padding: 18, gap: 10 },

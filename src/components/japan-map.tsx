@@ -170,8 +170,7 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
         >
           <Animated.View style={[styles.animatedMap, animatedMapStyle]}>
             <Svg
-              width="100%"
-              height="100%"
+              style={StyleSheet.absoluteFill}
               viewBox={`${MAP_X} ${MAP_Y} ${MAP_SIZE} ${MAP_SIZE}`}
               preserveAspectRatio="xMidYMid meet"
             >
@@ -230,8 +229,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mapFrame: {
-    width: '100%',
+    alignSelf: 'stretch',
     maxWidth: 680,
+    marginHorizontal: 'auto',
     aspectRatio: 1,
     borderRadius: 24,
     borderWidth: 1,

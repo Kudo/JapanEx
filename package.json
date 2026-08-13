@@ -51,5 +51,17 @@
     "verify": "node scripts/validate-data.mjs && node --experimental-strip-types --test src/utils/*.test.mjs && tsc --noEmit && expo lint",
     "export:web": "expo export --platform web"
   },
-  "private": true
+  "private": true,
+  "patchedDependencies": {
+    "@expo/ui@57.0.9": "patches/@expo%2Fui@57.0.9.patch"
+  },
+  "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-ui"
+        ]
+      }
+    }
+  }
 }

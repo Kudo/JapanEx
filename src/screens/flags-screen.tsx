@@ -10,6 +10,7 @@ import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
 import { REGION_CODES, type ExperienceLevel, type RegionCode } from '@/data/types';
+import { getBoundedContentWidth } from '@/utils/layout';
 import { REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
@@ -17,6 +18,7 @@ export function FlagsScreen() {
   const theme = useAppTheme();
   const { state } = useTracker();
   const { width } = useWindowDimensions();
+  const contentWidth = getBoundedContentWidth(width, 980);
   const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');
@@ -48,7 +50,7 @@ export function FlagsScreen() {
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[styles.content, { width: contentWidth }]}
         ItemSeparatorComponent={FlagCardSeparator}
         ListHeaderComponent={
           <View
@@ -92,7 +94,7 @@ export function FlagsScreen() {
               seedColor={theme.accent}
               style={styles.filterHost}
             >
-              <Row alignment="center" spacing={12} style={{ width: '100%' }}>
+              <Row style={{ width: '100%' }} alignment="center" spacing={12}>
                 <Picker
                   selectedValue={region}
                   onValueChange={(value) => setRegion(value as typeof region)}
@@ -201,15 +203,13 @@ function FlagCardSeparator() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: {
-    width: '100%',
-    maxWidth: 980,
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 14,
     paddingBottom: 54,
   },
   columnWrapper: { gap: 14 },
-  filterHost: { width: '100%' },
+  filterHost: { alignSelf: 'stretch' },
   filterPanel: {
     borderWidth: 1,
     borderRadius: 26,
@@ -250,12 +250,12 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   listFlagFrame: { width: 132, height: 90 },
-  gridFlagFrame: { width: '100%', height: 142 },
-  flag: { width: '100%', height: '100%' },
+  gridFlagFrame: { alignSelf: 'stretch', height: 142 },
+  flag: { flex: 1 },
   cardBody: { flex: 1, alignItems: 'flex-start', gap: 5 },
   nameRow: {
     paddingTop: 8,
-    width: '100%',
+    alignSelf: 'stretch',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
