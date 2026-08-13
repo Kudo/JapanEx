@@ -100,12 +100,15 @@ function ReadySettingsScreen() {
             value={nameValue}
             onChangeText={setDisplayName}
             placeholder={t(state.locale, 'optionalName')}
+            placeholderTextColor={theme.secondaryText}
             maxLength={40}
             autoCapitalize="words"
+            textStyle={{ color: theme.text, fontSize: 16, lineHeight: 20 }}
             style={{
               width: '100%',
               height: 48,
               paddingHorizontal: 14,
+              paddingVertical: 13,
               backgroundColor: theme.surface,
               borderColor: theme.border,
               borderWidth: 1,
