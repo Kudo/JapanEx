@@ -1,4 +1,4 @@
-import { Host, Picker, Row, Spacer, TextInput, useNativeState } from '@expo/ui';
+import { Host, Picker, TextInput, useNativeState } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
@@ -90,12 +90,12 @@ export function FlagsScreen() {
                 />
               </Host>
             ) : null}
-            <Host
-              matchContents={{ vertical: true }}
-              seedColor={theme.accent}
-              style={styles.filterHost}
-            >
-              <Row style={{ width: '100%' }} alignment="center" spacing={12}>
+            <View style={styles.filterControls}>
+              <Host
+                matchContents={{ vertical: true }}
+                seedColor={theme.accent}
+                style={styles.filterControlHost}
+              >
                 <Picker
                   selectedValue={region}
                   onValueChange={(value) => setRegion(value as typeof region)}
@@ -110,7 +110,12 @@ export function FlagsScreen() {
                     />
                   ))}
                 </Picker>
-                <Spacer flexible />
+              </Host>
+              <Host
+                matchContents={{ vertical: true }}
+                seedColor={theme.accent}
+                style={styles.filterControlHost}
+              >
                 <Picker
                   selectedValue={level}
                   onValueChange={(value) => setLevel(value as typeof level)}
@@ -125,8 +130,8 @@ export function FlagsScreen() {
                     />
                   ))}
                 </Picker>
-              </Row>
-            </Host>
+              </Host>
+            </View>
           </View>
         }
         ListEmptyComponent={
@@ -211,6 +216,15 @@ const styles = StyleSheet.create({
   },
   columnWrapper: { gap: 14 },
   filterHost: { alignSelf: 'stretch' },
+  filterControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  filterControlHost: {
+    flex: 1,
+    minWidth: 0,
+  },
   filterPanel: {
     borderWidth: 1,
     borderRadius: 26,
