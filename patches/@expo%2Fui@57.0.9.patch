@@ -1,8 +1,8 @@
 diff --git a/android/src/main/java/expo/modules/ui/ComposeViews.kt b/android/src/main/java/expo/modules/ui/ComposeViews.kt
-index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049079274d2 100644
+index 966015e0899c8a50a4f90e8b20ace7cc173185b0..066535fba5b841b05bd483b4c8b517b82a987387 100644
 --- a/android/src/main/java/expo/modules/ui/ComposeViews.kt
 +++ b/android/src/main/java/expo/modules/ui/ComposeViews.kt
-@@ -4,14 +4,13 @@ package expo.modules.ui
+@@ -4,17 +4,24 @@ package expo.modules.ui
  
  import androidx.compose.foundation.layout.Arrangement
  import androidx.compose.foundation.layout.Box
@@ -15,10 +15,29 @@ index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049
  import androidx.compose.material3.FloatingToolbarExitDirection
  import androidx.compose.runtime.Composable
 +import androidx.compose.runtime.CompositionLocalProvider
++import androidx.compose.runtime.compositionLocalOf
  import androidx.compose.ui.Alignment
  import androidx.compose.ui.Modifier
  import androidx.compose.ui.input.nestedscroll.nestedScroll
-@@ -60,14 +59,14 @@ internal fun FunctionalComposableScope.RowContent(props: LayoutProps) {
++import androidx.compose.ui.layout.Layout
++import androidx.compose.ui.layout.Measurable
++import androidx.compose.ui.layout.MeasureScope
++import androidx.compose.ui.layout.Placeable
++import androidx.compose.ui.unit.Constraints
++import androidx.compose.ui.unit.constrainHeight
++import androidx.compose.ui.unit.constrainWidth
+ import expo.modules.kotlin.types.Enumerable
+ import expo.modules.kotlin.views.ComposeProps
+ import expo.modules.kotlin.views.FunctionalComposableScope
+@@ -25,6 +32,7 @@ import expo.modules.ui.convertibles.ContentAlignment
+ import expo.modules.ui.convertibles.VerticalArrangement
+ import expo.modules.ui.convertibles.toComposeArrangement
+ import expo.modules.kotlin.views.OptimizedComposeProps
++import kotlin.math.roundToInt
+ 
+ enum class FloatingToolbarExitAlwaysScrollBehavior(val value: String) : Enumerable {
+   TOP("top"),
+@@ -60,14 +68,14 @@ internal fun FunctionalComposableScope.RowContent(props: LayoutProps) {
      ?.let {
        FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = it)
      }
@@ -35,7 +54,7 @@ index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049
    }
  }
  
-@@ -79,7 +78,9 @@ internal fun FunctionalComposableScope.FlowRowContent(props: LayoutProps) {
+@@ -79,7 +87,9 @@ internal fun FunctionalComposableScope.FlowRowContent(props: LayoutProps) {
      modifier = ModifierRegistry
        .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
    ) {
@@ -46,7 +65,7 @@ index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049
    }
  }
  
-@@ -90,14 +91,14 @@ internal fun FunctionalComposableScope.ColumnContent(props: LayoutProps) {
+@@ -90,14 +100,14 @@ internal fun FunctionalComposableScope.ColumnContent(props: LayoutProps) {
      ?.let {
        FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = it)
      }
@@ -63,7 +82,7 @@ index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049
    }
  }
  
-@@ -114,6 +115,8 @@ fun FunctionalComposableScope.BoxContent(props: LayoutProps) {
+@@ -114,6 +124,223 @@ fun FunctionalComposableScope.BoxContent(props: LayoutProps) {
        .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
        .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior) else Modifier)
    ) {
@@ -71,221 +90,8 @@ index 966015e0899c8a50a4f90e8b20ace7cc173185b0..c92ffda2861b048825ba54709c611049
 +    CompositionLocalProvider(LocalUniversalStackAxis provides null) {
 +      Children(UIComposableScope(boxScope = this@Box, nestedScrollConnection = scrollBehavior))
 +    }
-   }
- }
-diff --git a/android/src/main/java/expo/modules/ui/HostView.kt b/android/src/main/java/expo/modules/ui/HostView.kt
-index 3b6258da2d39ac2239041b0c8f6f6308bc2a087a..10888a6e7fb5fcdd3801c45f9b8d92f4febcc983 100644
---- a/android/src/main/java/expo/modules/ui/HostView.kt
-+++ b/android/src/main/java/expo/modules/ui/HostView.kt
-@@ -179,7 +179,15 @@ internal class HostView(context: Context, appContext: AppContext) :
-           constraints.maxHeight
-         }
-       )
--      val placeables = measurables.map { it.measure(boundedConstraints) }
-+      val definiteWidth = boundedConstraints.maxWidth.takeIf {
-+        it != Constraints.Infinity && (boundedConstraints.minWidth == it || useViewportSizeMeasurement)
-+      }
-+      val definiteHeight = boundedConstraints.maxHeight.takeIf {
-+        it != Constraints.Infinity && (boundedConstraints.minHeight == it || useViewportSizeMeasurement)
-+      }
-+      val placeables = measurables.map {
-+        measureUniversalChild(it, boundedConstraints, definiteWidth, definiteHeight)
-+      }
- 
-       val contentWidthPx = placeables.maxOfOrNull { it.width } ?: 0
-       val contentHeightPx = placeables.maxOfOrNull { it.height } ?: 0
-diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-index d442c5e1d253ffd816c07dc9b9818e52c176b391..1253223f443da3d52b3bfec4de09a546324cc914 100644
---- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-+++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
-@@ -61,11 +61,15 @@ import androidx.compose.ui.layout.onGloballyPositioned
- import androidx.compose.ui.layout.onSizeChanged
- import androidx.compose.ui.layout.onVisibilityChanged
- import androidx.compose.ui.layout.positionInWindow
-+import androidx.compose.ui.node.ModifierNodeElement
-+import androidx.compose.ui.node.ParentDataModifierNode
- import androidx.compose.ui.platform.LocalDensity
-+import androidx.compose.ui.platform.InspectorInfo
- import androidx.compose.ui.semantics.Role
- import androidx.compose.ui.semantics.contentType
- import androidx.compose.ui.semantics.semantics
- import androidx.compose.ui.unit.DpOffset
-+import androidx.compose.ui.unit.Density
- import androidx.compose.ui.unit.dp
- import androidx.compose.ui.zIndex
- import expo.modules.kotlin.AppContext
-@@ -131,6 +135,83 @@ internal data class HeightParams(
-   @Field val height: Int = 0
- ) : Record
- 
-+@OptimizedRecord
-+internal data class UniversalLayoutParams(
-+  @Field val widthPoints: Double? = null,
-+  @Field val widthFraction: Double? = null,
-+  @Field val heightPoints: Double? = null,
-+  @Field val heightFraction: Double? = null
-+) : Record
-+
-+internal data class UniversalLayoutDimensions(
-+  val widthPoints: Float? = null,
-+  val widthFraction: Float? = null,
-+  val heightPoints: Float? = null,
-+  val heightFraction: Float? = null
-+)
-+
-+private data class UniversalLayoutElement(
-+  val dimensions: UniversalLayoutDimensions
-+) : ModifierNodeElement<UniversalLayoutNode>() {
-+  override fun create() = UniversalLayoutNode(dimensions)
-+
-+  override fun update(node: UniversalLayoutNode) {
-+    node.dimensions = dimensions
-+  }
-+
-+  override fun InspectorInfo.inspectableProperties() {
-+    name = "universalLayout"
-+    properties["dimensions"] = dimensions
 +  }
 +}
-+
-+private class UniversalLayoutNode(
-+  var dimensions: UniversalLayoutDimensions
-+) : Modifier.Node(), ParentDataModifierNode {
-+  override fun Density.modifyParentData(parentData: Any?): Any =
-+    parentData.asUniversalLayoutParentData().copy(dimensions = dimensions)
-+}
-+
-+private data class UniversalWeightElement(val weight: Float) : ModifierNodeElement<UniversalWeightNode>() {
-+  override fun create() = UniversalWeightNode(weight)
-+  override fun update(node: UniversalWeightNode) { node.weight = weight }
-+  override fun InspectorInfo.inspectableProperties() {
-+    name = "universalWeight"
-+    properties["weight"] = weight
-+  }
-+}
-+
-+private class UniversalWeightNode(var weight: Float) : Modifier.Node(), ParentDataModifierNode {
-+  override fun Density.modifyParentData(parentData: Any?): Any =
-+    parentData.asUniversalLayoutParentData().copy(weight = weight)
-+}
-+
-+private data class UniversalAlignElement(
-+  val horizontal: androidx.compose.ui.Alignment.Horizontal? = null,
-+  val vertical: androidx.compose.ui.Alignment.Vertical? = null
-+) : ModifierNodeElement<UniversalAlignNode>() {
-+  override fun create() = UniversalAlignNode(horizontal, vertical)
-+  override fun update(node: UniversalAlignNode) {
-+    node.horizontal = horizontal
-+    node.vertical = vertical
-+  }
-+  override fun InspectorInfo.inspectableProperties() { name = "universalAlign" }
-+}
-+
-+private class UniversalAlignNode(
-+  var horizontal: androidx.compose.ui.Alignment.Horizontal?,
-+  var vertical: androidx.compose.ui.Alignment.Vertical?
-+) : Modifier.Node(), ParentDataModifierNode {
-+  override fun Density.modifyParentData(parentData: Any?): Any =
-+    parentData.asUniversalLayoutParentData().copy(
-+      horizontalAlignment = horizontal,
-+      verticalAlignment = vertical
-+    )
-+}
-+
-+private fun Double?.validatedUniversalDimension(): Float? =
-+  this?.toFloat()?.takeIf { it.isFinite() && it >= 0 }
-+
- @OptimizedRecord
- internal data class WrapContentWidthParams(
-   @Field val alignment: AlignmentType? = null
-@@ -461,6 +542,17 @@ object ModifierRegistry {
-       Modifier.height(params.height.dp)
-     }
- 
-+    register("universalLayout") { map, _, _, _ ->
-+      val params = recordFromMap<UniversalLayoutParams>(map)
-+      val dimensions = UniversalLayoutDimensions(
-+        widthPoints = params.widthPoints.validatedUniversalDimension(),
-+        widthFraction = params.widthFraction.validatedUniversalDimension(),
-+        heightPoints = params.heightPoints.validatedUniversalDimension(),
-+        heightFraction = params.heightFraction.validatedUniversalDimension()
-+      )
-+      Modifier.then(UniversalLayoutElement(dimensions))
-+    }
-+
-     register("defaultMinSize") { map, _, _, _ ->
-       val params = recordFromMap<DefaultMinSizeParams>(map)
-       Modifier.defaultMinSize(
-@@ -623,22 +715,34 @@ object ModifierRegistry {
-     // Scope-dependent modifiers
-     register("weight") { map, scope, _, _ ->
-       val params = recordFromMap<WeightParams>(map)
--      scope?.rowScope?.run {
--        Modifier.weight(params.weight)
--      } ?: scope?.columnScope?.run {
--        Modifier.weight(params.weight)
--      } ?: Modifier
-+      when (LocalUniversalStackAxis.current) {
-+        UniversalStackAxis.Horizontal, UniversalStackAxis.Vertical ->
-+          Modifier.then(UniversalWeightElement(params.weight))
-+        null -> scope?.rowScope?.run {
-+          Modifier.weight(params.weight)
-+        } ?: scope?.columnScope?.run {
-+          Modifier.weight(params.weight)
-+        } ?: Modifier
-+      }
-     }
- 
-     register("align") { map, scope, _, _ ->
-       val params = recordFromMap<AlignParams>(map)
--      scope?.boxScope?.run {
--        params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
--      } ?: scope?.rowScope?.run {
--        params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
--      } ?: scope?.columnScope?.run {
--        params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
--      } ?: Modifier
-+      when (LocalUniversalStackAxis.current) {
-+        UniversalStackAxis.Horizontal -> Modifier.then(
-+          UniversalAlignElement(vertical = params.alignment?.toVerticalAlignment())
-+        )
-+        UniversalStackAxis.Vertical -> Modifier.then(
-+          UniversalAlignElement(horizontal = params.alignment?.toHorizontalAlignment())
-+        )
-+        null -> scope?.boxScope?.run {
-+          params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
-+        } ?: scope?.rowScope?.run {
-+          params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
-+        } ?: scope?.columnScope?.run {
-+          params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
-+        } ?: Modifier
-+      }
-     }
- 
-     register("matchParentSize") { _, scope, _, _ ->
-diff --git a/node_modules/@expo/ui/android/src/main/java/expo/modules/ui/UniversalLayout.kt b/android/src/main/java/expo/modules/ui/UniversalLayout.kt
-new file mode 100644
-index 0000000000000000000000000000000000000000..5959651f34193bc363df8f53c8fed96a8a026aa0
---- /dev/null
-+++ b/android/src/main/java/expo/modules/ui/UniversalLayout.kt
-@@ -0,0 +1,232 @@
-+package expo.modules.ui
-+
-+import androidx.compose.foundation.layout.Arrangement
-+import androidx.compose.runtime.Composable
-+import androidx.compose.runtime.CompositionLocalProvider
-+import androidx.compose.runtime.compositionLocalOf
-+import androidx.compose.ui.Alignment
-+import androidx.compose.ui.Modifier
-+import androidx.compose.ui.layout.Layout
-+import androidx.compose.ui.layout.Measurable
-+import androidx.compose.ui.layout.MeasureScope
-+import androidx.compose.ui.layout.Placeable
-+import androidx.compose.ui.unit.Constraints
-+import androidx.compose.ui.unit.constrainHeight
-+import androidx.compose.ui.unit.constrainWidth
-+import kotlin.math.roundToInt
-+
 +internal enum class UniversalStackAxis {
 +  Horizontal,
 +  Vertical
@@ -499,10 +305,200 @@ index 0000000000000000000000000000000000000000..5959651f34193bc363df8f53c8fed96a
 +        placeable.place(alignment.align(placeable.width, width, layoutDirection), positions[index])
 +      }
 +    }
+   }
+ }
+diff --git a/android/src/main/java/expo/modules/ui/HostView.kt b/android/src/main/java/expo/modules/ui/HostView.kt
+index 3b6258da2d39ac2239041b0c8f6f6308bc2a087a..10888a6e7fb5fcdd3801c45f9b8d92f4febcc983 100644
+--- a/android/src/main/java/expo/modules/ui/HostView.kt
++++ b/android/src/main/java/expo/modules/ui/HostView.kt
+@@ -179,7 +179,15 @@ internal class HostView(context: Context, appContext: AppContext) :
+           constraints.maxHeight
+         }
+       )
+-      val placeables = measurables.map { it.measure(boundedConstraints) }
++      val definiteWidth = boundedConstraints.maxWidth.takeIf {
++        it != Constraints.Infinity && (boundedConstraints.minWidth == it || useViewportSizeMeasurement)
++      }
++      val definiteHeight = boundedConstraints.maxHeight.takeIf {
++        it != Constraints.Infinity && (boundedConstraints.minHeight == it || useViewportSizeMeasurement)
++      }
++      val placeables = measurables.map {
++        measureUniversalChild(it, boundedConstraints, definiteWidth, definiteHeight)
++      }
+ 
+       val contentWidthPx = placeables.maxOfOrNull { it.width } ?: 0
+       val contentHeightPx = placeables.maxOfOrNull { it.height } ?: 0
+diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+index d442c5e1d253ffd816c07dc9b9818e52c176b391..1253223f443da3d52b3bfec4de09a546324cc914 100644
+--- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
++++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+@@ -61,11 +61,15 @@ import androidx.compose.ui.layout.onGloballyPositioned
+ import androidx.compose.ui.layout.onSizeChanged
+ import androidx.compose.ui.layout.onVisibilityChanged
+ import androidx.compose.ui.layout.positionInWindow
++import androidx.compose.ui.node.ModifierNodeElement
++import androidx.compose.ui.node.ParentDataModifierNode
+ import androidx.compose.ui.platform.LocalDensity
++import androidx.compose.ui.platform.InspectorInfo
+ import androidx.compose.ui.semantics.Role
+ import androidx.compose.ui.semantics.contentType
+ import androidx.compose.ui.semantics.semantics
+ import androidx.compose.ui.unit.DpOffset
++import androidx.compose.ui.unit.Density
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.zIndex
+ import expo.modules.kotlin.AppContext
+@@ -131,6 +135,83 @@ internal data class HeightParams(
+   @Field val height: Int = 0
+ ) : Record
+ 
++@OptimizedRecord
++internal data class UniversalLayoutParams(
++  @Field val widthPoints: Double? = null,
++  @Field val widthFraction: Double? = null,
++  @Field val heightPoints: Double? = null,
++  @Field val heightFraction: Double? = null
++) : Record
++
++internal data class UniversalLayoutDimensions(
++  val widthPoints: Float? = null,
++  val widthFraction: Float? = null,
++  val heightPoints: Float? = null,
++  val heightFraction: Float? = null
++)
++
++private data class UniversalLayoutElement(
++  val dimensions: UniversalLayoutDimensions
++) : ModifierNodeElement<UniversalLayoutNode>() {
++  override fun create() = UniversalLayoutNode(dimensions)
++
++  override fun update(node: UniversalLayoutNode) {
++    node.dimensions = dimensions
++  }
++
++  override fun InspectorInfo.inspectableProperties() {
++    name = "universalLayout"
++    properties["dimensions"] = dimensions
 +  }
 +}
++
++private class UniversalLayoutNode(
++  var dimensions: UniversalLayoutDimensions
++) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(dimensions = dimensions)
++}
++
++private data class UniversalWeightElement(val weight: Float) : ModifierNodeElement<UniversalWeightNode>() {
++  override fun create() = UniversalWeightNode(weight)
++  override fun update(node: UniversalWeightNode) { node.weight = weight }
++  override fun InspectorInfo.inspectableProperties() {
++    name = "universalWeight"
++    properties["weight"] = weight
++  }
++}
++
++private class UniversalWeightNode(var weight: Float) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(weight = weight)
++}
++
++private data class UniversalAlignElement(
++  val horizontal: androidx.compose.ui.Alignment.Horizontal? = null,
++  val vertical: androidx.compose.ui.Alignment.Vertical? = null
++) : ModifierNodeElement<UniversalAlignNode>() {
++  override fun create() = UniversalAlignNode(horizontal, vertical)
++  override fun update(node: UniversalAlignNode) {
++    node.horizontal = horizontal
++    node.vertical = vertical
++  }
++  override fun InspectorInfo.inspectableProperties() { name = "universalAlign" }
++}
++
++private class UniversalAlignNode(
++  var horizontal: androidx.compose.ui.Alignment.Horizontal?,
++  var vertical: androidx.compose.ui.Alignment.Vertical?
++) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(
++      horizontalAlignment = horizontal,
++      verticalAlignment = vertical
++    )
++}
++
++private fun Double?.validatedUniversalDimension(): Float? =
++  this?.toFloat()?.takeIf { it.isFinite() && it >= 0 }
++
+ @OptimizedRecord
+ internal data class WrapContentWidthParams(
+   @Field val alignment: AlignmentType? = null
+@@ -461,6 +542,17 @@ object ModifierRegistry {
+       Modifier.height(params.height.dp)
+     }
+ 
++    register("universalLayout") { map, _, _, _ ->
++      val params = recordFromMap<UniversalLayoutParams>(map)
++      val dimensions = UniversalLayoutDimensions(
++        widthPoints = params.widthPoints.validatedUniversalDimension(),
++        widthFraction = params.widthFraction.validatedUniversalDimension(),
++        heightPoints = params.heightPoints.validatedUniversalDimension(),
++        heightFraction = params.heightFraction.validatedUniversalDimension()
++      )
++      Modifier.then(UniversalLayoutElement(dimensions))
++    }
++
+     register("defaultMinSize") { map, _, _, _ ->
+       val params = recordFromMap<DefaultMinSizeParams>(map)
+       Modifier.defaultMinSize(
+@@ -623,22 +715,34 @@ object ModifierRegistry {
+     // Scope-dependent modifiers
+     register("weight") { map, scope, _, _ ->
+       val params = recordFromMap<WeightParams>(map)
+-      scope?.rowScope?.run {
+-        Modifier.weight(params.weight)
+-      } ?: scope?.columnScope?.run {
+-        Modifier.weight(params.weight)
+-      } ?: Modifier
++      when (LocalUniversalStackAxis.current) {
++        UniversalStackAxis.Horizontal, UniversalStackAxis.Vertical ->
++          Modifier.then(UniversalWeightElement(params.weight))
++        null -> scope?.rowScope?.run {
++          Modifier.weight(params.weight)
++        } ?: scope?.columnScope?.run {
++          Modifier.weight(params.weight)
++        } ?: Modifier
++      }
+     }
+ 
+     register("align") { map, scope, _, _ ->
+       val params = recordFromMap<AlignParams>(map)
+-      scope?.boxScope?.run {
+-        params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: scope?.rowScope?.run {
+-        params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: scope?.columnScope?.run {
+-        params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: Modifier
++      when (LocalUniversalStackAxis.current) {
++        UniversalStackAxis.Horizontal -> Modifier.then(
++          UniversalAlignElement(vertical = params.alignment?.toVerticalAlignment())
++        )
++        UniversalStackAxis.Vertical -> Modifier.then(
++          UniversalAlignElement(horizontal = params.alignment?.toHorizontalAlignment())
++        )
++        null -> scope?.boxScope?.run {
++          params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: scope?.rowScope?.run {
++          params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: scope?.columnScope?.run {
++          params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: Modifier
++      }
+     }
+ 
+     register("matchParentSize") { _, scope, _, _ ->
 diff --git a/build/universal/transformStyle.android.d.ts b/build/universal/transformStyle.android.d.ts
-index a33eded8e5184bd2fc3ed91e5a4d391faee344fe..f88eff5cc63792348629028c66d157d31488f6ce 100644
+index a33eded8e5184bd2fc3ed91e5a4d391faee344fe..59fe8f21d66ca9b17307edeae407bdda24f264fe 100644
 --- a/build/universal/transformStyle.android.d.ts
 +++ b/build/universal/transformStyle.android.d.ts
 @@ -12,5 +12,7 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
@@ -510,15 +506,13 @@ index a33eded8e5184bd2fc3ed91e5a4d391faee344fe..f88eff5cc63792348629028c66d157d3
   * `$type`, so the escape hatch can override anything derived from props.
   */
 -export declare function transformToModifiers(style: UniversalStyle | undefined, props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>, extraModifiers?: ModifierConfig[]): ModifierConfig[];
--//# sourceMappingURL=transformStyle.android.d.ts.map
-\ No newline at end of file
 +export declare function transformToModifiers(style: UniversalStyle | undefined, props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>, extraModifiers?: ModifierConfig[], options?: {
 +    componentName?: string;
 +}): ModifierConfig[];
-+//# sourceMappingURL=transformStyle.android.d.ts.map
+ //# sourceMappingURL=transformStyle.android.d.ts.map
 \ No newline at end of file
 diff --git a/build/universal/transformStyle.ios.d.ts b/build/universal/transformStyle.ios.d.ts
-index 735efb8dc8b16ffbc3d89b44d775ed9d1ed6f39d..d86467492f0f90b8f12307c9bc3d019d9bc17620 100644
+index 735efb8dc8b16ffbc3d89b44d775ed9d1ed6f39d..5c2aa96ca24f07c2386a52400a185981cca6eee4 100644
 --- a/build/universal/transformStyle.ios.d.ts
 +++ b/build/universal/transformStyle.ios.d.ts
 @@ -14,6 +14,8 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
@@ -531,7 +525,7 @@ index 735efb8dc8b16ffbc3d89b44d775ed9d1ed6f39d..d86467492f0f90b8f12307c9bc3d019d
      frameAlignment?: Parameters<typeof frame>[0]['alignment'];
      /** Text-styling props for text-rendering components. */
 diff --git a/build/universal/types.d.ts b/build/universal/types.d.ts
-index fa05884333f3abe52bd548a24933c3c473c8a395..988859d0b097d4a44ae96ebf6c3b1f69184d4009 100644
+index fa05884333f3abe52bd548a24933c3c473c8a395..ee92553da0ad1b10429a9649401caf8cf0cf0503 100644
 --- a/build/universal/types.d.ts
 +++ b/build/universal/types.d.ts
 @@ -5,7 +5,13 @@ import type { ModifierConfig } from '../types';
@@ -1268,10 +1262,10 @@ index 1859c88c1e8c894357a9ca9ecc328fadf4cc483a..3bf350072ce375a0477d7faa4f0a3e6d
    if (editable === false) modifiers.push(disabledMod(true));
    if (keyboardType) modifiers.push(keyboardTypeMod(mapKeyboardType(keyboardType)));
 diff --git a/src/universal/modifierUtils.ts b/src/universal/modifierUtils.ts
-index f7fc7a177a8c9715aa24873ebea2d9fd940b3082..1b77946f99ba8f1bdcf05501acc34a97303b75d1 100644
+index f7fc7a177a8c9715aa24873ebea2d9fd940b3082..7161d58319c7d7986545865bedea728e98972f19 100644
 --- a/src/universal/modifierUtils.ts
 +++ b/src/universal/modifierUtils.ts
-@@ -13,11 +13,14 @@ import type { ModifierConfig } from '../types';
+@@ -13,11 +13,177 @@ import type { ModifierConfig } from '../types';
   */
  export function omitUserOverridden<T extends { $type: string }>(
    derived: T[],
@@ -1287,356 +1281,7 @@ index f7fc7a177a8c9715aa24873ebea2d9fd940b3082..1b77946f99ba8f1bdcf05501acc34a97
 +  return derived.filter(
 +    (modifier) => preservedTypes?.has(modifier.$type) || !userTypes.has(modifier.$type)
 +  );
- }
-diff --git a/src/universal/transformStyle.android.ts b/src/universal/transformStyle.android.ts
-index f73443a33e101375850fded8167027f1381bef28..ff7a10f0783c8eb9ec70a02cdf9184d860b5b56b 100644
---- a/src/universal/transformStyle.android.ts
-+++ b/src/universal/transformStyle.android.ts
-@@ -16,6 +16,11 @@ import {
- 
- import { omitUserOverridden } from './modifierUtils';
- import type { UniversalBaseProps, UniversalStyle } from './types';
-+import {
-+  createUniversalLayoutModifier,
-+  omitUserOverriddenDimensions,
-+  serializeUniversalDimensions,
-+} from './universalDimension';
- 
- /**
-  * Converts universal style/event/lifecycle/behavior props into a Jetpack
-@@ -32,20 +37,31 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
- export function transformToModifiers(
-   style: UniversalStyle | undefined,
-   props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>,
--  extraModifiers?: ModifierConfig[]
-+  extraModifiers?: ModifierConfig[],
-+  options?: { componentName?: string }
- ): ModifierConfig[] {
-   let mods: ModifierConfig[] = [];
-+  const dimensions = omitUserOverriddenDimensions(
-+    serializeUniversalDimensions(style, options?.componentName),
-+    extraModifiers,
-+    'android'
-+  );
-+  const fixedWidth = dimensions.widthPoints;
-+  const fixedHeight = dimensions.heightPoints;
-+  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
- 
--  if (style) {
--    // Sizing (outermost)
--    if (style.width != null && style.height != null) {
--      mods.push(size(style.width as number, style.height as number));
--    } else if (style.width != null) {
--      mods.push(width(style.width as number));
--    } else if (style.height != null) {
--      mods.push(height(style.height as number));
--    }
-+  if (universalLayoutModifier) mods.push(universalLayoutModifier);
- 
-+  // Fixed sizing is applied directly. Percentages remain as parent data for
-+  // the owning universal layout to resolve against its content box.
-+  if (fixedWidth != null && fixedHeight != null) {
-+    mods.push(size(fixedWidth, fixedHeight));
-+  } else {
-+    if (fixedWidth != null) mods.push(width(fixedWidth));
-+    if (fixedHeight != null) mods.push(height(fixedHeight));
-+  }
-+
-+  if (style) {
-     // Border + background + borderRadius handling.
-     // Compose's border() doesn't accept a shape, so when borderRadius is set
-     // alongside border, we simulate a rounded border using layered backgrounds:
-diff --git a/src/universal/transformStyle.ios.ts b/src/universal/transformStyle.ios.ts
-index 11dfa66af717cf7da3ef04cb86d144a94398e5cc..de0b16c58f8bf517ee25987743301518f9685538 100644
---- a/src/universal/transformStyle.ios.ts
-+++ b/src/universal/transformStyle.ios.ts
-@@ -21,6 +21,11 @@ import {
- import type { UniversalTextStyle } from './Text/types';
- import { omitUserOverridden } from './modifierUtils';
- import type { UniversalBaseProps, UniversalStyle } from './types';
-+import {
-+  createUniversalLayoutModifier,
-+  omitUserOverriddenDimensions,
-+  serializeUniversalDimensions,
-+} from './universalDimension';
- 
- const FONT_WEIGHT_MAP: Record<string, Parameters<typeof font>[0]['weight']> = {
-   '100': 'ultraLight',
-@@ -52,10 +57,17 @@ export function transformToModifiers(
-   style: UniversalStyle | undefined,
-   props: Pick<
-     UniversalBaseProps,
--    'onPress' | 'onAppear' | 'onDisappear' | 'disabled' | 'hidden' | 'testID'
-+    | 'onPress'
-+    | 'onAppear'
-+    | 'onDisappear'
-+    | 'disabled'
-+    | 'hidden'
-+    | 'testID'
-   >,
-   extraModifiers?: ModifierConfig[],
-   options?: {
-+    /** Component name included in invalid-dimension development warnings. */
-+    componentName?: string;
-     /** Alignment for the frame modifier (used by Column/Row). */
-     frameAlignment?: Parameters<typeof frame>[0]['alignment'];
-     /** Text-styling props for text-rendering components. */
-@@ -63,6 +75,13 @@ export function transformToModifiers(
-   }
- ): ModifierConfig[] {
-   let mods: ModifierConfig[] = [];
-+  const dimensions = omitUserOverriddenDimensions(
-+    serializeUniversalDimensions(style, options?.componentName),
-+    extraModifiers,
-+    'ios'
-+  );
-+  const fixedWidth = dimensions.widthPoints;
-+  const fixedHeight = dimensions.heightPoints;
- 
-   // Text styling (innermost — applies to text content before container modifiers)
-   const textStyle = options?.textStyle;
-@@ -117,18 +136,24 @@ export function transformToModifiers(
-         })
-       );
-     }
-+  }
- 
--    // Sizing (before background so background fills the frame)
--    if (style.width != null || style.height != null) {
--      mods.push(
--        frame({
--          width: style.width as number | undefined,
--          height: style.height as number | undefined,
--          alignment: options?.frameAlignment,
--        })
--      );
--    }
-+  // Fixed sizing is applied directly. Percentages remain as layout values for
-+  // the owning universal layout to resolve against its content box.
-+  if (fixedWidth != null || fixedHeight != null) {
-+    mods.push(
-+      frame({
-+        width: fixedWidth,
-+        height: fixedHeight,
-+        alignment: options?.frameAlignment,
-+      })
-+    );
-+  }
- 
-+  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
-+  if (universalLayoutModifier) mods.push(universalLayoutModifier);
-+
-+  if (style) {
-     // Background (fills the frame area including padding)
-     if (style.backgroundColor) {
-       mods.push(background(String(style.backgroundColor)));
-@@ -152,7 +177,9 @@ export function transformToModifiers(
- 
-   // A user-supplied modifier replaces any style-derived modifier of the same
-   // type. The event, lifecycle, and behavior modifiers below are never dropped.
--  mods = omitUserOverridden(mods, extraModifiers);
-+  // Axis-aware sizing precedence has already removed only the dimensions set
-+  // by a user frame. Preserve any derived frame that still owns the other axis.
-+  mods = omitUserOverridden(mods, extraModifiers, new Set(['frame', 'universalLayout']));
- 
-   // Events
-   if (props.onPress) mods.push(onTapGesture(props.onPress));
-diff --git a/src/universal/types.ts b/src/universal/types.ts
-index 446a1a00a2f0cbbdb05ea32cfdf58bb00ab51c42..5cd15bc61f3a55ec263456f01e83d26d8e648017 100644
---- a/src/universal/types.ts
-+++ b/src/universal/types.ts
-@@ -1,6 +1,9 @@
- import type { ViewStyle } from 'react-native';
- 
- import type { ModifierConfig } from '../types';
-+import type { UniversalDimension } from './universalDimension';
-+
-+export type { UniversalDimension } from './universalDimension';
- 
- /**
-  * Subset of React Native `ViewStyle` that maps cleanly to both SwiftUI modifiers
-@@ -21,9 +24,12 @@ export type UniversalStyle = Pick<
-   | 'borderWidth'
-   | 'borderColor'
-   | 'opacity'
--  | 'width'
--  | 'height'
-->;
-+> & {
-+  /** Fixed logical pixels or a percentage of the immediate parent's content width. */
-+  width?: UniversalDimension;
-+  /** Fixed logical pixels or a percentage of the immediate parent's content height. */
-+  height?: UniversalDimension;
-+};
- 
- /**
-  * Base props inherited by all universal components.
-diff --git a/node_modules/@expo/ui/src/universal/universalDimension.test.mjs b/src/universal/universalDimension.test.mjs
-new file mode 100644
-index 0000000000000000000000000000000000000000..943236d506c6a0489dd6f74e06bc952aca96c9a1
---- /dev/null
-+++ b/src/universal/universalDimension.test.mjs
-@@ -0,0 +1,152 @@
-+import assert from 'node:assert/strict';
-+import { afterEach, describe, it } from 'node:test';
-+
-+import {
-+  createUniversalLayoutModifier,
-+  getUserSizingOverrides,
-+  omitUserOverriddenDimensions,
-+  resetUniversalDimensionWarningsForTests,
-+  serializeUniversalDimensions,
-+} from './universalDimension.ts';
-+
-+describe('Universal dimensions', () => {
-+  const originalWarn = console.warn;
-+
-+  afterEach(() => {
-+    console.warn = originalWarn;
-+    resetUniversalDimensionWarningsForTests();
-+    delete globalThis.__DEV__;
-+  });
-+
-+  it('should preserve fixed numeric width and height', () => {
-+    assert.deepEqual(serializeUniversalDimensions({ width: 120.5, height: 48 }), {
-+      widthPoints: 120.5,
-+      widthFraction: undefined,
-+      heightPoints: 48,
-+      heightFraction: undefined,
-+    });
-+  });
-+
-+  it('should parse supported percentage dimensions', () => {
-+    for (const [value, fraction] of [
-+      ['0%', 0],
-+      ['33.3%', 0.333],
-+      ['75%', 0.75],
-+      ['100%', 1],
-+      ['150%', 1.5],
-+    ]) {
-+      const actual = serializeUniversalDimensions({ width: value }).widthFraction;
-+      assert.ok(Math.abs(actual - fraction) < Number.EPSILON);
-+    }
-+  });
-+
-+  it('should reject invalid dimensions without serializing native values', () => {
-+    globalThis.__DEV__ = false;
-+    const invalidValues = ['auto', '20px', '-1%', ' 20%', '20% ', '', -1, NaN, Infinity];
-+
-+    for (const value of invalidValues) {
-+      assert.deepEqual(serializeUniversalDimensions({ width: value }), {
-+        widthPoints: undefined,
-+        widthFraction: undefined,
-+        heightPoints: undefined,
-+        heightFraction: undefined,
-+      });
-+    }
-+  });
-+
-+  it('should accept null dimensions as intrinsic sizing without warning', () => {
-+    globalThis.__DEV__ = true;
-+    const warnings = [];
-+    console.warn = (...arguments_) => warnings.push(arguments_);
-+
-+    assert.deepEqual(serializeUniversalDimensions({ width: null, height: null }), {
-+      widthPoints: undefined,
-+      widthFraction: undefined,
-+      heightPoints: undefined,
-+      heightFraction: undefined,
-+    });
-+    assert.equal(warnings.length, 0);
-+  });
-+
-+  it('should warn once per component axis for invalid development values', () => {
-+    globalThis.__DEV__ = true;
-+    const warnings = [];
-+    console.warn = (...arguments_) => warnings.push(arguments_);
-+
-+    serializeUniversalDimensions({ width: 'auto' }, 'Column');
-+    serializeUniversalDimensions({ width: '20px' }, 'Column');
-+    serializeUniversalDimensions({ height: Infinity }, 'Column');
-+
-+    assert.equal(warnings.length, 2);
-+    assert.match(warnings[0][0], /width on Column/);
-+    assert.match(warnings[1][0], /height on Column/);
-+  });
-+
-+  it('should not warn for invalid production values', () => {
-+    globalThis.__DEV__ = false;
-+    const warnings = [];
-+    console.warn = (...arguments_) => warnings.push(arguments_);
-+
-+    serializeUniversalDimensions({ width: '100vw' }, 'Row');
-+
-+    assert.equal(warnings.length, 0);
-+  });
-+
-+  it('should create a numeric-only private native modifier', () => {
-+    assert.deepEqual(
-+      createUniversalLayoutModifier(
-+        serializeUniversalDimensions({ width: '75%', height: 40 })
-+      ),
-+      {
-+        $type: 'universalLayout',
-+        widthPoints: undefined,
-+        widthFraction: 0.75,
-+        heightPoints: 40,
-+        heightFraction: undefined,
-+      }
-+    );
-+  });
-+
-+  it('should let Android sizing modifiers override the relevant axes', () => {
-+    const dimensions = serializeUniversalDimensions({ width: '75%', height: '50%' });
-+
-+    assert.deepEqual(
-+      omitUserOverriddenDimensions(dimensions, [{ $type: 'width', width: 20 }], 'android'),
-+      {
-+        widthPoints: undefined,
-+        widthFraction: undefined,
-+        heightPoints: undefined,
-+        heightFraction: 0.5,
-+      }
-+    );
-+    assert.deepEqual(getUserSizingOverrides([{ $type: 'size', width: 20, height: 10 }], 'android'), {
-+      width: true,
-+      height: true,
-+    });
-+  });
-+
-+  it('should let an iOS frame override only the configured axis', () => {
-+    const dimensions = serializeUniversalDimensions({ width: '75%', height: '50%' });
-+
-+    assert.deepEqual(
-+      omitUserOverriddenDimensions(dimensions, [{ $type: 'frame', maxWidth: 200 }], 'ios'),
-+      {
-+        widthPoints: undefined,
-+        widthFraction: undefined,
-+        heightPoints: undefined,
-+        heightFraction: 0.5,
-+      }
-+    );
-+  });
-+
-+  it('should treat default fixedSize and Android weight as authoritative sizing', () => {
-+    assert.deepEqual(getUserSizingOverrides([{ $type: 'fixedSize' }], 'ios'), {
-+      width: true,
-+      height: true,
-+    });
-+    assert.deepEqual(getUserSizingOverrides([{ $type: 'weight', weight: 1 }], 'android'), {
-+      width: true,
-+      height: true,
-+    });
-+  });
-+});
-diff --git a/node_modules/@expo/ui/src/universal/universalDimension.ts b/src/universal/universalDimension.ts
-new file mode 100644
-index 0000000000000000000000000000000000000000..928555421396374255b3645e3f6ebf37e16f3098
---- /dev/null
-+++ b/src/universal/universalDimension.ts
-@@ -0,0 +1,165 @@
-+import type { ModifierConfig } from '../types';
-+
++}
 +export type UniversalDimension = number | `${number}%` | null;
 +
 +export type SerializedUniversalDimensions = {
@@ -1799,4 +1444,191 @@ index 0000000000000000000000000000000000000000..928555421396374255b3645e3f6ebf37
 +
 +export function resetUniversalDimensionWarningsForTests(): void {
 +  warnedInvalidDimensions.clear();
-+}
+ }
+diff --git a/src/universal/transformStyle.android.ts b/src/universal/transformStyle.android.ts
+index f73443a33e101375850fded8167027f1381bef28..37d67a691983379764ffe97b89735ba0385aec3b 100644
+--- a/src/universal/transformStyle.android.ts
++++ b/src/universal/transformStyle.android.ts
+@@ -14,7 +14,12 @@ import {
+   type ModifierConfig,
+ } from '@expo/ui/jetpack-compose/modifiers';
+ 
+-import { omitUserOverridden } from './modifierUtils';
++import {
++  createUniversalLayoutModifier,
++  omitUserOverridden,
++  omitUserOverriddenDimensions,
++  serializeUniversalDimensions,
++} from './modifierUtils';
+ import type { UniversalBaseProps, UniversalStyle } from './types';
+ 
+ /**
+@@ -32,20 +37,31 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
+ export function transformToModifiers(
+   style: UniversalStyle | undefined,
+   props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>,
+-  extraModifiers?: ModifierConfig[]
++  extraModifiers?: ModifierConfig[],
++  options?: { componentName?: string }
+ ): ModifierConfig[] {
+   let mods: ModifierConfig[] = [];
++  const dimensions = omitUserOverriddenDimensions(
++    serializeUniversalDimensions(style, options?.componentName),
++    extraModifiers,
++    'android'
++  );
++  const fixedWidth = dimensions.widthPoints;
++  const fixedHeight = dimensions.heightPoints;
++  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
+ 
+-  if (style) {
+-    // Sizing (outermost)
+-    if (style.width != null && style.height != null) {
+-      mods.push(size(style.width as number, style.height as number));
+-    } else if (style.width != null) {
+-      mods.push(width(style.width as number));
+-    } else if (style.height != null) {
+-      mods.push(height(style.height as number));
+-    }
++  if (universalLayoutModifier) mods.push(universalLayoutModifier);
+ 
++  // Fixed sizing is applied directly. Percentages remain as parent data for
++  // the owning universal layout to resolve against its content box.
++  if (fixedWidth != null && fixedHeight != null) {
++    mods.push(size(fixedWidth, fixedHeight));
++  } else {
++    if (fixedWidth != null) mods.push(width(fixedWidth));
++    if (fixedHeight != null) mods.push(height(fixedHeight));
++  }
++
++  if (style) {
+     // Border + background + borderRadius handling.
+     // Compose's border() doesn't accept a shape, so when borderRadius is set
+     // alongside border, we simulate a rounded border using layered backgrounds:
+diff --git a/src/universal/transformStyle.ios.ts b/src/universal/transformStyle.ios.ts
+index 11dfa66af717cf7da3ef04cb86d144a94398e5cc..bc998c5754dae98d3282c689d0a1153f0d1e7546 100644
+--- a/src/universal/transformStyle.ios.ts
++++ b/src/universal/transformStyle.ios.ts
+@@ -19,7 +19,12 @@ import {
+ } from '@expo/ui/swift-ui/modifiers';
+ 
+ import type { UniversalTextStyle } from './Text/types';
+-import { omitUserOverridden } from './modifierUtils';
++import {
++  createUniversalLayoutModifier,
++  omitUserOverridden,
++  omitUserOverriddenDimensions,
++  serializeUniversalDimensions,
++} from './modifierUtils';
+ import type { UniversalBaseProps, UniversalStyle } from './types';
+ 
+ const FONT_WEIGHT_MAP: Record<string, Parameters<typeof font>[0]['weight']> = {
+@@ -52,10 +57,17 @@ export function transformToModifiers(
+   style: UniversalStyle | undefined,
+   props: Pick<
+     UniversalBaseProps,
+-    'onPress' | 'onAppear' | 'onDisappear' | 'disabled' | 'hidden' | 'testID'
++    | 'onPress'
++    | 'onAppear'
++    | 'onDisappear'
++    | 'disabled'
++    | 'hidden'
++    | 'testID'
+   >,
+   extraModifiers?: ModifierConfig[],
+   options?: {
++    /** Component name included in invalid-dimension development warnings. */
++    componentName?: string;
+     /** Alignment for the frame modifier (used by Column/Row). */
+     frameAlignment?: Parameters<typeof frame>[0]['alignment'];
+     /** Text-styling props for text-rendering components. */
+@@ -63,6 +75,13 @@ export function transformToModifiers(
+   }
+ ): ModifierConfig[] {
+   let mods: ModifierConfig[] = [];
++  const dimensions = omitUserOverriddenDimensions(
++    serializeUniversalDimensions(style, options?.componentName),
++    extraModifiers,
++    'ios'
++  );
++  const fixedWidth = dimensions.widthPoints;
++  const fixedHeight = dimensions.heightPoints;
+ 
+   // Text styling (innermost — applies to text content before container modifiers)
+   const textStyle = options?.textStyle;
+@@ -117,18 +136,24 @@ export function transformToModifiers(
+         })
+       );
+     }
++  }
+ 
+-    // Sizing (before background so background fills the frame)
+-    if (style.width != null || style.height != null) {
+-      mods.push(
+-        frame({
+-          width: style.width as number | undefined,
+-          height: style.height as number | undefined,
+-          alignment: options?.frameAlignment,
+-        })
+-      );
+-    }
++  // Fixed sizing is applied directly. Percentages remain as layout values for
++  // the owning universal layout to resolve against its content box.
++  if (fixedWidth != null || fixedHeight != null) {
++    mods.push(
++      frame({
++        width: fixedWidth,
++        height: fixedHeight,
++        alignment: options?.frameAlignment,
++      })
++    );
++  }
+ 
++  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
++  if (universalLayoutModifier) mods.push(universalLayoutModifier);
++
++  if (style) {
+     // Background (fills the frame area including padding)
+     if (style.backgroundColor) {
+       mods.push(background(String(style.backgroundColor)));
+@@ -152,7 +177,9 @@ export function transformToModifiers(
+ 
+   // A user-supplied modifier replaces any style-derived modifier of the same
+   // type. The event, lifecycle, and behavior modifiers below are never dropped.
+-  mods = omitUserOverridden(mods, extraModifiers);
++  // Axis-aware sizing precedence has already removed only the dimensions set
++  // by a user frame. Preserve any derived frame that still owns the other axis.
++  mods = omitUserOverridden(mods, extraModifiers, new Set(['frame', 'universalLayout']));
+ 
+   // Events
+   if (props.onPress) mods.push(onTapGesture(props.onPress));
+diff --git a/src/universal/types.ts b/src/universal/types.ts
+index 446a1a00a2f0cbbdb05ea32cfdf58bb00ab51c42..f8245257dc8ec910fe1e4e3505bca6aa1d157f5a 100644
+--- a/src/universal/types.ts
++++ b/src/universal/types.ts
+@@ -1,6 +1,9 @@
+ import type { ViewStyle } from 'react-native';
+ 
+ import type { ModifierConfig } from '../types';
++import type { UniversalDimension } from './modifierUtils';
++
++export type { UniversalDimension } from './modifierUtils';
+ 
+ /**
+  * Subset of React Native `ViewStyle` that maps cleanly to both SwiftUI modifiers
+@@ -21,9 +24,12 @@ export type UniversalStyle = Pick<
+   | 'borderWidth'
+   | 'borderColor'
+   | 'opacity'
+-  | 'width'
+-  | 'height'
+->;
++> & {
++  /** Fixed logical pixels or a percentage of the immediate parent's content width. */
++  width?: UniversalDimension;
++  /** Fixed logical pixels or a percentage of the immediate parent's content height. */
++  height?: UniversalDimension;
++};
+ 
+ /**
+  * Base props inherited by all universal components.
