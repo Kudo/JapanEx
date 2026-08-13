@@ -8,7 +8,7 @@ import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { useAppTheme } from '@/constants/app-theme';
 import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { buildShareUrl } from '@/utils/share-state';
@@ -38,7 +38,7 @@ export function SettingsScreen() {
 
 function ReadySettingsScreen() {
   const theme = useAppTheme();
-  const contentWidth = useBoundedContentWidth(720);
+  const contentStyle = useBoundedContentStyle(720);
   const router = useRouter();
   const { state, score, setDisplayName, setLocale, resetLevels } = useTracker();
   const nameValue = useNativeState(state.displayName);
@@ -66,7 +66,7 @@ function ReadySettingsScreen() {
       alwaysBounceVertical
       contentInsetAdjustmentBehavior="always"
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={[styles.content, { width: contentWidth }]}
+      contentContainerStyle={[styles.content, contentStyle]}
     >
       <View style={[styles.summary, { backgroundColor: theme.hero }]}>
         <View style={[styles.scoreSeal, { backgroundColor: theme.accent }]}>

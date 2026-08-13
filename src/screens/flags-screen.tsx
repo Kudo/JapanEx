@@ -2,7 +2,7 @@ import { Host, Picker, TextInput, useNativeState } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { LevelIndicator } from '@/components/level-indicator';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -10,15 +10,18 @@ import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
 import { REGION_CODES, type ExperienceLevel, type RegionCode } from '@/data/types';
-import { getBoundedContentWidth } from '@/utils/layout';
+import {
+  useBoundedContentStyle,
+  useViewportWidth,
+} from '@/hooks/use-bounded-content-width';
 import { REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
 export function FlagsScreen() {
   const theme = useAppTheme();
   const { state } = useTracker();
-  const { width } = useWindowDimensions();
-  const contentWidth = getBoundedContentWidth(width, 980);
+  const width = useViewportWidth();
+  const contentStyle = useBoundedContentStyle(980);
   const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');
@@ -51,7 +54,7 @@ export function FlagsScreen() {
         contentInsetAdjustmentBehavior="always"
         showsVerticalScrollIndicator={false}
         columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
-        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        contentContainerStyle={[styles.content, contentStyle]}
         ItemSeparatorComponent={FlagCardSeparator}
         ListHeaderComponent={
           <View

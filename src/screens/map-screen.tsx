@@ -10,7 +10,7 @@ import { ResultCard } from '@/components/result-card';
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, saveResult, shareResult } from '@/utils/result-export';
@@ -23,7 +23,7 @@ type MapScreenProps = {
 
 export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const theme = useAppTheme();
-  const contentWidth = useBoundedContentWidth(820);
+  const contentStyle = useBoundedContentStyle(820);
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');
@@ -61,7 +61,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
         alwaysBounceVertical
         contentInsetAdjustmentBehavior="always"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        contentContainerStyle={[styles.content, contentStyle]}
       >
         <TrackerSnapshot
           levels={state.levels}

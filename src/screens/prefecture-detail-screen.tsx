@@ -10,13 +10,13 @@ import { useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { isPrefectureCode, PREFECTURES_BY_CODE } from '@/data/prefectures';
 import type { ExperienceLevel } from '@/data/types';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { LEVEL_LABELS, REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
 export function PrefectureDetailScreen() {
   const theme = useAppTheme();
-  const contentWidth = useBoundedContentWidth(720);
+  const contentStyle = useBoundedContentStyle(720);
   const router = useRouter();
   const { code = '' } = useLocalSearchParams<{ code: string }>();
   const { state, setLevel } = useTracker();
@@ -51,7 +51,7 @@ export function PrefectureDetailScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        contentContainerStyle={[styles.content, contentStyle]}
       >
         <Image
           source={FLAG_ASSETS[prefecture.code]}

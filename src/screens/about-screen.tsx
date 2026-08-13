@@ -7,12 +7,12 @@ import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { PREFECTURES } from '@/data/prefectures';
 import { t } from '@/i18n/translations';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 
 export function AboutScreen() {
   const theme = useAppTheme();
-  const contentWidth = useBoundedContentWidth(760);
+  const contentStyle = useBoundedContentStyle(760);
   const { state } = useTracker();
 
   return (
@@ -21,7 +21,7 @@ export function AboutScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        contentContainerStyle={[styles.content, contentStyle]}
         data={PREFECTURES}
         keyExtractor={(item) => item.code}
         ListHeaderComponent={

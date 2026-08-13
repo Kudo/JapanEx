@@ -5,13 +5,13 @@ import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { t } from '@/i18n/translations';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 import { parseImportParams, type ImportParams } from '@/utils/share-state';
 
 export function ImportScreen() {
   const theme = useAppTheme();
-  const cardWidth = useBoundedContentWidth(620, 40);
+  const cardStyle = useBoundedContentStyle(620, 40);
   const router = useRouter();
   const params = useLocalSearchParams<ImportParams>();
   const { state, replaceState } = useTracker();
@@ -27,7 +27,8 @@ export function ImportScreen() {
         <View
           style={[
             styles.card,
-            { width: cardWidth, backgroundColor: theme.surface, borderColor: theme.border },
+            cardStyle,
+            { backgroundColor: theme.surface, borderColor: theme.border },
           ]}
         >
           {result.ok ? (

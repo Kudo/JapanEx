@@ -7,15 +7,15 @@ import { ReadOnlyPrefectureSheet } from '@/components/read-only-prefecture-sheet
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
-import { useBoundedContentWidth } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { getInitialLocale } from '@/state/tracker-state';
 import { parseSharedStateParams, type SharedStateParams } from '@/utils/share-state';
 
 export function SharedViewScreen() {
   const theme = useAppTheme();
-  const contentWidth = useBoundedContentWidth(820);
-  const errorCardWidth = Math.min(Math.max(0, contentWidth - 36), 620);
+  const contentStyle = useBoundedContentStyle(820);
+  const errorCardStyle = useBoundedContentStyle(620, 36);
   const router = useRouter();
   const params = useLocalSearchParams<SharedStateParams>();
   const result = parseSharedStateParams(params);
@@ -29,7 +29,7 @@ export function SharedViewScreen() {
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, { width: contentWidth }]}
+        contentContainerStyle={[styles.content, contentStyle]}
       >
         {result.ok ? (
           <>
@@ -83,7 +83,8 @@ export function SharedViewScreen() {
           <View
             style={[
               styles.errorCard,
-              { width: errorCardWidth, backgroundColor: theme.surface, borderColor: theme.border },
+              errorCardStyle,
+              { backgroundColor: theme.surface, borderColor: theme.border },
             ]}
           >
             <Text selectable accessibilityRole="alert" style={[styles.error, { color: theme.danger }]}>
