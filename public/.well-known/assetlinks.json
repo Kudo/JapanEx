@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "dev.expo.kudo.japanex",
       "sha256_cert_fingerprints": [
-        "38:ED:37:63:29:8A:2F:BE:15:95:B3:AA:58:E1:1C:37:B5:D5:04:B8:4B:22:59:BB:F5:7A:40:1E:16:16:64:D5"
+        "38:ED:37:63:29:8A:2F:BE:15:95:B3:AA:58:E1:1C:37:B5:D5:04:B8:4B:22:59:BB:F5:7A:40:1E:16:16:64:D5",
+        "C8:0F:3A:85:93:AC:D3:FF:C6:10:AC:51:B5:38:BE:AD:B5:3B:DC:1D:96:55:03:78:C3:BC:61:B3:93:1D:5C:D1"
       ]
     }
   }
