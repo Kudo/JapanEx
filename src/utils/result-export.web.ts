@@ -21,10 +21,10 @@ export async function shareResult(asset: ResultAsset): Promise<void> {
     return;
   }
 
-  await saveResult(asset);
+  downloadResult(asset);
 }
 
-export async function saveResult(asset: ResultAsset): Promise<void> {
+function downloadResult(asset: ResultAsset): void {
   const anchor = document.createElement('a');
   anchor.href = asset.uri;
   anchor.download = asset.fileName;

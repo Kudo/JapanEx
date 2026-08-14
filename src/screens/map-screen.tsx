@@ -13,7 +13,7 @@ import type { PrefectureCode } from '@/data/types';
 import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
-import { createResultAsset, saveResult, shareResult } from '@/utils/result-export';
+import { createResultAsset, shareResult } from '@/utils/result-export';
 import { buildShareUrl } from '@/utils/share-state';
 
 type MapScreenProps = {
@@ -30,18 +30,13 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const [isExporting, setIsExporting] = useState(false);
   const resultRef = useRef<Svg>(null);
 
-  const handleResultAction = async (action: 'share' | 'save') => {
+  const handleShareResult = async () => {
     setIsExporting(true);
     setStatus('');
     try {
       const asset = await createResultAsset(resultRef.current);
-      if (action === 'share') {
-        await shareResult(asset);
-        setStatus(t(state.locale, 'imageShared'));
-      } else {
-        await saveResult(asset);
-        setStatus(t(state.locale, 'imageSaved'));
-      }
+      await shareResult(asset);
+      setStatus(t(state.locale, 'imageShared'));
     } catch {
       setStatus(t(state.locale, 'exportFailed'));
     } finally {
@@ -90,13 +85,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
               <Button
                 label={t(state.locale, 'shareImage')}
                 disabled={isExporting}
-                onPress={() => handleResultAction('share')}
-              />
-              <Button
-                label={t(state.locale, 'saveImage')}
-                variant="outlined"
-                disabled={isExporting}
-                onPress={() => handleResultAction('save')}
+                onPress={handleShareResult}
               />
               <Button
                 label={t(state.locale, 'copyViewLink')}

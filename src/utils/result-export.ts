@@ -1,5 +1,4 @@
 import { File, Paths } from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import type Svg from 'react-native-svg';
 
@@ -28,12 +27,6 @@ export async function shareResult(asset: ResultAsset): Promise<void> {
     mimeType: asset.mimeType,
     UTI: 'public.png',
   });
-}
-
-export async function saveResult(asset: ResultAsset): Promise<void> {
-  const permission = await MediaLibrary.requestPermissionsAsync(true, ['photo']);
-  if (!permission.granted) throw new Error('Photo library permission was not granted');
-  await MediaLibrary.Asset.create(asset.uri);
 }
 
 function captureSvg(svg: Svg | null): Promise<string> {
