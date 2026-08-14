@@ -53,12 +53,12 @@ export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
         </SvgText>
       ) : null}
 
-      <Rect x={342} y={-108} width={650} height={238} rx={22} fill="#FFFFFF" fillOpacity={0.92} />
+      <Rect x={342} y={-108} width={650} height={268} rx={22} fill="#FFFFFF" fillOpacity={0.92} />
       {([5, 4, 3, 2, 1, 0] as ExperienceLevel[]).map((level, index) => {
         const y = -76 + index * 36;
         return (
           <G key={level}>
-            <Rect x={374} y={y} width={46} height={24} rx={6} fill={LEVEL_COLORS[level]} stroke="#4A5560" strokeWidth={1} />
+            <Rect x={374} y={y} width={46} height={24} rx={6} fill={LEVEL_COLORS[level]} stroke="#4A5560" strokeWidth={2} />
             <SvgText x={440} y={y + 20} fontSize={20} fontWeight="600" fill={RESULT_THEME.text}>
               {level} · {LEVEL_LABELS[locale][level]}
             </SvgText>

@@ -89,7 +89,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
               />
               <Button
                 label={t(state.locale, 'copyViewLink')}
-                variant="text"
+                variant="outlined"
                 onPress={copyLink}
               />
             </Column>
