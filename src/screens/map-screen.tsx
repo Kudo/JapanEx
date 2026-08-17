@@ -53,7 +53,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
       resolveResultRef.current = resolve;
     });
 
-    if (process.env.EXPO_OS === 'ios' && showFlags && !flagsReadyRef.current) {
+    if (showFlags && !flagsReadyRef.current) {
       await new Promise<void>((resolve) => {
         resolveFlagsReadyRef.current = resolve;
       });
