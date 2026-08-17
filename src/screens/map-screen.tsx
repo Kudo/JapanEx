@@ -1,6 +1,6 @@
 import { Button, Column, Host } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
-import { useRef, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import type Svg from 'react-native-svg';
 
@@ -15,6 +15,7 @@ import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, shareResult } from '@/utils/result-export';
 import { buildShareUrl } from '@/utils/share-state';
+import { RESULT_CARD_RENDER_SIZE } from '@/utils/svg-capture';
 
 type MapScreenProps = {
   showFlags: boolean;
@@ -28,18 +29,53 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const resultRef = useRef<Svg>(null);
+  const resultRef = useRef<Svg | null>(null);
+  const resolveResultRef = useRef<((result: Svg) => void) | null>(null);
+  const flagsReadyRef = useRef(false);
+  const resolveFlagsReadyRef = useRef<(() => void) | null>(null);
+
+  const handleResultRef = useCallback((result: Svg | null) => {
+    resultRef.current = result;
+    if (result && resolveResultRef.current) {
+      resolveResultRef.current(result);
+      resolveResultRef.current = null;
+    }
+  }, []);
+
+  const handleFlagsReady = useCallback(() => {
+    flagsReadyRef.current = true;
+    resolveFlagsReadyRef.current?.();
+    resolveFlagsReadyRef.current = null;
+  }, []);
+
+  const waitForResultCard = async () => {
+    const resultCard = resultRef.current ?? await new Promise<Svg>((resolve) => {
+      resolveResultRef.current = resolve;
+    });
+
+    if (process.env.EXPO_OS === 'ios' && showFlags && !flagsReadyRef.current) {
+      await new Promise<void>((resolve) => {
+        resolveFlagsReadyRef.current = resolve;
+      });
+    }
+
+    return resultCard;
+  };
 
   const handleShareResult = async () => {
+    flagsReadyRef.current = false;
     setIsExporting(true);
     setStatus('');
     try {
-      const asset = await createResultAsset(resultRef.current);
+      const resultCard = await waitForResultCard();
+      const asset = await createResultAsset(resultCard);
       await shareResult(asset);
       setStatus(t(state.locale, 'imageShared'));
     } catch {
       setStatus(t(state.locale, 'exportFailed'));
     } finally {
+      resolveResultRef.current = null;
+      resolveFlagsReadyRef.current = null;
       setIsExporting(false);
     }
   };
@@ -112,16 +148,19 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
         ) : null}
       </ScrollView>
 
-      <View style={styles.exportSurface}>
-        <ResultCard
-          ref={resultRef}
-          locale={state.locale}
-          displayName={state.displayName}
-          score={score}
-          levels={state.levels}
-          showFlags={showFlags}
-        />
-      </View>
+      {isExporting ? (
+        <View style={styles.exportSurface}>
+          <ResultCard
+            ref={handleResultRef}
+            locale={state.locale}
+            displayName={state.displayName}
+            score={score}
+            levels={state.levels}
+            onFlagsReady={handleFlagsReady}
+            showFlags={showFlags}
+          />
+        </View>
+      ) : null}
 
       <PrefectureSheet code={selectedCode} onDismiss={() => setSelectedCode(null)} />
       <LanguageStackToolbar showFlags={showFlags} onToggleFlags={onToggleFlags} />
@@ -148,10 +187,10 @@ const styles = StyleSheet.create({
   status: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   exportSurface: {
     position: 'absolute',
-    left: -4096,
+    left: -RESULT_CARD_RENDER_SIZE * 2,
     top: 0,
-    width: 2048,
-    height: 2048,
+    width: RESULT_CARD_RENDER_SIZE,
+    height: RESULT_CARD_RENDER_SIZE,
     opacity: 0,
     pointerEvents: 'none',
   },

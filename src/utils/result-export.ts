@@ -2,6 +2,8 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import type Svg from 'react-native-svg';
 
+import { captureSvg } from '@/utils/svg-capture';
+
 export type ResultAsset = {
   uri: string;
   fileName: string;
@@ -27,11 +29,6 @@ export async function shareResult(asset: ResultAsset): Promise<void> {
     mimeType: asset.mimeType,
     UTI: 'public.png',
   });
-}
-
-function captureSvg(svg: Svg | null): Promise<string> {
-  if (!svg) return Promise.reject(new Error('Result card is not ready'));
-  return new Promise((resolve) => svg.toDataURL(resolve, { width: 2048, height: 2048 }));
 }
 
 function decodeBase64(base64: string): Uint8Array {

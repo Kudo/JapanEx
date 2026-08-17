@@ -1,6 +1,7 @@
 import type Svg from 'react-native-svg';
 
 import type { ResultAsset } from '@/utils/result-export';
+import { captureSvg } from '@/utils/svg-capture';
 
 export async function createResultAsset(svg: Svg | null): Promise<ResultAsset> {
   const base64 = await captureSvg(svg);
@@ -32,9 +33,4 @@ function downloadResult(asset: ResultAsset): void {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
-}
-
-function captureSvg(svg: Svg | null): Promise<string> {
-  if (!svg) return Promise.reject(new Error('Result card is not ready'));
-  return new Promise((resolve) => svg.toDataURL(resolve, { width: 2048, height: 2048 }));
 }

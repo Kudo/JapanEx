@@ -7,7 +7,7 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { LevelIndicator } from '@/components/level-indicator';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
-import { FLAG_ASSETS } from '@/data/flags';
+import { FLAG_THUMBNAIL_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
 import { REGION_CODES, type ExperienceLevel, type RegionCode } from '@/data/types';
 import {
@@ -166,7 +166,7 @@ export function FlagsScreen() {
                   ]}
                 >
                   <Image
-                    source={FLAG_ASSETS[item.code]}
+                    source={FLAG_THUMBNAIL_ASSETS[item.code]}
                     contentFit="contain"
                     style={styles.flag}
                     accessibilityLabel={`${item.names[state.locale]} flag`}
