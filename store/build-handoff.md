@@ -17,7 +17,7 @@ Do not use `--auto-submit` for this verification round. Save each EAS build ID, 
 
 1. Confirm the iOS archive has bundle ID `dev.expo.kudo.japanex`, the expected version and build number, the `applinks:japanex.expo.app` entitlement, and no development menu.
 2. Confirm the Android App Bundle has package `dev.expo.kudo.japanex`, the expected version code, the verified HTTPS `/view` filter, and no unused overlay, photo, video, or storage permission in its merged manifest.
-3. Install the signed builds through TestFlight and Play internal testing. Run the [native smoke test](release-readiness.md#native-smoke-test), including offline launch, read-only and confirmed-import links, accessibility, and 2048 × 2048 PNG export with flags hidden and shown.
+3. Install the signed builds through TestFlight and Play internal testing. Run the [native smoke test](release-readiness.md#native-smoke-test), including offline launch, read-only and confirmed-import links, accessibility, and 2048 × 2048 PNG export with flags hidden and shown. Try a long display name and check that its image label stays clear of the score.
 4. Check HTTPS link handoff with the final signing certificates. A custom-scheme link or config introspection alone does not prove universal/app-link verification.
 5. Recapture the final store screenshots from these builds and compare them with the submitted UI. Review the Play pre-launch report before wider rollout.
 

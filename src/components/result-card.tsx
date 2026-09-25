@@ -6,6 +6,7 @@ import { MapRegions } from '@/components/map-regions';
 import { LEVEL_COLORS, RESULT_THEME } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 import { LEVEL_LABELS, t } from '@/i18n/translations';
+import { resultDisplayName } from '@/utils/result-display-name';
 import { MAP_SIZE, MAP_X, MAP_Y } from '@/utils/map-layout';
 
 type ResultCardProps = {
@@ -23,6 +24,8 @@ export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
   { locale, displayName, score, levels, onFlagsReady, onLayout, showFlags, renderSize },
   ref,
 ) {
+  const imageDisplayName = resultDisplayName(displayName);
+
   return (
     <Svg
       ref={ref}
@@ -51,9 +54,9 @@ export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
       <SvgText x={620} y={-178} fontSize={64} fontWeight="800" fill={RESULT_THEME.accent}>
         {score}
       </SvgText>
-      {displayName ? (
+      {imageDisplayName ? (
         <SvgText x={1038} y={-184} textAnchor="end" fontSize={28} fontWeight="600" fill={RESULT_THEME.text}>
-          {displayName}
+          {imageDisplayName}
         </SvgText>
       ) : null}
 

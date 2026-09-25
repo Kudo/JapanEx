@@ -6,7 +6,7 @@
 **Role:** Root
 **Author:** Codex / Kudo Chien
 **Date:** 2026-08-18
-**Revised:** 2026-09-25 (release-readiness behavior observed; design constraints confirmed by Kudo Chien on 2026-08-18)
+**Revised:** 2026-09-26 (release-readiness behavior observed; design constraints confirmed by Kudo Chien on 2026-08-18)
 
 ## Summary
 
@@ -75,6 +75,8 @@
 [observed] `TrackerSnapshot` and `ResultCard` provide reusable read-only renderings of tracker state. The export path renders a fixed-size SVG surface and uses platform-specific result export adapters; image and flag readiness are coordinated before capture (`src/components/tracker-snapshot.tsx`, `src/components/result-card.tsx`, `src/utils/result-export*`, `src/utils/svg-capture.ts`, and `src/utils/image-load-barrier.ts`).
 
 [observed] Native capture rounds the offscreen SVG layout size up to the device pixel ratio, then uses Expo ImageManipulator to normalize the PNG to exactly 2048×2048 physical pixels. Web capture scales its smaller SVG surface into a 2048-pixel canvas (`src/utils/result-card-size.ts`, `src/components/result-card.tsx`, `src/utils/svg-capture.ts`, and `src/utils/result-export.ts`).
+
+[observed] The result image shortens a long display name to keep its label clear of the score; the saved tracker state and shared URL retain the full name. The image label uses a conservative width budget, and an iOS Release simulator export with a 40-character name rendered without overlap (`src/utils/result-display-name.ts`, `src/components/result-card.tsx`, and `store/release-readiness.md`).
 
 [observed] iOS `react-native-svg` encodes PNG data with line breaks in its base64 output. Native export writes that string through Expo FileSystem's base64 encoding option, whose platform decoders accept the line breaks; passing the string through Hermes `atob` failed in a Release simulator build (`src/utils/result-export.ts` and the native module implementations).
 
