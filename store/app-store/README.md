@@ -33,6 +33,8 @@ The [support page source](../../public/support/index.html) contains contact info
 
 The app supports iPhone and iPad. Capture current UI from the final build, without fabricated progress or altered controls. Apple currently requires screenshots for a 6.9-inch iPhone display and a 13-inch iPad display when the app runs on both. Use accepted portrait sizes such as **1320 × 2868** for iPhone 17 Pro Max and **2064 × 2752** for a 13-inch iPad Pro. Apple accepts 1–10 PNG or JPEG screenshots per set and disallows alpha. Check the latest [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) before upload.
 
+The [simulator draft set](screenshots/draft-simulator/) provides four English screenshots per device for layout and copy review. Capture the upload set from the final signed build after its smoke test.
+
 Suggested sequence for each size: map with representative levels, prefecture experience picker, searchable Flags view, Settings with language and sharing controls. Capture at least the primary English set; add localized screenshots if the publisher wants the Japanese and Traditional Chinese listings to show matching UI text.
 
 ## Review notes draft

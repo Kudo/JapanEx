@@ -2,6 +2,8 @@
 
 Capture these from the final signed build after the UI and export smoke test. Keep the unedited source captures here until the publisher has reviewed them.
 
+`draft-simulator/` contains an eight-image review set captured on 2026-09-25 from the local iOS Release simulator app. It covers the Map, Hokkaido detail, Flags, and Settings on an iPhone 17 Pro Max and a 13-inch iPad. The app's import flow set five prefectures to representative levels for a score of 14; the display name was left empty. The captures have a 9:41 status bar, native pixel dimensions, and no alpha channel. These are layout and listing-copy drafts; recapture the upload set from the final signed build and check it against that build before submission.
+
 | Directory | Device class | Suggested portrait pixel size |
 | --- | --- | --- |
 | `iphone/en-US/` | 6.9-inch iPhone | 1320 × 2868 |
