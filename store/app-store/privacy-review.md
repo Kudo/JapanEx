@@ -6,8 +6,8 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 | App Store Connect item | Candidate | Basis to verify |
 | --- | --- | --- |
-| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The public page returned HTTP 200 and matched the repository source on 2026-09-25. |
-| Data collection | **No, we do not collect data from this app** | Tracker data is stored on-device; no app-owned tracker upload or analytics call was found in the current source. The local iOS Release simulator app's 11 privacy manifests all declare no collected data. |
+| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The public page matched the repository source on 2026-09-26. |
+| Data collection | **No, we do not collect data from this app** | Tracker data is stored on-device; no app-owned tracker upload or analytics call was found in the current source. The iOS Release simulator app rebuilt on 2026-09-26 still has 11 privacy manifests, all declaring no collected data. |
 | Tracking | **No** | The current source includes no ads or cross-app tracking integration; those same manifests declare tracking `false`. |
 | Privacy choices URL | Leave blank unless the publisher wants a separate choices page | The policy already explains local deletion and backup limits. Apple lists this URL as optional. |
 
