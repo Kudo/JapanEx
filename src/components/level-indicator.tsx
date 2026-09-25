@@ -1,5 +1,6 @@
 import { StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel } from '@/data/types';
 import { LEVEL_LABELS } from '@/i18n/translations';
@@ -12,8 +13,7 @@ type LevelIndicatorProps = {
 
 export function LevelIndicator({ level, locale, compact = false }: LevelIndicatorProps) {
   const theme = useAppTheme();
-  // @ref LLP 0000#adaptive-accessibility-layout
-  const largeText = useWindowDimensions().fontScale >= 1.8;
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
 
   return (
     <View

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText, useWindowDimensions, View } from 'react-native';
 
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
 import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
@@ -39,8 +40,7 @@ export function SettingsScreen() {
 function ReadySettingsScreen() {
   const theme = useAppTheme();
   const contentStyle = useBoundedContentStyle(720);
-  // @ref LLP 0000#adaptive-accessibility-layout
-  const largeText = useWindowDimensions().fontScale >= 1.8;
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const router = useRouter();
   const { state, score, setDisplayName, setLocale, resetLevels } = useTracker();
   const nameValue = useNativeState(state.displayName);
@@ -108,9 +108,9 @@ function ReadySettingsScreen() {
             textStyle={{ color: theme.text, fontSize: 16, lineHeight: 20 }}
             style={{
               width: '100%',
-              height: 48,
+              height: largeText ? 76 : 48,
               paddingHorizontal: 14,
-              paddingVertical: 13,
+              paddingVertical: largeText ? 12 : 13,
               backgroundColor: theme.surface,
               borderColor: theme.border,
               borderWidth: 1,

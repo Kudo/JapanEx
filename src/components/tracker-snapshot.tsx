@@ -2,6 +2,7 @@ import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from '
 
 import { JapanMap } from '@/components/japan-map';
 import { LevelIndicator } from '@/components/level-indicator';
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 
@@ -29,8 +30,7 @@ export function TrackerSnapshot({
   onSelect,
 }: TrackerSnapshotProps) {
   const theme = useAppTheme();
-  // @ref LLP 0000#adaptive-accessibility-layout
-  const largeText = useWindowDimensions().fontScale >= 1.8;
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const markedPrefectures = Object.values(levels).filter((level) => level > 0).length;
   const remainingProgress = 235 - score;
 

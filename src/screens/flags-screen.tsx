@@ -7,6 +7,7 @@ import type { SearchBarCommands } from 'react-native-screens';
 
 import { LevelIndicator } from '@/components/level-indicator';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import { FLAG_THUMBNAIL_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
@@ -22,8 +23,7 @@ export function FlagsScreen() {
   const theme = useAppTheme();
   const { state } = useTracker();
   const width = useViewportWidth();
-  // @ref LLP 0000#adaptive-accessibility-layout
-  const largeText = useWindowDimensions().fontScale >= 1.8;
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const contentStyle = useBoundedContentStyle(980);
   const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
