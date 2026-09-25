@@ -1,0 +1,14 @@
+Use case: ads-marketing
+Asset type: Google Play feature graphic base artwork, final aspect ratio 1024:500 (very wide banner)
+Primary request: Create a polished, modern travel-tracker banner for JapanEx using the app icon only as a brand and palette reference.
+Input image: Reference image for brand colors and simplified Japan-map visual language; do not merely enlarge or duplicate the square icon.
+Scene/backdrop: Deep navy blue atmospheric background with a subtle paper-grain texture, faint topographic contour lines, and very restrained travel-route arcs.
+Subject: An elegant expanded simplified map of Japan, composed of softly dimensional ivory prefecture-like pieces with a few selected regions in coral red and golden yellow, suggesting tracked travel progress.
+Style/medium: Premium editorial vector-like illustration with gentle depth, crisp silhouettes, sophisticated and calm, suitable for an app store.
+Composition/framing: Extremely wide 2.048:1 banner; reserve clean negative space in the left-center for later localized typography; place the Japan map across the center-right, fully visible, with its main mass and focal accents inside the central 70% safe area. Keep important content away from all edges.
+Lighting/mood: Subtle warm glow, optimistic and exploratory, restrained rather than flashy.
+Color palette: Match the reference—deep navy, warm ivory, coral red, mustard gold—with minimal muted teal accents if useful.
+Text: None.
+Constraints: No words, letters, numerals, logos, app-store badges, device mockups, people, flags, photorealism, or watermark. Avoid fine details that disappear at phone size. The result must crop cleanly to exactly 1024x500.
+
+The generated base was resized to 1024 × 500 and exact localized typography was added during deterministic post-processing.

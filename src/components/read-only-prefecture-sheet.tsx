@@ -54,7 +54,7 @@ export function ReadOnlyPrefectureSheet({
               source={FLAG_ASSETS[prefecture.code]}
               contentFit="contain"
               style={styles.flag}
-              accessibilityLabel={`${prefecture.names[locale]} flag`}
+              accessibilityLabel={`${prefecture.names[locale]} ${t(locale, 'flag')}`}
             />
           </RNHostView>
           <Text textStyle={{ fontSize: 14, color: theme.secondaryText }}>

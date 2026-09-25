@@ -6,7 +6,7 @@
 **Role:** Root
 **Author:** Codex / Kudo Chien
 **Date:** 2026-08-18
-**Revised:** 2026-08-18 (design constraints confirmed by Kudo Chien)
+**Revised:** 2026-09-25 (release-readiness behavior observed; design constraints confirmed by Kudo Chien on 2026-08-18)
 
 ## Summary
 
@@ -24,7 +24,7 @@
 
 [observed] The interface supports Japanese, Traditional Chinese, and English. The initial locale comes from `expo-localization`, unsupported device locales fall back to English, and the chosen locale is part of persisted and shared state (`src/i18n`, `src/state/tracker-state.ts`, and `src/utils/share-state.ts`).
 
-[observed] Progress remains on the device unless the user creates a share URL. Native persistence uses `expo-sqlite/kv-store`; web persistence uses `localStorage` through React Native's platform-file resolution (`src/storage/tracker-storage.ts` and `src/storage/tracker-storage.web.ts`).
+[observed] Progress is stored locally, and users can create share URLs. Native persistence uses `expo-sqlite/kv-store`; web persistence uses `localStorage` through React Native's platform-file resolution. Android and iOS device backups may include the native SQLite database when backups are enabled (`src/storage/tracker-storage.ts`, `src/storage/tracker-storage.web.ts`, `app.json`, and `public/privacy/index.html`).
 
 ## System map
 
@@ -42,17 +42,29 @@
 
 [observed] The provider's `isReady` guard prevents its save effect from running before the initial storage load settles, so the freshly created empty state is not persisted during that load (`src/state/tracker-context.tsx`).
 
+[observed] Mutations made before the initial storage load completes are replayed over the stored state in their original order, so an early edit or confirmed import is not overwritten by hydration (`src/state/tracker-context.tsx` and `src/state/tracker-hydration.ts`).
+
+[observed] Saves are queued in state order so an earlier asynchronous write cannot finish after and overwrite a newer edit (`src/state/tracker-context.tsx` and `src/state/tracker-persistence.ts`).
+
+[observed] If the initial storage read fails, the provider keeps the in-memory UI available but does not write its empty initial state over potentially recoverable stored progress (`src/state/tracker-context.tsx`).
+
 ### Prefecture data, map, and flags
 
 [observed] `src/data/prefectures.json` is the metadata source, `src/data/map-shapes.json` supplies map geometry, and `src/data/prefectures.ts` combines them into typed runtime records. The 47 SVG flags and their thumbnail derivatives are bundled in `assets`, so core browsing and map rendering do not require a network request (`src/data`, `assets/flags`, and `assets/flag-thumbnails`).
 
 [observed] The map UI is split across `japan-map.tsx`, map region/flag components, camera/layout utilities, and screen-level interaction state. Pure map camera and annotation behavior has dependency-free Node coverage (`src/components/japan-map.tsx`, `src/components/map-*`, `src/utils/map-*`, and matching tests).
 
+### Adaptive accessibility layout
+
+[observed] At accessibility text scales of 1.8 or greater, the map score card, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/components/tracker-snapshot.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).
+
 ### Sharing and import
 
 [observed] Shared state uses a versioned query contract: `v=1`, exactly 47 level digits in JIS code order, one supported locale, and an optional display name capped at 40 characters. Parsing rejects unsupported versions, malformed level strings, unsupported locales, and overlong names (`src/utils/share-state.ts` and `src/utils/share-state.test.mjs`).
 
 [observed] `/view` renders valid shared state without replacing local progress. `/import` previews the incoming score and requires an explicit confirmation before replacing the current tracker state (`src/screens/shared-view-screen.tsx` and `src/screens/import-screen.tsx`).
+
+[observed] A valid read-only view offers an explicit action to open the same snapshot in the confirmed-import screen. Canceling import returns to the view when navigation history permits; neither opening the preview nor canceling changes local progress (`src/screens/shared-view-screen.tsx` and `src/screens/import-screen.tsx`).
 
 [confirmed] (Kudo Chien, 2026-08-18) `/view` must never modify local progress. Replacing local state is reserved for `/import` and requires explicit user confirmation.
 
@@ -61,6 +73,16 @@
 ### Result rendering and export
 
 [observed] `TrackerSnapshot` and `ResultCard` provide reusable read-only renderings of tracker state. The export path renders a fixed-size SVG surface and uses platform-specific result export adapters; image and flag readiness are coordinated before capture (`src/components/tracker-snapshot.tsx`, `src/components/result-card.tsx`, `src/utils/result-export*`, `src/utils/svg-capture.ts`, and `src/utils/image-load-barrier.ts`).
+
+[observed] Native capture rounds the offscreen SVG layout size up to the device pixel ratio, then uses Expo ImageManipulator to normalize the PNG to exactly 2048×2048 physical pixels. Web capture scales its smaller SVG surface into a 2048-pixel canvas (`src/utils/result-card-size.ts`, `src/components/result-card.tsx`, `src/utils/svg-capture.ts`, and `src/utils/result-export.ts`).
+
+[observed] iOS `react-native-svg` encodes PNG data with line breaks in its base64 output. Native export writes that string through Expo FileSystem's base64 encoding option, whose platform decoders accept the line breaks; passing the string through Hermes `atob` failed in a Release simulator build (`src/utils/result-export.ts` and the native module implementations).
+
+[observed] The offscreen result-card readiness wait and SVG capture have bounded timeouts. If rendering or a flag image never reports completion, export shows a retryable error and releases its busy state instead of waiting indefinitely (`src/screens/map-screen.tsx`, `src/utils/svg-capture.ts`, and `src/utils/promise-timeout.ts`).
+
+[observed] The Map screen shows localized progress while it prepares the result image, then clears that progress before opening the native share sheet (`src/screens/map-screen.tsx` and `src/i18n/translations.ts`).
+
+[observed] Native capture waits for the offscreen SVG layout event in addition to its React ref before calling `toDataURL`; the iOS SVG bridge can return no image while the native view is still mounting. An empty callback result is treated as a capture error before writing a file (`src/screens/map-screen.tsx`, `src/components/result-card.tsx`, and `src/utils/svg-capture.ts`).
 
 [confirmed] (Kudo Chien, 2026-08-18) Export must continue to produce a 2048×2048 PNG, and the assets needed for core map and flag rendering must remain bundled for offline use. The internal rendering and capture mechanisms may change if they preserve that behavior.
 

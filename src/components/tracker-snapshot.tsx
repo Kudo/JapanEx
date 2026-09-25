@@ -1,4 +1,4 @@
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { JapanMap } from '@/components/japan-map';
 import { LevelIndicator } from '@/components/level-indicator';
@@ -29,6 +29,8 @@ export function TrackerSnapshot({
   onSelect,
 }: TrackerSnapshotProps) {
   const theme = useAppTheme();
+  // @ref LLP 0000#adaptive-accessibility-layout
+  const largeText = useWindowDimensions().fontScale >= 1.8;
   const markedPrefectures = Object.values(levels).filter((level) => level > 0).length;
   const remainingProgress = 235 - score;
 
@@ -36,23 +38,23 @@ export function TrackerSnapshot({
     <View style={styles.container}>
       <View style={[styles.heroCard, { backgroundColor: theme.hero }]}>
         <View style={[styles.heroCircle, { borderColor: theme.heroMuted }]} />
-        <View style={styles.heroTopRow}>
-          <View style={styles.heroCopy}>
+        <View style={[styles.heroTopRow, largeText && styles.heroTopRowLarge]}>
+          <View style={[styles.heroCopy, largeText && styles.heroCopyLarge]}>
             <Text style={[styles.eyebrow, { color: theme.heroMuted }]}>{scoreLabel}</Text>
-            <View style={styles.scoreRow}>
-              <Text selectable style={[styles.score, { color: theme.heroText }]}>
+            <View style={[styles.scoreRow, largeText && styles.scoreRowLarge]}>
+              <Text selectable maxFontSizeMultiplier={2} style={[styles.score, { color: theme.heroText }]}>
                 {score}
               </Text>
-              <Text style={[styles.maxScore, { color: theme.heroMuted }]}>{maxScoreLabel}</Text>
+              <Text maxFontSizeMultiplier={2} style={[styles.maxScore, { color: theme.heroMuted }]}>{maxScoreLabel}</Text>
             </View>
           </View>
-          <View style={[styles.prefectureSeal, { backgroundColor: theme.accent }]}>
+          <View style={[styles.prefectureSeal, largeText && styles.prefectureSealLarge, { backgroundColor: theme.accent }]}>
             {isReady ? (
               <>
-                <Text selectable style={[styles.sealCount, { color: theme.heroText }]}>
+                <Text selectable maxFontSizeMultiplier={1.5} style={[styles.sealCount, { color: theme.heroText }]}>
                   {markedPrefectures}
                 </Text>
-                <Text style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
+                <Text maxFontSizeMultiplier={1.5} style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
               </>
             ) : (
               <ActivityIndicator color={theme.heroText} />
@@ -116,9 +118,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 16,
   },
+  heroTopRowLarge: { flexDirection: 'column', alignItems: 'stretch' },
   heroCopy: { flex: 1 },
+  heroCopyLarge: { flex: 0 },
   eyebrow: { fontSize: 13, fontWeight: '800', letterSpacing: 1.1, textTransform: 'uppercase' },
   scoreRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
+  scoreRowLarge: { flexDirection: 'column', alignItems: 'flex-start' },
   score: { fontSize: 58, fontWeight: '900', lineHeight: 64, fontVariant: ['tabular-nums'] },
   maxScore: { fontSize: 15, fontWeight: '700' },
   prefectureSeal: {
@@ -129,6 +134,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     transform: [{ rotate: '3deg' }],
   },
+  prefectureSealLarge: { width: 100, height: 100, borderRadius: 50 },
   sealCount: { fontSize: 27, lineHeight: 30, fontWeight: '900', fontVariant: ['tabular-nums'] },
   sealTotal: { fontSize: 12, fontWeight: '800', opacity: 0.9 },
   progressTrack: {

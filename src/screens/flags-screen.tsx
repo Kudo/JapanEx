@@ -1,8 +1,9 @@
 import { Host, Picker, TextInput, useNativeState } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
-import { useMemo, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { FlatList, Keyboard, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import type { SearchBarCommands } from 'react-native-screens';
 
 import { LevelIndicator } from '@/components/level-indicator';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -14,19 +15,27 @@ import {
   useBoundedContentStyle,
   useViewportWidth,
 } from '@/hooks/use-bounded-content-width';
-import { REGION_LABELS, t } from '@/i18n/translations';
+import { experienceAccessibilityLabel, REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
 export function FlagsScreen() {
   const theme = useAppTheme();
   const { state } = useTracker();
   const width = useViewportWidth();
+  // @ref LLP 0000#adaptive-accessibility-layout
+  const largeText = useWindowDimensions().fontScale >= 1.8;
   const contentStyle = useBoundedContentStyle(980);
   const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');
   const [level, setLevel] = useState<'all' | `${ExperienceLevel}`>('all');
+  const searchBarRef = useRef<SearchBarCommands | null>(null);
   const columns = width >= 820 ? 2 : 1;
+
+  const dismissSearchKeyboard = () => {
+    searchBarRef.current?.blur();
+    Keyboard.dismiss();
+  };
 
   const filteredPrefectures = useMemo(() => {
     const normalizedSearch = search.trim().toLocaleLowerCase();
@@ -63,13 +72,13 @@ export function FlagsScreen() {
               { backgroundColor: theme.hero, borderColor: theme.border },
             ]}
           >
-            <View style={styles.filterHeading}>
+            <View style={[styles.filterHeading, largeText && styles.filterHeadingLarge]}>
               <Text style={[styles.filterTitle, { color: theme.heroText }]}>
                 {t(state.locale, 'flagCollection')}
               </Text>
               <View style={[styles.countBadge, { backgroundColor: theme.accent }]}>
                 <Text style={[styles.countText, { color: theme.heroText }]}>
-                  {filteredPrefectures.length} / 47
+                  {filteredPrefectures.length}
                 </Text>
               </View>
             </View>
@@ -93,15 +102,18 @@ export function FlagsScreen() {
                 />
               </Host>
             ) : null}
-            <View style={styles.filterControls}>
+            <View style={[styles.filterControls, largeText && styles.filterControlsLarge]}>
               <Host
                 matchContents={{ vertical: true }}
                 seedColor={theme.accent}
-                style={styles.filterControlHost}
+                style={[styles.filterControlHost, largeText && styles.filterControlHostLarge]}
               >
                 <Picker
                   selectedValue={region}
-                  onValueChange={(value) => setRegion(value as typeof region)}
+                  onValueChange={(value) => {
+                    dismissSearchKeyboard();
+                    setRegion(value as typeof region);
+                  }}
                   testID="region-filter"
                 >
                   <Picker.Item value="all" label={t(state.locale, 'allRegions')} />
@@ -117,11 +129,14 @@ export function FlagsScreen() {
               <Host
                 matchContents={{ vertical: true }}
                 seedColor={theme.accent}
-                style={styles.filterControlHost}
+                style={[styles.filterControlHost, largeText && styles.filterControlHostLarge]}
               >
                 <Picker
                   selectedValue={level}
-                  onValueChange={(value) => setLevel(value as typeof level)}
+                  onValueChange={(value) => {
+                    dismissSearchKeyboard();
+                    setLevel(value as typeof level);
+                  }}
                   testID="level-filter"
                 >
                   <Picker.Item value="all" label={t(state.locale, 'allLevels')} />
@@ -147,10 +162,11 @@ export function FlagsScreen() {
             <Link href={`/prefecture/${item.code}`} asChild>
               <Pressable
                 accessibilityRole="button"
-                accessibilityLabel={item.names[state.locale]}
+                accessibilityLabel={experienceAccessibilityLabel(state.locale, item.names[state.locale], state.levels[item.code])}
                 style={({ pressed }) => [
                   styles.card,
                   columns === 1 ? styles.listCard : styles.gridCard,
+                  largeText && columns === 1 && styles.listCardLarge,
                   {
                     backgroundColor: theme.surface,
                     borderColor: theme.border,
@@ -169,12 +185,12 @@ export function FlagsScreen() {
                     source={FLAG_THUMBNAIL_ASSETS[item.code]}
                     contentFit="contain"
                     style={styles.flag}
-                    accessibilityLabel={`${item.names[state.locale]} flag`}
+                    accessibilityLabel={`${item.names[state.locale]} ${t(state.locale, 'flag')}`}
                   />
                 </View>
-                <View style={styles.cardBody}>
-                  <View style={styles.nameRow}>
-                    <Text numberOfLines={1} style={[styles.name, { color: theme.text }]}>
+              <View style={[styles.cardBody, largeText && styles.cardBodyLarge]}>
+                <View style={[styles.nameRow, largeText && styles.nameRowLarge]}>
+                  <Text numberOfLines={largeText ? undefined : 1} style={[styles.name, { color: theme.text }]}>
                       {item.names[state.locale]}
                     </Text>
                     <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
@@ -191,6 +207,7 @@ export function FlagsScreen() {
       />
       {process.env.EXPO_OS !== 'web' ? (
         <Stack.SearchBar
+          ref={searchBarRef}
           autoCapitalize="none"
           hideWhenScrolling={false}
           onCancelButtonPress={() => setSearch('')}
@@ -224,10 +241,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
   },
+  filterControlsLarge: { flexDirection: 'column', alignItems: 'stretch' },
   filterControlHost: {
     flex: 1,
     minWidth: 0,
   },
+  filterControlHostLarge: { flex: 0, width: '100%' },
   filterPanel: {
     borderWidth: 1,
     borderRadius: 26,
@@ -243,6 +262,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 12,
   },
+  filterHeadingLarge: { flexDirection: 'column', alignItems: 'flex-start' },
   filterTitle: { fontSize: 22, fontWeight: '900', letterSpacing: 0.2 },
   countBadge: { borderRadius: 15, paddingHorizontal: 12, paddingVertical: 6 },
   countText: { fontSize: 13, fontWeight: '900', fontVariant: ['tabular-nums'] },
@@ -259,6 +279,7 @@ const styles = StyleSheet.create({
     boxShadow: '0 6px 18px rgba(34, 48, 56, 0.08)',
   },
   listCard: { flexDirection: 'row', minHeight: 136, alignItems: 'center' },
+  listCardLarge: { flexDirection: 'column', alignItems: 'stretch' },
   gridCard: { minHeight: 270 },
   pressed: { opacity: 0.76, transform: [{ scale: 0.99 }] },
   flagFrame: {
@@ -271,6 +292,7 @@ const styles = StyleSheet.create({
   gridFlagFrame: { alignSelf: 'stretch', height: 142 },
   flag: { flex: 1 },
   cardBody: { flex: 1, alignItems: 'flex-start', gap: 5 },
+  cardBodyLarge: { alignSelf: 'stretch' },
   nameRow: {
     paddingTop: 8,
     alignSelf: 'stretch',
@@ -279,6 +301,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
+  nameRowLarge: { flexWrap: 'wrap' },
   name: { fontSize: 20, fontWeight: '800' },
   code: { fontSize: 13, fontWeight: '900', fontVariant: ['tabular-nums'] },
   region: { fontSize: 14, paddingBottom: 4 },

@@ -10,7 +10,7 @@ import type { PrefectureCode } from '@/data/types';
 import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { getInitialLocale } from '@/state/tracker-state';
-import { parseSharedStateParams, type SharedStateParams } from '@/utils/share-state';
+import { encodeLevels, parseSharedStateParams, type SharedStateParams } from '@/utils/share-state';
 
 export function SharedViewScreen() {
   const theme = useAppTheme();
@@ -45,6 +45,28 @@ export function SharedViewScreen() {
               <Text selectable style={[styles.notice, { color: theme.secondaryText }]}>
                 {t(locale, 'sharedViewNotice')}
               </Text>
+              <Host
+                matchContents={{ vertical: true }}
+                seedColor={theme.accent}
+                style={styles.nativeHost}
+              >
+                <Button
+                  label={t(locale, 'importSharedProgress')}
+                  variant="outlined"
+                  onPress={() => {
+                    // @ref LLP 0000#sharing-and-import
+                    router.push({
+                      pathname: '/import',
+                      params: {
+                        v: '1',
+                        s: encodeLevels(result.state),
+                        l: result.state.locale,
+                        ...(result.state.displayName ? { n: result.state.displayName } : {}),
+                      },
+                    });
+                  }}
+                />
+              </Host>
             </View>
 
             <TrackerSnapshot

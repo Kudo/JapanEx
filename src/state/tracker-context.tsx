@@ -1,4 +1,4 @@
-import { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, type PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import type {
   AppLocale,
@@ -7,6 +7,8 @@ import type {
   TrackerStateV1,
 } from '@/data/types';
 import { createEmptyLevels, createInitialState, calculateScore } from '@/state/tracker-state';
+import { replayPendingMutations, type TrackerMutation } from '@/state/tracker-hydration';
+import { createSaveQueue } from '@/state/tracker-persistence';
 import { trackerStorage } from '@/storage/tracker-storage';
 
 type TrackerContextValue = {
@@ -27,6 +29,18 @@ export function TrackerProvider({ children }: PropsWithChildren) {
   const [state, setState] = useState<TrackerStateV1>(() => createInitialState());
   const [isReady, setIsReady] = useState(false);
   const [hasStorageError, setHasStorageError] = useState(false);
+  // @ref LLP 0000#tracker-state-and-persistence — retain edits made before storage finishes loading.
+  const hasLoadedRef = useRef(false);
+  // @ref LLP 0000#tracker-state-and-persistence — a failed read must not be followed by an empty write.
+  const loadFailedRef = useRef(false);
+  const pendingMutationsRef = useRef<TrackerMutation[]>([]);
+  // @ref LLP 0000#tracker-state-and-persistence — complete earlier writes before newer state is saved.
+  const saveStateRef = useRef(createSaveQueue(trackerStorage.save));
+
+  const mutateState = useCallback((mutation: TrackerMutation) => {
+    if (!hasLoadedRef.current) pendingMutationsRef.current.push(mutation);
+    setState(mutation);
+  }, []);
 
   useEffect(() => {
     let isActive = true;
@@ -35,10 +49,19 @@ export function TrackerProvider({ children }: PropsWithChildren) {
       .load()
       .then((storedState) => {
         if (!isActive) return;
-        if (storedState) setState(storedState);
+        if (storedState) {
+          setState(replayPendingMutations(storedState, pendingMutationsRef.current));
+        }
+        hasLoadedRef.current = true;
+        pendingMutationsRef.current = [];
       })
       .catch(() => {
-        if (isActive) setHasStorageError(true);
+        if (isActive) {
+          hasLoadedRef.current = true;
+          loadFailedRef.current = true;
+          pendingMutationsRef.current = [];
+          setHasStorageError(true);
+        }
       })
       .finally(() => {
         if (isActive) setIsReady(true);
@@ -50,8 +73,8 @@ export function TrackerProvider({ children }: PropsWithChildren) {
   }, []);
 
   useEffect(() => {
-    if (!isReady) return;
-    trackerStorage.save(state).then(
+    if (!isReady || loadFailedRef.current) return;
+    saveStateRef.current(state).then(
       () => setHasStorageError(false),
       () => setHasStorageError(true),
     );
@@ -64,18 +87,18 @@ export function TrackerProvider({ children }: PropsWithChildren) {
       isReady,
       hasStorageError,
       setLevel: (code, level) =>
-        setState((current) => ({
+        mutateState((current) => ({
           ...current,
           levels: { ...current.levels, [code]: level },
         })),
-      setLocale: (locale) => setState((current) => ({ ...current, locale })),
+      setLocale: (locale) => mutateState((current) => ({ ...current, locale })),
       setDisplayName: (displayName) =>
-        setState((current) => ({ ...current, displayName: displayName.slice(0, 40) })),
+        mutateState((current) => ({ ...current, displayName: displayName.slice(0, 40) })),
       resetLevels: () =>
-        setState((current) => ({ ...current, levels: createEmptyLevels() })),
-      replaceState: setState,
+        mutateState((current) => ({ ...current, levels: createEmptyLevels() })),
+      replaceState: (replacement) => mutateState(() => replacement),
     }),
-    [hasStorageError, isReady, state],
+    [hasStorageError, isReady, mutateState, state],
   );
 
   return <TrackerContext.Provider value={value}>{children}</TrackerContext.Provider>;

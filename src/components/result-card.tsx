@@ -7,7 +7,6 @@ import { LEVEL_COLORS, RESULT_THEME } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 import { LEVEL_LABELS, t } from '@/i18n/translations';
 import { MAP_SIZE, MAP_X, MAP_Y } from '@/utils/map-layout';
-import { RESULT_CARD_RENDER_SIZE } from '@/utils/svg-capture';
 
 type ResultCardProps = {
   locale: AppLocale;
@@ -15,18 +14,21 @@ type ResultCardProps = {
   score: number;
   levels: Record<PrefectureCode, ExperienceLevel>;
   onFlagsReady: () => void;
+  onLayout: () => void;
   showFlags: boolean;
+  renderSize: number;
 };
 
 export const ResultCard = forwardRef<Svg, ResultCardProps>(function ResultCard(
-  { locale, displayName, score, levels, onFlagsReady, showFlags },
+  { locale, displayName, score, levels, onFlagsReady, onLayout, showFlags, renderSize },
   ref,
 ) {
   return (
     <Svg
       ref={ref}
-      width={RESULT_CARD_RENDER_SIZE}
-      height={RESULT_CARD_RENDER_SIZE}
+      width={renderSize}
+      height={renderSize}
+      onLayout={onLayout}
       viewBox={`${MAP_X} ${MAP_Y} ${MAP_SIZE} ${MAP_SIZE}`}
     >
       <Rect x={MAP_X} y={MAP_Y} width={MAP_SIZE} height={MAP_SIZE} fill={RESULT_THEME.ocean} />

@@ -51,7 +51,7 @@ export function PrefectureSheet({ code, onDismiss }: PrefectureSheetProps) {
               source={FLAG_ASSETS[prefecture.code]}
               contentFit="contain"
               style={styles.flag}
-              accessibilityLabel={`${prefecture.names[state.locale]} flag`}
+              accessibilityLabel={`${prefecture.names[state.locale]} ${t(state.locale, 'flag')}`}
             />
           </RNHostView>
           <Text textStyle={{ fontSize: 14, color: theme.secondaryText }}>

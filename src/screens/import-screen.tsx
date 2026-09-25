@@ -16,6 +16,13 @@ export function ImportScreen() {
   const params = useLocalSearchParams<ImportParams>();
   const { state, replaceState } = useTracker();
   const result = parseImportParams(params);
+  const cancelImport = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
 
   return (
     <>
@@ -58,7 +65,7 @@ export function ImportScreen() {
                       router.replace('/');
                     }}
                   />
-                  <Button label={t(state.locale, 'cancel')} variant="text" onPress={() => router.replace('/')} />
+                  <Button label={t(state.locale, 'cancel')} variant="text" onPress={cancelImport} />
                 </Column>
               </Host>
             </>

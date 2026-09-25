@@ -57,7 +57,7 @@ export function PrefectureDetailScreen() {
           source={FLAG_ASSETS[prefecture.code]}
           contentFit="contain"
           style={[styles.flag, { backgroundColor: theme.surface, borderColor: theme.border }]}
-          accessibilityLabel={`${localizedName} flag`}
+          accessibilityLabel={`${localizedName} ${t(state.locale, 'flag')}`}
         />
 
         <View style={styles.titleBlock}>

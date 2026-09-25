@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { afterEach, describe, it } from 'node:test';
 
-import { captureSvg, RESULT_CARD_RENDER_SIZE } from './svg-capture.ts';
+import { RESULT_CARD_PIXEL_SIZE } from './result-card-size.ts';
+import { captureSvg } from './svg-capture.ts';
 
 const originalExpoOs = process.env.EXPO_OS;
 
@@ -12,6 +13,10 @@ describe('captureSvg()', () => {
       return;
     }
     process.env.EXPO_OS = originalExpoOs;
+  });
+
+  it('should keep the export target at 2048 pixels per side', () => {
+    assert.equal(RESULT_CARD_PIXEL_SIZE, 2048);
   });
 
   it('should capture the rendered bounds on Android so the artwork fills the bitmap', async () => {
@@ -28,8 +33,22 @@ describe('captureSvg()', () => {
     assert.equal(receivedArgumentCount, 1);
   });
 
-  it('should provide explicit rendered bounds when capturing on iOS', async () => {
+  it('should capture fractional rendered bounds on iOS without truncating options', async () => {
     process.env.EXPO_OS = 'ios';
+    let receivedArgumentCount = 0;
+    const svg = {
+      toDataURL(...args) {
+        receivedArgumentCount = args.length;
+        args[0]('encoded-image');
+      },
+    };
+
+    assert.equal(await captureSvg(svg), 'encoded-image');
+    assert.equal(receivedArgumentCount, 1);
+  });
+
+  it('should scale the web capture to the export pixel size', async () => {
+    process.env.EXPO_OS = 'web';
     let receivedOptions;
     const svg = {
       toDataURL(callback, options) {
@@ -39,13 +58,15 @@ describe('captureSvg()', () => {
     };
 
     assert.equal(await captureSvg(svg), 'encoded-image');
-    assert.deepEqual(receivedOptions, {
-      width: RESULT_CARD_RENDER_SIZE,
-      height: RESULT_CARD_RENDER_SIZE,
-    });
+    assert.deepEqual(receivedOptions, { width: 2048, height: 2048 });
   });
 
   it('should reject when the result card is unavailable', async () => {
     await assert.rejects(captureSvg(null), /Result card is not ready/);
+  });
+
+  it('should reject when native capture returns no image', async () => {
+    process.env.EXPO_OS = 'ios';
+    await assert.rejects(captureSvg({ toDataURL: (callback) => callback() }), /returned no image/);
   });
 });

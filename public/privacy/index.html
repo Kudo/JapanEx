@@ -223,15 +223,15 @@
           <span>JapanEx</span>
         </a>
         <h1>Privacy Policy</h1>
-        <p class="updated">Last updated: August 14, 2026</p>
+        <p class="updated">Last updated: September 25, 2026</p>
       </div>
     </header>
 
     <main>
       <p class="summary">
         JapanEx is an offline-first app. We do not require an account, and the app does not
-        include advertising or analytics SDKs. Your map progress stays on your device unless
-        you choose to share it.
+        include advertising or analytics SDKs. Your map progress is stored locally and may be
+        included in an operating-system backup if you enable device backups.
       </p>
 
       <section aria-labelledby="who-we-are">
@@ -255,6 +255,11 @@
           result images. JapanEx contributors do not receive it through the app. On Android and
           iOS, it is stored in the app's local database. On the web, it is stored in your
           browser's local storage.
+        </p>
+        <p>
+          If device backup is enabled, Android or iOS may include the app's local database in a
+          backup managed by your device or backup provider. JapanEx does not run its own sync or
+          backup service, and its contributors cannot access those device backups through the app.
         </p>
       </section>
 
@@ -303,16 +308,16 @@
         <h2 id="sharing-sale">Data sharing, sale, and advertising</h2>
         <p>
           We do not sell or rent personal information. JapanEx does not include third-party ads,
-          analytics, cross-app tracking, or crash-reporting SDKs. Information is disclosed to
-          others only when you direct the app to share content, when a service provider processes
-          technical information needed to deliver the website, or when required by law.
+          analytics, cross-app tracking, or crash-reporting SDKs. Information may be handled by
+          your device backup provider if you enable backups, when you direct the app to share
+          content, when a service provider delivers the website, or when required by law.
         </p>
       </section>
 
       <section aria-labelledby="security">
         <h2 id="security">Security</h2>
         <p>
-          JapanEx limits its handling of information by keeping app data on your device. The
+          JapanEx limits its handling of information by storing app data locally. The
           public website and shared links use HTTPS encryption in transit. No internet or storage
           system can be guaranteed to be completely secure, and view-only links should be treated
           as shareable information.
@@ -326,9 +331,10 @@
           prefecture levels with <strong>Settings → Reset progress</strong> and remove the optional
           display name by clearing that field. To remove all locally stored JapanEx information,
           clear the app or website data in your device or browser settings, or uninstall the app.
-          JapanEx has no user accounts and therefore holds no account data to delete. Information
-          processed by Expo or a service you choose to share with may be retained under that
-          service's policy.
+          Device backups may retain a copy after local data is removed; manage those backups in
+          your device or backup-provider settings. JapanEx has no user accounts and therefore holds
+          no account data to delete. Information processed by Expo or a service you choose to share
+          with may be retained under that service's policy.
         </p>
       </section>
 
