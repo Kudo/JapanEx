@@ -1,11 +1,13 @@
 # JapanEx release readiness
 
-Last checked: 2026-09-25. This records evidence for the current worktree; it is not a store approval.
+Last checked: 2026-09-26. This records evidence for the current worktree; it is not a store approval.
 
 ## Verified
 
 - `bun run verify`: data validation, 39 tests, TypeScript, and Expo lint passed.
 - `bun run export:web`: static web export passed.
+- Expo SDK 57 packages were updated to Expo Doctor's expected patch versions. The custom `@expo/ui` percentage-layout patch was rebased onto `@expo/ui@57.0.20`; a frozen offline Bun install reapplied it, and Expo Doctor passed all 21 checks.
+- After updating CocoaPods, an unsigned iOS Release simulator build succeeded with the rebased patch. The app installed and launched on the isolated iPhone QA simulator; its Map screen rendered with the saved score, prefecture map, zoom controls, and tabs in the expected positions.
 - The Play icon is a 512 × 512 RGBA PNG under 1 MB. The three localized feature graphics are opaque RGB PNGs at 1024 × 500. Draft phone screenshots are opaque 1080 × 1920 PNGs, and the existing tablet sets contain four opaque PNGs each; the tablet 5:8 ratio differs from Google's current 9:16 large-screen guidance and should be revisited during final capture.
 - Expo config introspection for the current worktree generated an Android HTTPS `/view` intent filter with `autoVerify`, removal directives for overlay and media/storage permissions, and an iOS Associated Domains entitlement for `japanex.expo.app`. This checks config-plugin output; the final signed artifacts still need inspection because native dependency manifests and signing are resolved during builds.
 - The new support page is present in the web export at `dist/support/index.html`; the exported support and privacy HTML match their source files byte for byte. On 2026-09-25, the live support and privacy URLs both returned HTTP 200 with HTML content types and matched the current source files byte for byte. The `/view` route returned HTTP 200. Both public `.well-known` association files returned HTTP 200 with JSON content types and matched the current source files byte for byte.
