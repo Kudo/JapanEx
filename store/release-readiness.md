@@ -29,6 +29,7 @@ Last checked: 2026-09-25. This records evidence for the current worktree; it is 
 - A `japanex:///view` test link opened in that development build after iOS's first-open confirmation. The native shared screen showed the expected score of 4 and its read-only notice, while the SQLite tracker state still contained 47 zero levels with score 0. A direct `japanex:///import` link showed the score-4 preview and replacement warning without changing storage; an invalid-version `/view` link showed its error state. The simulator was returned to Map. Signed HTTPS universal links remain unverified.
 - The iPhone Release build rejected an unsupported-version `/view` link and a malformed-level `/import` link with their respective error screens. Returning to Map left all 47 saved levels intact with score 1.
 - EAS build history was rechecked on 2026-09-25: the newest Android production build is build 7 (`f60e809b-0bff-4082-b1e6-78ce10b86348`) from 2026-08-17 at commit `184abb85`, and the newest iOS build is internal preview `91b1081f-09ec-4719-815a-72916cf34214` from 2026-08-10. Neither includes the current release changes; no newer build was listed.
+- The production EAS profile leaves `developmentClient` at its default `false`. In the installed Expo 57 native source, `ExpoDevLauncherReactDelegateHandler` returns without creating the launcher unless `EXAppDefines.APP_DEBUG` is true; `EXAppDefinesLoader` derives that value from the `DEBUG` compile flag. The local Release pod configuration does not define `DEBUG`. This points away from the normal production configuration as the cause of the earlier automation overlay, but it does not replace inspection of the signed archive.
 - Web smoke test: a prefecture level changed the score, survived reload, and appeared in Flags and prefecture detail.
 
 ## Still required before submission
@@ -41,7 +42,7 @@ Last checked: 2026-09-25. This records evidence for the current worktree; it is 
 - Recapture `03-flags.png` and `04-settings.png` for the phone, 7-inch, and 10-inch Play screenshot sets from the final release build. Existing images show earlier UI and are drafts.
 - Confirm the publisher identity and monitored support/privacy email shown on the public pages, complete Play Console declarations, and verify the deployed app-link association against the final signing certificate.
 - Review the new `store/app-store/` listing draft and capture final iPhone and iPad screenshots. The public support URL is available for App Store Connect once its contact details are confirmed.
-- Confirm the signed production iOS build has no Expo development menu. A development-menu overlay appeared during repeated custom-scheme automation on the local simulator build even though `xcodebuild` used Release configuration; the local build alone cannot establish the production configuration.
+- Confirm the signed production iOS build has no Expo development menu. A development-menu overlay appeared during repeated custom-scheme automation on the local simulator build; the current profile and native compile gates indicate it should be inactive in a production build, but the signed archive and TestFlight launch remain the deciding evidence.
 
 ## UI and functionality assessment
 
