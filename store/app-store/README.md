@@ -29,6 +29,8 @@ Each locale has `name.txt`, `subtitle.txt`, `keywords.txt`, `description.txt`, a
 
 The [support page source](../../public/support/index.html) contains contact information, as required for Apple's [Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information). The deployed page returned HTTP 200 and matched the source on 2026-09-25. Apple's [App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy) questions and age-rating questionnaire still require publisher review against the final signed build.
 
+Use the [App Store privacy review draft](privacy-review.md) to check source-based candidate answers and their remaining signed-build checks before publishing App Privacy responses.
+
 ## Screenshots
 
 The app supports iPhone and iPad. Capture current UI from the final build, without fabricated progress or altered controls. Apple currently requires screenshots for a 6.9-inch iPhone display and a 13-inch iPad display when the app runs on both. Use accepted portrait sizes such as **1320 × 2868** for iPhone 17 Pro Max and **2064 × 2752** for a 13-inch iPad Pro. Apple accepts 1–10 PNG or JPEG screenshots per set and disallows alpha. Check the latest [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications) before upload.

@@ -40,7 +40,7 @@ These suggested answers are based on the current source and must be rechecked ag
 
 ## Data safety draft
 
-Recommended top-level answers for the current production code:
+Candidate top-level answers from the current source, to be confirmed against the signed production AAB and actual network behavior:
 
 - Does the app collect or share any required user data types? **No.**
 - Is all user data encrypted in transit? **Not applicable**, because the app itself does not transmit user data to a developer-controlled backend.
