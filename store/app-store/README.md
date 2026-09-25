@@ -22,12 +22,12 @@ Each locale has `name.txt`, `subtitle.txt`, `keywords.txt`, `description.txt`, a
 | Primary category | Travel — publisher to confirm |
 | Price | Free — publisher to confirm |
 | Privacy policy | `https://japanex.expo.app/privacy/` |
-| Support URL | `https://japanex.expo.app/support/` — publish and verify before entry |
+| Support URL | `https://japanex.expo.app/support/` — live and verified on 2026-09-25; confirm contact details before entry |
 | Marketing URL | `https://japanex.expo.app/` — optional |
 | Support email | `kudo@csie.io` appears on the current privacy and support pages; confirm that it is monitored |
 | Review login | None; the app has no account or restricted feature |
 
-The [support page source](../../public/support/index.html) contains contact information, as required for Apple's [Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information). Publish it with the next website deployment and verify it loads publicly. Apple's [App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy) questions and age-rating questionnaire still require publisher review against the final signed build.
+The [support page source](../../public/support/index.html) contains contact information, as required for Apple's [Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information). The deployed page returned HTTP 200 and matched the source on 2026-09-25. Apple's [App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy) questions and age-rating questionnaire still require publisher review against the final signed build.
 
 ## Screenshots
 
