@@ -42,7 +42,7 @@ The Flags and Settings screens changed after these captures. Recapture those two
 2. Add the three store-listing languages above.
 3. Paste each locale's text into the matching Main store listing fields.
 4. Complete the declarations in `submission-details.md`.
-5. Deploy and verify the Kudo Chien contact details at https://japanex.expo.app/privacy/ and https://japanex.expo.app/support/, then verify delivery to `support@dozastudio.dev`.
+5. Recheck the live Kudo Chien contact details at https://japanex.expo.app/privacy/ and https://japanex.expo.app/support/, then verify delivery to `support@dozastudio.dev`.
 6. Upload the screenshots and feature graphic described in `submission-details.md`.
 7. Recheck every declaration against the final production AAB before submitting for review.
 

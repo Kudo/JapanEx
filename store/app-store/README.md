@@ -23,12 +23,12 @@ Each locale has `name.txt`, `subtitle.txt`, `keywords.txt`, `description.txt`, a
 | Primary category | Travel — publisher to confirm |
 | Price | Free — publisher to confirm |
 | Privacy policy | `https://japanex.expo.app/privacy/` |
-| Support URL | `https://japanex.expo.app/support/` — redeploy and verify updated contact details before entry |
+| Support URL | `https://japanex.expo.app/support/` — live page verified with current contact details |
 | Marketing URL | `https://japanex.expo.app/` — optional |
 | Support email | `support@dozastudio.dev` — supplied by publisher; verify delivery before submission |
 | Review login | None; the app has no account or restricted feature |
 
-The [support page source](../../public/support/index.html) contains contact information, as required for Apple's [Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information). The prior deployed page returned HTTP 200, but the new Kudo Chien contact details need deployment and a fresh live check. Apple's [App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy) questions and age-rating questionnaire still require publisher review against the final signed build.
+The [support page source](../../public/support/index.html) contains contact information, as required for Apple's [Support URL](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information). The deployed page returned HTTP 200 on 2026-09-26 and matched the Kudo Chien source byte for byte. Apple's [App Privacy](https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy) questions and age-rating questionnaire still require publisher review against the final signed build.
 
 Use the [App Store privacy review draft](privacy-review.md) to check source-based candidate answers and their remaining signed-build checks before publishing App Privacy responses.
 

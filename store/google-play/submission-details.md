@@ -15,7 +15,7 @@ This document separates facts verified from the repository from publisher-owned 
 | Pricing | Free — confirm with publisher |
 | Category | Travel & Local |
 | Website | https://japanex.expo.app |
-| Privacy policy URL | https://japanex.expo.app/privacy/ — URL is live; deploy and verify the new Kudo Chien contact details before submission |
+| Privacy policy URL | https://japanex.expo.app/privacy/ — live page verified with Kudo Chien contact details on 2026-09-26 |
 | Support email | `support@dozastudio.dev` — supplied by publisher; verify delivery before submission |
 | Support phone | Optional |
 
@@ -60,7 +60,7 @@ Google's [Data safety instructions](https://support.google.com/googleplay/androi
 
 ## Permission review before submission
 
-JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. Inspect the merged production manifest before uploading and confirm that no photo, video, or storage permission is present.
+JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. The merged manifest in production AAB build 8 requests no photo, video, or storage permission. Reinspect if the app is rebuilt before upload.
 
 ## Store assets
 
@@ -101,9 +101,9 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 
 ## Before review
 
-- Verify that `support@dozastudio.dev` receives support and privacy requests, and that the deployed support/privacy pages show Kudo Chien and this address.
+- Verify that `support@dozastudio.dev` receives support and privacy requests; recheck that the deployed support/privacy pages still show Kudo Chien and this address.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
-- Inspect the merged production manifest and confirm that no photo, video, or storage permission is present.
+- If a new production AAB is built, inspect its merged manifest and confirm that no photo, video, or storage permission is present.
 - Recapture the phone Flags and Settings screenshots and all eight tablet screenshots from the final release build. Use native 9:16 tablet captures rather than resizing the 5:8 drafts.
 - Upload localized listing text, release notes, screenshots, app icon, and the matching localized feature graphic.
 - Complete Data safety, Ads, App access, Target audience, Content rating, and all other dashboard declarations.

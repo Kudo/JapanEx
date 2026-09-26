@@ -1,6 +1,6 @@
 # Signed build handoff
 
-Build from the final reviewed JapanEx worktree. The local iOS Release simulator build verifies UI behavior, but it is not a signed App Store archive. Existing EAS artifacts predate the release-readiness changes.
+Build from the final reviewed JapanEx worktree. Android production build 8 and iOS internal preview build 2 finished from commit `a67820a`. The iOS preview is AdHoc-signed for registered devices; it is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and Android runtime checks.
 
 ## Build
 
@@ -8,10 +8,9 @@ The `production` profile in `eas.json` increments the remote build version. EAS 
 
 ```sh
 npx eas-cli@latest build -p ios --profile production
-npx eas-cli@latest build -p android --profile production
 ```
 
-Do not use `--auto-submit` for this verification round. Save each EAS build ID, version/build number, log URL, and artifact URL. If a build fails, preserve the failure log; fix the cause and create a new build rather than submitting an older artifact.
+Do not use `--auto-submit` for this verification round. Save the iOS production build ID, version/build number, log URL, and artifact URL. Rebuild Android only if the reviewed source changes after build 8. If a build fails, preserve the failure log; fix the cause and create a new build rather than submitting an older artifact.
 
 ## Inspect the artifacts
 
@@ -21,4 +20,4 @@ Do not use `--auto-submit` for this verification round. Save each EAS build ID, 
 4. Check HTTPS link handoff with the final signing certificates. A custom-scheme link or config introspection alone does not prove universal/app-link verification.
 5. Recapture the final store screenshots from these builds and compare them with the submitted UI. Review the Play pre-launch report before wider rollout.
 
-Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The support and privacy sources now name Kudo Chien and `support@dozastudio.dev`; deploy them and verify the live pages and inbox before store submission.
+Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The live support and privacy pages show Kudo Chien and `support@dozastudio.dev`; verify inbox delivery before store submission.
