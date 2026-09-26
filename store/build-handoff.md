@@ -2,6 +2,18 @@
 
 Build from the final reviewed JapanEx worktree. Android production build 9 (`d7f03afd-37a2-4d03-902e-f00c1b699d2c`) and iOS preview build 2 (`6c191d50-bb8f-431e-bbb5-41edfdfbab75`) were built from `0f3e23e`. Android build 9 exposed an intermittent image-export race that is fixed locally but requires a replacement signed build. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and local runtime checks.
 
+## Local gate before EAS
+
+1. Run `bun run verify`, which includes a type-aware lint rule for unhandled Promises. Build and install a local Android Release APK (`cd android && ./gradlew :app:assembleRelease --offline`) on a fresh, disposable emulator with Wi-Fi and mobile data disabled. Run an iOS Release simulator build for changes affecting iOS.
+2. Open a valid score-14 import with a 40-character display name, inspect its preview, and confirm replacement. On the first Map export, turn flags on and tap **Share result image**. Confirm the system share sheet opens and the PNG is 2048 × 2048 with the map, flags, legend, score, and a name label clear of the score.
+3. Cancel the share sheet, export once more with flags on, then turn flags off and export again. Confirm each export completes without an error and the app remains usable after cancellation. Test the normal zero-score map as well. Retryable errors must be investigated before starting a paid EAS build, even when the next attempt succeeds.
+
+The score-14 import fixture used above has 47 levels and a 40-character name:
+
+```sh
+adb shell "am start -a android.intent.action.VIEW -d 'japanex:///import?v=1&s=40000000000030000000000002200000000000000000003&l=en&n=MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM' dev.expo.kudo.japanex"
+```
+
 ## Build
 
 The `production` profile in `eas.json` increments the remote build version. EAS cloud builds may consume paid plan resources. Record `git rev-parse HEAD` and confirm `git status --short` is empty before starting. Use the project-required EAS CLI version through the commands below; the older globally installed `eas` CLI does not satisfy `eas.json`.

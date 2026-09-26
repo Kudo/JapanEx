@@ -126,6 +126,8 @@
 
 [observed] `bun run verify` is the repository-wide check. It runs the data validator, Node's dependency-free test suite, TypeScript with `--noEmit`, and Expo ESLint (`package.json` and `README.md`).
 
+[observed] Expo ESLint uses type information to reject floating Promises in TypeScript source. The native image-export race was caused by an unawaited Expo FileSystem write that ordinary TypeScript checking did not reject; the rule now catches that exact expression before a local or EAS build (`eslint.config.js` and `src/utils/result-export.ts`).
+
 [observed] Tests are colocated under `src/utils` as `*.test.mjs` and focus on pure cross-platform contracts: sharing, layout, map annotations, map camera behavior, image readiness, and SVG capture (`src/utils/*.test.mjs`).
 
 [observed] The project intentionally does not include Jest or React Native Testing Library, so screen interaction and native/web integration still require manual verification on the affected targets (`README.md`).
