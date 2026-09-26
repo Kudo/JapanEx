@@ -19,8 +19,8 @@ export async function createResultAsset(svg: Svg | null): Promise<ResultAsset> {
     const sourceFile = new File(Paths.cache, `source-${attempt}-${fileName}`);
     sourceFile.create({ overwrite: true, intermediates: true });
     try {
-      // @ref LLP 0000#result-rendering-and-export — iOS SVG output may contain base64 line breaks.
-      sourceFile.write(base64, { encoding: 'base64' });
+      // @ref LLP 0000#result-rendering-and-export — await the PNG write before native image decoding.
+      await sourceFile.write(base64, { encoding: 'base64' });
 
       // @ref LLP 0000#result-rendering-and-export — native pixel rounding can miss 2048 by a few pixels.
       const context = ImageManipulator.manipulate(sourceFile.uri);

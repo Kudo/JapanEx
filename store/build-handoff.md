@@ -1,6 +1,6 @@
 # Signed build handoff
 
-Build from the final reviewed JapanEx worktree. Android production build 8 and iOS internal preview build 2 finished from commit `a67820a`, before the 2× Settings text and iPad Flags width fixes. Neither is the final upload candidate. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and local runtime checks.
+Build from the final reviewed JapanEx worktree. Android production build 9 (`d7f03afd-37a2-4d03-902e-f00c1b699d2c`) and iOS preview build 2 (`6c191d50-bb8f-431e-bbb5-41edfdfbab75`) were built from `0f3e23e`. Android build 9 exposed an intermittent image-export race that is fixed locally but requires a replacement signed build. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and local runtime checks.
 
 ## Build
 
