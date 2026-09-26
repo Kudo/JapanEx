@@ -1,6 +1,6 @@
 # Signed build handoff
 
-Build from the final reviewed JapanEx worktree. Android production build 8 and iOS internal preview build 2 finished from commit `a67820a`. The iOS preview is AdHoc-signed for registered devices; it is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and Android runtime checks.
+Build from the final reviewed JapanEx worktree. Android production build 8 and iOS internal preview build 2 finished from commit `a67820a`, before the 2× Settings text fix. Neither is the final upload candidate. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and Android runtime checks.
 
 ## Build
 
@@ -8,9 +8,10 @@ The `production` profile in `eas.json` increments the remote build version. EAS 
 
 ```sh
 npx eas-cli@latest build -p ios --profile production
+npx eas-cli@latest build -p android --profile production
 ```
 
-Do not use `--auto-submit` for this verification round. Save the iOS production build ID, version/build number, log URL, and artifact URL. Rebuild Android only if the reviewed source changes after build 8. If a build fails, preserve the failure log; fix the cause and create a new build rather than submitting an older artifact.
+Do not use `--auto-submit` for this verification round. Save each new production build ID, version/build number, log URL, and artifact URL. If a build fails, preserve the failure log; fix the cause and create a new build rather than submitting an older artifact.
 
 ## Inspect the artifacts
 

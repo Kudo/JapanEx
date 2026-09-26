@@ -118,6 +118,10 @@ function ReadySettingsScreen() {
             }}
           />
         </Host>
+        {/* @ref LLP 0000#adaptive-accessibility-layout */}
+        <RNText style={[styles.nameHint, { color: theme.secondaryText }]}>
+          {t(state.locale, 'displayNameHint')}
+        </RNText>
       </View>
 
       <View
@@ -227,5 +231,6 @@ const styles = StyleSheet.create({
     boxShadow: '0 6px 18px rgba(34, 48, 56, 0.07)',
   },
   sectionTitle: { fontSize: 15, fontWeight: '900', letterSpacing: 0.2 },
+  nameHint: { fontSize: 13, lineHeight: 19 },
   status: { textAlign: 'center', fontSize: 14 },
 });

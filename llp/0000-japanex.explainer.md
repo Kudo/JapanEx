@@ -58,6 +58,8 @@
 
 [observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).
 
+[observed] On the SDK 58 Android production AAB at 2× text, the long display-name placeholder wrapped inside the fixed-height native field and its second line was clipped. A shorter localized placeholder plus a separate, wrapping hint keeps the explanation visible outside the field. A locally rebuilt Release APK rendered Settings at 1× and at 2× in English, Japanese, and Traditional Chinese without that clipping; a long entered name remained usable through horizontal scrolling (`src/screens/settings-screen.tsx`, `src/i18n/translations.ts`, and `store/release-readiness.md`).
+
 [observed] The import screen remounts its scroll content when the system font scale changes. An open iOS Release sheet otherwise retained stale spacing after a live accessibility-size change; rebuilding the content remeasured the mixed React Native and Expo UI layout (`src/screens/import-screen.tsx` and `store/release-readiness.md`).
 
 ### Sharing and import

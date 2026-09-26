@@ -60,7 +60,7 @@ Google's [Data safety instructions](https://support.google.com/googleplay/androi
 
 ## Permission review before submission
 
-JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. The merged manifest in production AAB build 8 requests no photo, video, or storage permission. Reinspect if the app is rebuilt before upload.
+JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. The merged manifest in production AAB build 8 requests no photo, video, or storage permission. Build 8 predates the Settings text fix; inspect the replacement production AAB before upload.
 
 ## Store assets
 
@@ -103,7 +103,7 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 
 - Verify that `support@dozastudio.dev` receives support and privacy requests; recheck that the deployed support/privacy pages still show Kudo Chien and this address.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
-- If a new production AAB is built, inspect its merged manifest and confirm that no photo, video, or storage permission is present.
+- Inspect the replacement production AAB's merged manifest and confirm that no photo, video, or storage permission is present.
 - Recapture the phone Flags and Settings screenshots and all eight tablet screenshots from the final release build. Use native 9:16 tablet captures rather than resizing the 5:8 drafts.
 - Upload localized listing text, release notes, screenshots, app icon, and the matching localized feature graphic.
 - Complete Data safety, Ads, App access, Target audience, Content rating, and all other dashboard declarations.
