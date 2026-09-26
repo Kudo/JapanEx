@@ -19,6 +19,6 @@ Do not use `--auto-submit` for this verification round. Save each new production
 2. Confirm the Android App Bundle has package `dev.expo.kudo.japanex`, the expected version code, the verified HTTPS `/view` filter, and no unused overlay, photo, video, or storage permission in its merged manifest.
 3. Install the signed builds through TestFlight and Play internal testing. Run the [native smoke test](release-readiness.md#native-smoke-test), including offline launch, read-only and confirmed-import links, accessibility, and 2048 × 2048 PNG export with flags hidden and shown. Try a long display name and check that its image label stays clear of the score.
 4. Check HTTPS link handoff with the final signing certificates. A custom-scheme link or config introspection alone does not prove universal/app-link verification.
-5. Compare the App Store simulator screenshot drafts with the signed iOS UI and recapture any mismatch. Recapture the outstanding Play phone and tablet images from the release build. Review the Play pre-launch report before wider rollout.
+5. Compare the App Store and Play screenshot drafts with the delivered signed UI and recapture any mismatch. Verify the Play phone and both 9:16 tablet sets in Play Console. Review the Play pre-launch report before wider rollout.
 
 Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The live support and privacy pages show Kudo Chien and `support@dozastudio.dev`; verify inbox delivery before store submission.

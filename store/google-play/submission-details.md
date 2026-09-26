@@ -70,22 +70,22 @@ JapanEx does not browse, import, or save to the user's photo library. The Expo c
 | --- | --- | --- |
 | Play Store icon | 512 × 512 px, 32-bit PNG | Ready at `assets/app-icon.png` |
 | Feature graphic | 1024 × 500 px, JPEG or 24-bit PNG without alpha | Ready in English, Japanese, and Traditional Chinese under `assets/` |
-| Phone screenshots | At least 2; use at least 4 portrait 1080 × 1920 px screenshots for recommendation eligibility | Drafts under `screenshots/phone/en-US/`; recapture Flags and Settings |
-| 7-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Current 5:8 drafts under `screenshots/7-inch-tablet/en-US/`; recapture all four |
-| 10-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Current 5:8 drafts under `screenshots/10-inch-tablet/en-US/`; recapture all four |
+| Phone screenshots | At least 2; use at least 4 portrait 1080 × 1920 px screenshots for recommendation eligibility | Four current local Release drafts under `screenshots/phone/en-US/` |
+| 7-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Four 1080 × 1920 local Release drafts under `screenshots/7-inch-tablet/en-US/` |
+| 10-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Four 1440 × 2560 local Release drafts under `screenshots/10-inch-tablet/en-US/` |
 
-Google Play accepts up to eight screenshots per supported device type. The phone, 7-inch tablet, and 10-inch tablet drafts were captured from an earlier release APK in English with representative on-device progress. The Flags and Settings screens have changed since those captures.
+Google Play accepts up to eight screenshots per supported device type. These three English sets were captured from the current local Release APK with the same representative on-device progress. Check them against the final signed build before upload.
 
 ### Recommended phone screenshot sequence
 
 1. Interactive map with several experience levels selected
    - Alt text: `A color-coded map of Japan showing experience levels for all 47 prefectures.`
-2. Prefecture experience-level picker
-   - Alt text: `A prefecture detail sheet with six travel experience levels.`
+2. Hokkaido detail and selected experience level
+   - Alt text: `The Hokkaido prefectural flag and its selected travel experience level.`
 3. Searchable prefecture flag gallery
    - Alt text: `A searchable gallery displaying Japanese prefecture flags and experience levels.`
 4. Settings and language selection
-   - Alt text: `JapanEx settings with display name, language, sharing, and reset controls.`
+   - Alt text: `JapanEx settings with display name, language, and view-link sharing controls.`
 
 Use actual in-app screens without device frames. Keep any added tagline under 20% of the image, localize overlays for each listing language, and do not add rankings, awards, price promotions, or calls to install.
 
@@ -104,7 +104,7 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 - Verify that `support@dozastudio.dev` receives support and privacy requests; recheck that the deployed support/privacy pages still show Kudo Chien and this address.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
 - Inspect the replacement production AAB's merged manifest and confirm that no photo, video, or storage permission is present.
-- Recapture the phone Flags and Settings screenshots and all eight tablet screenshots from the final release build. Use native 9:16 tablet captures rather than resizing the 5:8 drafts.
+- Compare the twelve local Release screenshot drafts with the final Play-signed build; recapture any screen whose delivered UI differs. Verify all three sets in Play Console before upload.
 - Upload localized listing text, release notes, screenshots, app icon, and the matching localized feature graphic.
 - Complete Data safety, Ads, App access, Target audience, Content rating, and all other dashboard declarations.
 - Run the production build through internal testing and review its pre-launch report.

@@ -29,12 +29,12 @@ Each is an opaque 1024 × 500 PNG. `feature-graphic-base.png` is the text-free m
 English screenshot drafts are in `screenshots/`:
 
 - `phone/en-US/` — four 1080 × 1920 PNGs
-- `7-inch-tablet/en-US/` — four 1200 × 1920 PNGs
-- `10-inch-tablet/en-US/` — four 1600 × 2560 PNGs
+- `7-inch-tablet/en-US/` — four 1080 × 1920 PNGs
+- `10-inch-tablet/en-US/` — four 1440 × 2560 PNGs
 
 Each set uses the same sequence: map, Hokkaido detail, flag gallery, and settings. See `screenshots/README.md` for captions and capture details.
 
-The Flags and Settings screens changed after these captures. Recapture those two phone images and every tablet image from the final release build. The current tablet drafts are 5:8; Google's large-screen guidance calls for 9:16 portrait captures.
+All three sets now show the current local Android Release UI with the same representative score-14 progress. The tablet drafts are native 9:16 captures from isolated 7-inch and 10-inch emulator profiles. Compare every image with the final signed Play build and recapture any screen whose delivered UI differs.
 
 ## How to use this pack
 

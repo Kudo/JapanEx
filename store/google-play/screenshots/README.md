@@ -1,18 +1,18 @@
 # Google Play screenshots
 
-These screenshots were captured from the Android release APK in English with representative local progress. They are unframed, portrait PNGs with a normalized 10:00 status bar.
+These screenshots were captured from the current local Android Release APK in English with five representative prefecture levels totaling a score of 14. The display name was left empty. They are unframed, opaque portrait PNGs with a normalized 10:00 status bar.
 
-`03-flags.png` in each set shows the previous collection heading and count, and `04-settings.png` shows the previous score layout and privacy wording. Recapture those two phone images and all eight tablet images from the final release build before store upload, then check that every screenshot matches the submitted app.
+The phone, 7-inch tablet, and 10-inch tablet sets each show Map, Hokkaido detail, Flags, and Settings from the same local build. The phone Settings capture is scrolled to show display-name, language, and view-link controls. Compare all twelve images with the final signed Play build before upload, and recapture any UI that differs.
 
-The current tablet captures use a 5:8 portrait ratio. Google's [preview-asset guidance](https://support.google.com/googleplay/android-developer/answer/9866151) says to use 9:16 portrait screenshots for large screens. Capture the final tablet sets directly from 9:16 tablet device profiles, such as 1080 × 1920 for 7-inch and 1440 × 2560 for 10-inch if those profiles show the actual tablet UI. Do not stretch or crop the existing images to force that ratio. Check the final files in Play Console before upload.
+Google's [preview-asset guidance](https://support.google.com/googleplay/android-developer/answer/9866151) calls for 9:16 portrait screenshots on large screens. The new tablet captures came directly from isolated Nexus 7 and Nexus 10 emulator profiles configured at 1080 × 1920, 288 dpi and 1440 × 2560, 280 dpi, respectively; no image was stretched or cropped. The emulator's fully opaque alpha channel was removed without changing RGB pixels. Check the final files in Play Console before upload.
 
 ## Upload sets
 
-| Play Console slot | Directory | Current draft dimensions | Final capture target | Files |
-| --- | --- | --- | --- | --- |
-| Phone screenshots | `phone/en-US/` | 1080 × 1920 | 1080 × 1920 | 4 |
-| 7-inch tablet screenshots | `7-inch-tablet/en-US/` | 1200 × 1920 | 9:16 native capture | 4 |
-| 10-inch tablet screenshots | `10-inch-tablet/en-US/` | 1600 × 2560 | 9:16 native capture | 4 |
+| Play Console slot | Directory | Draft dimensions | Files |
+| --- | --- | --- | --- |
+| Phone screenshots | `phone/en-US/` | 1080 × 1920 | 4 |
+| 7-inch tablet screenshots | `7-inch-tablet/en-US/` | 1080 × 1920 | 4 |
+| 10-inch tablet screenshots | `10-inch-tablet/en-US/` | 1440 × 2560 | 4 |
 
 ## Sequence and alt text
 
@@ -23,6 +23,6 @@ The current tablet captures use a 5:8 portrait ratio. Google's [preview-asset gu
 3. `03-flags.png`
    - The prefecture flag gallery with region and experience-level filters.
 4. `04-settings.png`
-   - JapanEx settings showing the display name, English language selection, sharing, privacy, and reset controls.
+   - JapanEx settings showing the display name, English language selection, and view-link sharing controls.
 
 Upload the four files in filename order for each device type. The app data is intentionally identical across all three sets so the score and prefecture states remain consistent.
