@@ -6,7 +6,7 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 | App Store Connect item | Candidate | Basis to verify |
 | --- | --- | --- |
-| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The public page matched the repository source on 2026-09-26. |
+| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The previous public page matched repository source on 2026-09-26. Deploy and verify the new Kudo Chien contact details. |
 | Data collection | **No, we do not collect data from this app** | Tracker data is stored on-device; no app-owned tracker upload or analytics call was found in the current source. The iOS Release simulator app rebuilt on 2026-09-26 still has 11 privacy manifests, all declaring no collected data. |
 | Tracking | **No** | The current source includes no ads or cross-app tracking integration; those same manifests declare tracking `false`. |
 | Privacy choices URL | Leave blank unless the publisher wants a separate choices page | The policy already explains local deletion and backup limits. Apple lists this URL as optional. |
@@ -24,5 +24,5 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 1. Inspect the signed production archive's privacy report, embedded manifests, and bundled SDKs. The simulator archive is not the store artifact.
 2. Check actual outbound traffic during fresh launch, map editing, sharing, and link opening; revisit the candidate answers if a dependency sends user or device data.
-3. Confirm the publisher identity and monitored `kudo@csie.io` address shown on the public policy and support pages.
+3. Verify that the deployed policy and support pages show the publisher-supplied Kudo Chien name and `support@dozastudio.dev` address, and that the inbox receives requests.
 4. Enter the answers in App Store Connect and review the product-page privacy preview before publishing them.

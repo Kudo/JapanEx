@@ -7,6 +7,7 @@ This document separates facts verified from the repository from publisher-owned 
 | Field | Value |
 | --- | --- |
 | App name | JapanEx |
+| Developer / publisher | Kudo Chien — supplied by publisher on 2026-09-26 |
 | Default language | English (United States) |
 | App or game | App |
 | Package name | `dev.expo.kudo.japanex` |
@@ -14,8 +15,8 @@ This document separates facts verified from the repository from publisher-owned 
 | Pricing | Free — confirm with publisher |
 | Category | Travel & Local |
 | Website | https://japanex.expo.app |
-| Privacy policy URL | https://japanex.expo.app/privacy/ — published and verified |
-| Support email | **REQUIRED: add a monitored publisher support address** |
+| Privacy policy URL | https://japanex.expo.app/privacy/ — URL is live; deploy and verify the new Kudo Chien contact details before submission |
+| Support email | `support@dozastudio.dev` — supplied by publisher; verify delivery before submission |
 | Support phone | Optional |
 
 For tags, open Play Console's suggested tags and select no more than five that are visibly supported by the listing and initial app experience. Prefer travel-map, travel-planning, or trip-recording tags if Google offers them; do not select navigation because JapanEx does not provide routes or live location.
@@ -100,7 +101,7 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 
 ## Before review
 
-- Replace the support-email placeholder with a monitored address.
+- Verify that `support@dozastudio.dev` receives support and privacy requests, and that the deployed support/privacy pages show Kudo Chien and this address.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
 - Inspect the merged production manifest and confirm that no photo, video, or storage permission is present.
 - Recapture the phone Flags and Settings screenshots and all eight tablet screenshots from the final release build. Use native 9:16 tablet captures rather than resizing the 5:8 drafts.

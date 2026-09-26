@@ -21,4 +21,4 @@ Do not use `--auto-submit` for this verification round. Save each EAS build ID, 
 4. Check HTTPS link handoff with the final signing certificates. A custom-scheme link or config introspection alone does not prove universal/app-link verification.
 5. Recapture the final store screenshots from these builds and compare them with the submitted UI. Review the Play pre-launch report before wider rollout.
 
-Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). Store submission starts only after those checks and the public support/privacy pages are verified.
+Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The support and privacy sources now name Kudo Chien and `support@dozastudio.dev`; deploy them and verify the live pages and inbox before store submission.
