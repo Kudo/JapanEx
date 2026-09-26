@@ -66,6 +66,8 @@
 
 [observed] A valid read-only view offers an explicit action to open the same snapshot in the confirmed-import screen. Canceling import returns to the view when navigation history permits; neither opening the preview nor canceling changes local progress (`src/screens/shared-view-screen.tsx` and `src/screens/import-screen.tsx`).
 
+[observed] The import confirmation sheet opens at full height so its Replace and Cancel actions are visible immediately. A half-height initial detent hid both actions below the viewport on a Pixel 9 Pro Android Release build, requiring an undiscoverable drag to continue (`src/app/_layout.tsx` and `store/release-readiness.md`).
+
 [confirmed] (Kudo Chien, 2026-08-18) `/view` must never modify local progress. Replacing local state is reserved for `/import` and requires explicit user confirmation.
 
 [observed] Production links target `https://japanex.expo.app/view`; iOS associated domains, Android verified app links, and static `.well-known` files connect that URL to installed applications (`src/utils/share-state.ts`, `app.json`, and `public/.well-known`).
