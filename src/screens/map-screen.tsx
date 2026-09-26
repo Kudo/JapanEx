@@ -73,10 +73,17 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
       });
     }
 
-    if (showFlags && !flagsReadyRef.current) {
-      await new Promise<void>((resolve) => {
-        resolveFlagsReadyRef.current = resolve;
-      });
+    if (showFlags) {
+      if (!flagsReadyRef.current) {
+        await new Promise<void>((resolve) => {
+          resolveFlagsReadyRef.current = resolve;
+        });
+      } else {
+        // @ref LLP 0000#result-rendering-and-export — cached flags may not report onLoad after remounting.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
+      }
     }
 
     return resultCard;
@@ -84,7 +91,6 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
 
   const handleShareResult = async () => {
     layoutReadyRef.current = false;
-    flagsReadyRef.current = false;
     setExportPhase('preparing');
     setStatus('');
     try {
