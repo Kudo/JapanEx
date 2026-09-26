@@ -60,7 +60,7 @@ Google's [Data safety instructions](https://support.google.com/googleplay/androi
 
 ## Permission review before submission
 
-JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. The merged manifest in production AAB build 8 requests no photo, video, or storage permission. Build 8 predates the Settings text fix; inspect the replacement production AAB before upload.
+JapanEx does not browse, import, or save to the user's photo library. The Expo config blocks Android storage and media permissions, including `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO`, `READ_EXTERNAL_STORAGE`, and `WRITE_EXTERNAL_STORAGE`. The merged manifest in production AAB build 9 requests no photo, video, or storage permission. Build 9 contains the superseded image-export race; inspect its replacement production AAB before upload.
 
 ## Store assets
 
