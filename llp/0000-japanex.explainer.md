@@ -58,6 +58,8 @@
 
 [observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).
 
+[observed] The import screen remounts its scroll content when the system font scale changes. An open iOS Release sheet otherwise retained stale spacing after a live accessibility-size change; rebuilding the content remeasured the mixed React Native and Expo UI layout (`src/screens/import-screen.tsx` and `store/release-readiness.md`).
+
 ### Sharing and import
 
 [observed] Shared state uses a versioned query contract: `v=1`, exactly 47 level digits in JIS code order, one supported locale, and an optional display name capped at 40 characters. Parsing rejects unsupported versions, malformed level strings, unsupported locales, and overlong names (`src/utils/share-state.ts` and `src/utils/share-state.test.mjs`).
@@ -67,6 +69,8 @@
 [observed] A valid read-only view offers an explicit action to open the same snapshot in the confirmed-import screen. Canceling import returns to the view when navigation history permits; neither opening the preview nor canceling changes local progress (`src/screens/shared-view-screen.tsx` and `src/screens/import-screen.tsx`).
 
 [observed] The import confirmation sheet opens at full height so its Replace and Cancel actions are visible immediately. A half-height initial detent hid both actions below the viewport on a Pixel 9 Pro Android Release build, requiring an undiscoverable drag to continue (`src/app/_layout.tsx` and `store/release-readiness.md`).
+
+[observed] The confirmation button is constrained to the width of its content column so its label can wrap inside the card at accessibility text sizes. An unconstrained iOS button extended beyond the card on an iPhone 17 Pro Max Release simulator (`src/screens/import-screen.tsx` and `store/release-readiness.md`).
 
 [confirmed] (Kudo Chien, 2026-08-18) `/view` must never modify local progress. Replacing local state is reserved for `/import` and requires explicit user confirmation.
 

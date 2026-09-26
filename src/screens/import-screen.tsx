@@ -1,6 +1,6 @@
 import { Button, Column, Host } from '@expo/ui';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -13,6 +13,7 @@ export function ImportScreen() {
   const theme = useAppTheme();
   const cardStyle = useBoundedContentStyle(620, 40);
   const router = useRouter();
+  const { fontScale } = useWindowDimensions();
   const params = useLocalSearchParams<ImportParams>();
   const { state, replaceState } = useTracker();
   const result = parseImportParams(params);
@@ -26,7 +27,9 @@ export function ImportScreen() {
 
   return (
     <>
+      {/* @ref LLP 0000#adaptive-accessibility-layout */}
       <ScrollView
+        key={fontScale}
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.screen}
@@ -58,8 +61,10 @@ export function ImportScreen() {
                 style={styles.nativeHost}
               >
                 <Column style={{ width: '100%' }} spacing={10}>
+                  {/* @ref LLP 0000#sharing-and-import */}
                   <Button
                     label={t(state.locale, 'importConfirm')}
+                    style={styles.confirmButton}
                     onPress={() => {
                       replaceState(result.state);
                       router.replace('/');
@@ -89,6 +94,7 @@ export function ImportScreen() {
 
 const styles = StyleSheet.create({
   nativeHost: { alignSelf: 'stretch' },
+  confirmButton: { width: '100%' },
   screen: { flexGrow: 1, padding: 20, justifyContent: 'center' },
   card: {
     alignSelf: 'center',
