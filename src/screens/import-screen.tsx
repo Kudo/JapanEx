@@ -64,7 +64,7 @@ export function ImportScreen() {
                   {/* @ref LLP 0000#sharing-and-import */}
                   <Button
                     label={t(state.locale, 'importConfirm')}
-                    style={styles.confirmButton}
+                    style={{ width: '100%' }}
                     onPress={() => {
                       replaceState(result.state);
                       router.replace('/');
@@ -94,7 +94,6 @@ export function ImportScreen() {
 
 const styles = StyleSheet.create({
   nativeHost: { alignSelf: 'stretch' },
-  confirmButton: { width: '100%' },
   screen: { flexGrow: 1, padding: 20, justifyContent: 'center' },
   card: {
     alignSelf: 'center',

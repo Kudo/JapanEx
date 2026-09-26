@@ -1,0 +1,3472 @@
+diff --git a/node_modules/@expo/ui/.bun-tag-def7fc32b16ca26c b/.bun-tag-def7fc32b16ca26c
+new file mode 100644
+index 0000000000000000000000000000000000000000..e69de29bb2d1d6434b8b29ae775ad8c2e48c5391
+diff --git a/android/src/main/java/expo/modules/ui/ComposeViews.kt b/android/src/main/java/expo/modules/ui/ComposeViews.kt
+index 966015e0899c8a50a4f90e8b20ace7cc173185b0..066535fba5b841b05bd483b4c8b517b82a987387 100644
+--- a/android/src/main/java/expo/modules/ui/ComposeViews.kt
++++ b/android/src/main/java/expo/modules/ui/ComposeViews.kt
+@@ -4,17 +4,24 @@ package expo.modules.ui
+ 
+ import androidx.compose.foundation.layout.Arrangement
+ import androidx.compose.foundation.layout.Box
+-import androidx.compose.foundation.layout.Column
+ import androidx.compose.foundation.layout.ExperimentalLayoutApi
+ import androidx.compose.foundation.layout.FlowRow
+-import androidx.compose.foundation.layout.Row
+ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+ import androidx.compose.material3.FloatingToolbarDefaults
+ import androidx.compose.material3.FloatingToolbarExitDirection
+ import androidx.compose.runtime.Composable
++import androidx.compose.runtime.CompositionLocalProvider
++import androidx.compose.runtime.compositionLocalOf
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
+ import androidx.compose.ui.input.nestedscroll.nestedScroll
++import androidx.compose.ui.layout.Layout
++import androidx.compose.ui.layout.Measurable
++import androidx.compose.ui.layout.MeasureScope
++import androidx.compose.ui.layout.Placeable
++import androidx.compose.ui.unit.Constraints
++import androidx.compose.ui.unit.constrainHeight
++import androidx.compose.ui.unit.constrainWidth
+ import expo.modules.kotlin.types.Enumerable
+ import expo.modules.kotlin.views.ComposeProps
+ import expo.modules.kotlin.views.FunctionalComposableScope
+@@ -25,6 +32,7 @@ import expo.modules.ui.convertibles.ContentAlignment
+ import expo.modules.ui.convertibles.VerticalArrangement
+ import expo.modules.ui.convertibles.toComposeArrangement
+ import expo.modules.kotlin.views.OptimizedComposeProps
++import kotlin.math.roundToInt
+ 
+ enum class FloatingToolbarExitAlwaysScrollBehavior(val value: String) : Enumerable {
+   TOP("top"),
+@@ -60,14 +68,14 @@ internal fun FunctionalComposableScope.RowContent(props: LayoutProps) {
+     ?.let {
+       FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = it)
+     }
+-  Row(
++  UniversalRow(
+     horizontalArrangement = props.horizontalArrangement?.toComposeArrangement() ?: Arrangement.Start,
+     verticalAlignment = props.verticalAlignment?.toComposeAlignment() ?: Alignment.Top,
+     modifier = ModifierRegistry
+       .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
+       .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior) else Modifier)
+   ) {
+-    Children(UIComposableScope(rowScope = this@Row, nestedScrollConnection = scrollBehavior))
++    Children(UIComposableScope(nestedScrollConnection = scrollBehavior))
+   }
+ }
+ 
+@@ -79,7 +87,9 @@ internal fun FunctionalComposableScope.FlowRowContent(props: LayoutProps) {
+     modifier = ModifierRegistry
+       .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
+   ) {
+-    Children(UIComposableScope(rowScope = this@FlowRow))
++    CompositionLocalProvider(LocalUniversalStackAxis provides null) {
++      Children(UIComposableScope(rowScope = this@FlowRow))
++    }
+   }
+ }
+ 
+@@ -90,14 +100,14 @@ internal fun FunctionalComposableScope.ColumnContent(props: LayoutProps) {
+     ?.let {
+       FloatingToolbarDefaults.exitAlwaysScrollBehavior(exitDirection = it)
+     }
+-  Column(
++  UniversalColumn(
+     verticalArrangement = props.verticalArrangement?.toComposeArrangement() ?: Arrangement.Top,
+     horizontalAlignment = props.horizontalAlignment?.toComposeAlignment() ?: Alignment.Start,
+     modifier = ModifierRegistry
+       .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
+       .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior) else Modifier)
+   ) {
+-    Children(UIComposableScope(columnScope = this@Column, nestedScrollConnection = scrollBehavior))
++    Children(UIComposableScope(nestedScrollConnection = scrollBehavior))
+   }
+ }
+ 
+@@ -114,6 +124,223 @@ fun FunctionalComposableScope.BoxContent(props: LayoutProps) {
+       .applyModifiers(props.modifiers, appContext, composableScope, globalEventDispatcher)
+       .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior) else Modifier)
+   ) {
+-    Children(UIComposableScope(boxScope = this@Box, nestedScrollConnection = scrollBehavior))
++    CompositionLocalProvider(LocalUniversalStackAxis provides null) {
++      Children(UIComposableScope(boxScope = this@Box, nestedScrollConnection = scrollBehavior))
++    }
++  }
++}
++internal enum class UniversalStackAxis {
++  Horizontal,
++  Vertical
++}
++
++internal val LocalUniversalStackAxis = compositionLocalOf<UniversalStackAxis?> { null }
++
++internal data class UniversalLayoutParentData(
++  val dimensions: UniversalLayoutDimensions = UniversalLayoutDimensions(),
++  val weight: Float = 0f,
++  val horizontalAlignment: Alignment.Horizontal? = null,
++  val verticalAlignment: Alignment.Vertical? = null
++)
++
++internal fun Any?.asUniversalLayoutParentData(): UniversalLayoutParentData =
++  this as? UniversalLayoutParentData ?: UniversalLayoutParentData()
++
++private fun Float.toSafePixels(density: Float): Int =
++  (this * density).roundToInt().coerceIn(0, Constraints.Infinity)
++
++private fun Float.toSafeFractionPixels(parentSize: Int): Int =
++  (this * parentSize).roundToInt().coerceIn(0, Constraints.Infinity)
++
++private fun UniversalLayoutDimensions.resolveWidth(parentWidth: Int?, density: Float): Int? =
++  widthPoints?.toSafePixels(density) ?: parentWidth?.let { widthFraction?.toSafeFractionPixels(it) }
++
++private fun UniversalLayoutDimensions.resolveHeight(parentHeight: Int?, density: Float): Int? =
++  heightPoints?.toSafePixels(density) ?: parentHeight?.let { heightFraction?.toSafeFractionPixels(it) }
++
++private fun fixedOrBoundedConstraints(
++  width: Int?,
++  height: Int?,
++  maxWidth: Int,
++  maxHeight: Int
++): Constraints = Constraints(
++  minWidth = width ?: 0,
++  maxWidth = width ?: maxWidth,
++  minHeight = height ?: 0,
++  maxHeight = height ?: maxHeight
++)
++
++internal fun MeasureScope.measureUniversalChild(
++  measurable: Measurable,
++  constraints: Constraints,
++  parentWidth: Int?,
++  parentHeight: Int?
++): Placeable {
++  val dimensions = measurable.parentData.asUniversalLayoutParentData().dimensions
++  return measurable.measure(
++    fixedOrBoundedConstraints(
++      dimensions.resolveWidth(parentWidth, density),
++      dimensions.resolveHeight(parentHeight, density),
++      constraints.maxWidth,
++      constraints.maxHeight
++    )
++  )
++}
++
++@Composable
++internal fun UniversalRow(
++  modifier: Modifier,
++  horizontalArrangement: Arrangement.Horizontal,
++  verticalAlignment: Alignment.Vertical,
++  content: @Composable () -> Unit
++) {
++  CompositionLocalProvider(LocalUniversalStackAxis provides UniversalStackAxis.Horizontal) {
++    Layout(modifier = modifier, content = content) { measurables, constraints ->
++      measureUniversalStack(
++        measurables,
++        constraints,
++        UniversalStackAxis.Horizontal,
++        horizontalArrangement,
++        Arrangement.Top,
++        Alignment.Start,
++        verticalAlignment
++      )
++    }
++  }
++}
++
++@Composable
++internal fun UniversalColumn(
++  modifier: Modifier,
++  verticalArrangement: Arrangement.Vertical,
++  horizontalAlignment: Alignment.Horizontal,
++  content: @Composable () -> Unit
++) {
++  CompositionLocalProvider(LocalUniversalStackAxis provides UniversalStackAxis.Vertical) {
++    Layout(modifier = modifier, content = content) { measurables, constraints ->
++      measureUniversalStack(
++        measurables,
++        constraints,
++        UniversalStackAxis.Vertical,
++        Arrangement.Start,
++        verticalArrangement,
++        horizontalAlignment,
++        Alignment.Top
++      )
++    }
++  }
++}
++
++private fun MeasureScope.measureUniversalStack(
++  measurables: List<Measurable>,
++  constraints: Constraints,
++  axis: UniversalStackAxis,
++  horizontalArrangement: Arrangement.Horizontal,
++  verticalArrangement: Arrangement.Vertical,
++  horizontalAlignment: Alignment.Horizontal,
++  verticalAlignment: Alignment.Vertical
++): androidx.compose.ui.layout.MeasureResult {
++  val horizontal = axis == UniversalStackAxis.Horizontal
++  val definiteWidth = constraints.maxWidth.takeIf {
++    it != Constraints.Infinity && constraints.minWidth == it
++  }
++  val definiteHeight = constraints.maxHeight.takeIf {
++    it != Constraints.Infinity && constraints.minHeight == it
++  }
++  val maxMain = if (horizontal) constraints.maxWidth else constraints.maxHeight
++  val maxCross = if (horizontal) constraints.maxHeight else constraints.maxWidth
++  val spacing = if (horizontal) {
++    horizontalArrangement.spacing.roundToPx()
++  } else {
++    verticalArrangement.spacing.roundToPx()
++  }
++  val totalSpacing = spacing * (measurables.size - 1).coerceAtLeast(0)
++  val placeables = arrayOfNulls<Placeable>(measurables.size)
++  var occupiedMain = 0
++
++  measurables.forEachIndexed { index, measurable ->
++    val parentData = measurable.parentData.asUniversalLayoutParentData()
++    if (parentData.weight > 0f) return@forEachIndexed
++
++    val width = parentData.dimensions.resolveWidth(definiteWidth, density)
++    val height = parentData.dimensions.resolveHeight(definiteHeight, density)
++    val resolvedMain = if (horizontal) width else height
++    val remainingMain = if (maxMain == Constraints.Infinity) {
++      Constraints.Infinity
++    } else {
++      (maxMain - occupiedMain - totalSpacing).coerceAtLeast(0)
++    }
++    val childConstraints = if (horizontal) {
++      fixedOrBoundedConstraints(width, height, resolvedMain ?: remainingMain, maxCross)
++    } else {
++      fixedOrBoundedConstraints(width, height, maxCross, resolvedMain ?: remainingMain)
++    }
++    val placeable = measurable.measure(childConstraints)
++    placeables[index] = placeable
++    occupiedMain += if (horizontal) placeable.width else placeable.height
++  }
++
++  val totalWeight = measurables.sumOf {
++    it.parentData.asUniversalLayoutParentData().weight.toDouble()
++  }.toFloat()
++  if (totalWeight > 0f) {
++    val targetMain = when {
++      maxMain != Constraints.Infinity -> maxMain
++      horizontal -> constraints.minWidth
++      else -> constraints.minHeight
++    }
++    var remaining = (targetMain - occupiedMain - totalSpacing).coerceAtLeast(0)
++    var remainingWeight = totalWeight
++    measurables.forEachIndexed { index, measurable ->
++      val parentData = measurable.parentData.asUniversalLayoutParentData()
++      if (parentData.weight <= 0f) return@forEachIndexed
++
++      val share = if (remainingWeight == parentData.weight) {
++        remaining
++      } else {
++        (remaining * (parentData.weight / remainingWeight)).roundToInt()
++      }
++      remaining -= share
++      remainingWeight -= parentData.weight
++      val width = if (horizontal) share else parentData.dimensions.resolveWidth(definiteWidth, density)
++      val height = if (horizontal) parentData.dimensions.resolveHeight(definiteHeight, density) else share
++      placeables[index] = measurable.measure(
++        fixedOrBoundedConstraints(width, height, constraints.maxWidth, constraints.maxHeight)
++      )
++    }
++  }
++
++  val childMainSizes = IntArray(placeables.size) { index ->
++    placeables[index]?.let { if (horizontal) it.width else it.height } ?: 0
++  }
++  val contentMain = childMainSizes.sum() + totalSpacing
++  val contentCross = placeables.maxOfOrNull {
++    it?.let { placeable -> if (horizontal) placeable.height else placeable.width } ?: 0
++  } ?: 0
++  val width = constraints.constrainWidth(if (horizontal) contentMain else contentCross)
++  val height = constraints.constrainHeight(if (horizontal) contentCross else contentMain)
++  val positions = IntArray(placeables.size)
++  if (horizontal) {
++    with(horizontalArrangement) {
++      arrange(width, childMainSizes, layoutDirection, positions)
++    }
++  } else {
++    with(verticalArrangement) {
++      arrange(height, childMainSizes, positions)
++    }
++  }
++
++  return layout(width, height) {
++    placeables.forEachIndexed { index, placeable ->
++      placeable ?: return@forEachIndexed
++      val parentData = measurables[index].parentData.asUniversalLayoutParentData()
++      if (horizontal) {
++        val alignment = parentData.verticalAlignment ?: verticalAlignment
++        placeable.place(positions[index], alignment.align(placeable.height, height))
++      } else {
++        val alignment = parentData.horizontalAlignment ?: horizontalAlignment
++        placeable.place(alignment.align(placeable.width, width, layoutDirection), positions[index])
++      }
++    }
+   }
+ }
+diff --git a/android/src/main/java/expo/modules/ui/HostView.kt b/android/src/main/java/expo/modules/ui/HostView.kt
+index 94f57671a000634b77a48dc12aebd2ceb4242df7..bfd7ef2069898d04dd59974c71023b59cb790afa 100644
+--- a/android/src/main/java/expo/modules/ui/HostView.kt
++++ b/android/src/main/java/expo/modules/ui/HostView.kt
+@@ -188,7 +188,15 @@ internal class HostView(context: Context, appContext: AppContext) :
+           constraints.maxHeight
+         }
+       )
+-      val placeables = measurables.map { it.measure(boundedConstraints) }
++      val definiteWidth = boundedConstraints.maxWidth.takeIf {
++        it != Constraints.Infinity && (boundedConstraints.minWidth == it || useViewportSizeMeasurement)
++      }
++      val definiteHeight = boundedConstraints.maxHeight.takeIf {
++        it != Constraints.Infinity && (boundedConstraints.minHeight == it || useViewportSizeMeasurement)
++      }
++      val placeables = measurables.map {
++        measureUniversalChild(it, boundedConstraints, definiteWidth, definiteHeight)
++      }
+ 
+       val contentWidthPx = placeables.maxOfOrNull { it.width } ?: 0
+       val contentHeightPx = placeables.maxOfOrNull { it.height } ?: 0
+diff --git a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+index 7c2880de1e90269a93ce015716658c02952f078f..e0358332417613b9c0264fbc315a81fe5d9e3221 100644
+--- a/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
++++ b/android/src/main/java/expo/modules/ui/ModifierRegistry.kt
+@@ -65,11 +65,15 @@ import androidx.compose.ui.layout.onGloballyPositioned
+ import androidx.compose.ui.layout.onSizeChanged
+ import androidx.compose.ui.layout.onVisibilityChanged
+ import androidx.compose.ui.layout.positionInWindow
++import androidx.compose.ui.node.ModifierNodeElement
++import androidx.compose.ui.node.ParentDataModifierNode
+ import androidx.compose.ui.platform.LocalDensity
++import androidx.compose.ui.platform.InspectorInfo
+ import androidx.compose.ui.semantics.Role
+ import androidx.compose.ui.semantics.contentType
+ import androidx.compose.ui.semantics.semantics
+ import androidx.compose.ui.unit.DpOffset
++import androidx.compose.ui.unit.Density
+ import androidx.compose.ui.unit.dp
+ import androidx.compose.ui.zIndex
+ import com.facebook.react.bridge.Dynamic
+@@ -137,6 +141,83 @@ data class HeightParams(
+   @Field val height: Int = 0
+ ) : Record
+ 
++@OptimizedRecord
++internal data class UniversalLayoutParams(
++  @Field val widthPoints: Double? = null,
++  @Field val widthFraction: Double? = null,
++  @Field val heightPoints: Double? = null,
++  @Field val heightFraction: Double? = null
++) : Record
++
++internal data class UniversalLayoutDimensions(
++  val widthPoints: Float? = null,
++  val widthFraction: Float? = null,
++  val heightPoints: Float? = null,
++  val heightFraction: Float? = null
++)
++
++private data class UniversalLayoutElement(
++  val dimensions: UniversalLayoutDimensions
++) : ModifierNodeElement<UniversalLayoutNode>() {
++  override fun create() = UniversalLayoutNode(dimensions)
++
++  override fun update(node: UniversalLayoutNode) {
++    node.dimensions = dimensions
++  }
++
++  override fun InspectorInfo.inspectableProperties() {
++    name = "universalLayout"
++    properties["dimensions"] = dimensions
++  }
++}
++
++private class UniversalLayoutNode(
++  var dimensions: UniversalLayoutDimensions
++) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(dimensions = dimensions)
++}
++
++private data class UniversalWeightElement(val weight: Float) : ModifierNodeElement<UniversalWeightNode>() {
++  override fun create() = UniversalWeightNode(weight)
++  override fun update(node: UniversalWeightNode) { node.weight = weight }
++  override fun InspectorInfo.inspectableProperties() {
++    name = "universalWeight"
++    properties["weight"] = weight
++  }
++}
++
++private class UniversalWeightNode(var weight: Float) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(weight = weight)
++}
++
++private data class UniversalAlignElement(
++  val horizontal: androidx.compose.ui.Alignment.Horizontal? = null,
++  val vertical: androidx.compose.ui.Alignment.Vertical? = null
++) : ModifierNodeElement<UniversalAlignNode>() {
++  override fun create() = UniversalAlignNode(horizontal, vertical)
++  override fun update(node: UniversalAlignNode) {
++    node.horizontal = horizontal
++    node.vertical = vertical
++  }
++  override fun InspectorInfo.inspectableProperties() { name = "universalAlign" }
++}
++
++private class UniversalAlignNode(
++  var horizontal: androidx.compose.ui.Alignment.Horizontal?,
++  var vertical: androidx.compose.ui.Alignment.Vertical?
++) : Modifier.Node(), ParentDataModifierNode {
++  override fun Density.modifyParentData(parentData: Any?): Any =
++    parentData.asUniversalLayoutParentData().copy(
++      horizontalAlignment = horizontal,
++      verticalAlignment = vertical
++    )
++}
++
++private fun Double?.validatedUniversalDimension(): Float? =
++  this?.toFloat()?.takeIf { it.isFinite() && it >= 0 }
++
+ @OptimizedRecord
+ data class WrapContentWidthParams(
+   @Field val alignment: AlignmentType? = null
+@@ -479,6 +560,17 @@ object ModifierRegistry {
+       Modifier.height(params.height.dp)
+     }
+ 
++    register("universalLayout") { map, _, appContext, _ ->
++      val params = recordFromMap<UniversalLayoutParams>(map, appContext)
++      val dimensions = UniversalLayoutDimensions(
++        widthPoints = params.widthPoints.validatedUniversalDimension(),
++        widthFraction = params.widthFraction.validatedUniversalDimension(),
++        heightPoints = params.heightPoints.validatedUniversalDimension(),
++        heightFraction = params.heightFraction.validatedUniversalDimension()
++      )
++      Modifier.then(UniversalLayoutElement(dimensions))
++    }
++
+     register("defaultMinSize") { map, _, appContext, _ ->
+       val params = recordFromMap<DefaultMinSizeParams>(map, appContext)
+       Modifier.defaultMinSize(
+@@ -647,22 +739,34 @@ object ModifierRegistry {
+     // Scope-dependent modifiers
+     register("weight") { map, scope, appContext, _ ->
+       val params = recordFromMap<WeightParams>(map, appContext)
+-      scope?.rowScope?.run {
+-        Modifier.weight(params.weight)
+-      } ?: scope?.columnScope?.run {
+-        Modifier.weight(params.weight)
+-      } ?: Modifier
++      when (LocalUniversalStackAxis.current) {
++        UniversalStackAxis.Horizontal, UniversalStackAxis.Vertical ->
++          Modifier.then(UniversalWeightElement(params.weight))
++        null -> scope?.rowScope?.run {
++          Modifier.weight(params.weight)
++        } ?: scope?.columnScope?.run {
++          Modifier.weight(params.weight)
++        } ?: Modifier
++      }
+     }
+ 
+     register("align") { map, scope, appContext, _ ->
+       val params = recordFromMap<AlignParams>(map, appContext)
+-      scope?.boxScope?.run {
+-        params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: scope?.rowScope?.run {
+-        params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: scope?.columnScope?.run {
+-        params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
+-      } ?: Modifier
++      when (LocalUniversalStackAxis.current) {
++        UniversalStackAxis.Horizontal -> Modifier.then(
++          UniversalAlignElement(vertical = params.alignment?.toVerticalAlignment())
++        )
++        UniversalStackAxis.Vertical -> Modifier.then(
++          UniversalAlignElement(horizontal = params.alignment?.toHorizontalAlignment())
++        )
++        null -> scope?.boxScope?.run {
++          params.alignment?.toAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: scope?.rowScope?.run {
++          params.alignment?.toVerticalAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: scope?.columnScope?.run {
++          params.alignment?.toHorizontalAlignment()?.let { alignment -> Modifier.align(alignment) }
++        } ?: Modifier
++      }
+     }
+ 
+     register("matchParentSize") { _, scope, _, _ ->
+diff --git a/build/universal/Button/index.android.js b/build/universal/Button/index.android.js
+index 8b124da5a59a6c8f45a77447e2e692b169fa0f69..4badc6e11705ba7c5b149f3879fa8b15dd9e50a7 100644
+--- a/build/universal/Button/index.android.js
++++ b/build/universal/Button/index.android.js
+@@ -1,34 +1,26 @@
+ import { jsx as _jsx } from "react/jsx-runtime";
+-import { Button as ComposeButton, OutlinedButton, Text, TextButton } from '@expo/ui/jetpack-compose';
++import { Button as ComposeButton, OutlinedButton, Text, TextButton, } from '@expo/ui/jetpack-compose';
+ import { useUniversalLifecycle } from '../hooks';
+ import { transformToModifiers } from '../transformStyle';
+-export function Button({ children, label, onPress, variant = 'filled', style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Button({ children, label, onPress, variant = 'filled', style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
+-    const modifiers = transformToModifiers(style, {
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    const content = children ?? /*#__PURE__*/ _jsx(Text, {
+-        children: label ?? ''
++    if (hidden)
++        return null;
++    const modifiers = transformToModifiers(style, { disabled, hidden, testID }, extraModifiers, {
++        componentName: 'Button',
+     });
++    const content = children ?? _jsx(Text, { children: label ?? '' });
+     const commonProps = {
+         onClick: disabled ? undefined : onPress,
+         enabled: !disabled,
+-        modifiers
++        modifiers,
+     };
+     const ButtonComponent = variantComponentMap[variant];
+-    return /*#__PURE__*/ _jsx(ButtonComponent, {
+-        ...commonProps,
+-        children: content
+-    });
++    return _jsx(ButtonComponent, { ...commonProps, children: content });
+ }
+ const variantComponentMap = {
+     filled: ComposeButton,
+     outlined: OutlinedButton,
+-    text: TextButton
++    text: TextButton,
+ };
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Button/index.ios.js b/build/universal/Button/index.ios.js
+index 1f7c78dcd3394063aec75a89ebad27be371c5db8..9c5c66a8169b39401c7f7458c76ab831707cfc68 100644
+--- a/build/universal/Button/index.ios.js
++++ b/build/universal/Button/index.ios.js
+@@ -6,32 +6,13 @@ import { transformToModifiers } from '../transformStyle';
+ const variantButtonStyle = {
+     filled: 'borderedProminent',
+     outlined: 'bordered',
+-    text: 'plain'
++    text: 'plain',
+ };
+-export function Button({ children, label, onPress, variant = 'filled', style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Button({ children, label, onPress, variant = 'filled', style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     // A user-supplied buttonStyle modifier replaces the variant's.
+-    const buttonSpecificModifiers = omitUserOverridden([
+-        buttonStyle(variantButtonStyle[variant])
+-    ], extraModifiers);
+-    const universalModifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    const modifiers = [
+-        ...buttonSpecificModifiers,
+-        ...universalModifiers
+-    ];
+-    return /*#__PURE__*/ _jsx(SwiftUIButton, {
+-        onPress: onPress,
+-        label: !children ? label : undefined,
+-        modifiers: modifiers,
+-        testID: testID,
+-        children: children
+-    });
++    const buttonSpecificModifiers = omitUserOverridden([buttonStyle(variantButtonStyle[variant])], extraModifiers, { componentName: 'Button' });
++    const universalModifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers);
++    const modifiers = [...buttonSpecificModifiers, ...universalModifiers];
++    return (_jsx(SwiftUIButton, { onPress: onPress, label: !children ? label : undefined, modifiers: modifiers, testID: testID, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/Collapsible/index.ios.js b/build/universal/Collapsible/index.ios.js
+index f7268e73f2d920ddf77ed6bdaf192327bf1655ac..2d186d25917750406514787864693bb12a1fbc2f 100644
+--- a/build/universal/Collapsible/index.ios.js
++++ b/build/universal/Collapsible/index.ios.js
+@@ -3,24 +3,14 @@ import { DisclosureGroup, Text } from '@expo/ui/swift-ui';
+ import { transformToModifiers } from '../transformStyle';
+ /**
+  * iOS implementation of `Collapsible`. Wraps SwiftUI's `DisclosureGroup`.
+- */ export function Collapsible({ isOpen, onOpenChange, label = '', labelStyle, children }) {
+-    const labelTextModifiers = labelStyle ? transformToModifiers(undefined, {}, undefined, {
+-        textStyle: labelStyle
+-    }) : undefined;
+-    return /*#__PURE__*/ _jsxs(DisclosureGroup, {
+-        isExpanded: isOpen,
+-        onIsExpandedChange: onOpenChange,
+-        children: [
+-            /*#__PURE__*/ _jsx(DisclosureGroup.Label, {
+-                children: /*#__PURE__*/ _jsx(Text, {
+-                    modifiers: labelTextModifiers,
+-                    children: label
+-                })
+-            }),
+-            children
+-        ]
+-    });
++ */
++export function Collapsible({ isOpen, onOpenChange, label = '', labelStyle, children, }) {
++    const labelTextModifiers = labelStyle
++        ? transformToModifiers(undefined, {}, undefined, {
++            componentName: 'Collapsible',
++            textStyle: labelStyle,
++        })
++        : undefined;
++    return (_jsxs(DisclosureGroup, { isExpanded: isOpen, onIsExpandedChange: onOpenChange, children: [_jsx(DisclosureGroup.Label, { children: _jsx(Text, { modifiers: labelTextModifiers, children: label }) }), children] }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/Column/index.android.js b/build/universal/Column/index.android.js
+index b91fc4c04d4245e66b533398b8f7566379ca688c..4147c1147edd40084aa7329f371ae2cc70efcd43 100644
+--- a/build/universal/Column/index.android.js
++++ b/build/universal/Column/index.android.js
+@@ -5,26 +5,13 @@ import { transformToModifiers } from '../transformStyle';
+ const alignmentMap = {
+     start: 'start',
+     center: 'center',
+-    end: 'end'
++    end: 'end',
+ };
+-export function Column({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Column({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
+-    const modifiers = transformToModifiers(style, {
+-        onPress: disabled ? undefined : onPress,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(ComposeColumn, {
+-        horizontalAlignment: alignmentMap[alignment],
+-        verticalArrangement: spacing != null ? {
+-            spacedBy: spacing
+-        } : undefined,
+-        modifiers: modifiers,
+-        children: children
+-    });
++    if (hidden)
++        return null;
++    const modifiers = transformToModifiers(style, { onPress: disabled ? undefined : onPress, disabled, hidden, testID }, extraModifiers, { componentName: 'Column' });
++    return (_jsx(ComposeColumn, { horizontalAlignment: alignmentMap[alignment], verticalArrangement: spacing != null ? { spacedBy: spacing } : undefined, modifiers: modifiers, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Column/index.ios.js b/build/universal/Column/index.ios.js
+index 20e5412cd85ff4b3686ed4d3bd5357db1db836c6..50450c4c0071299f4dfa28f5ce8ed0f7539c891e 100644
+--- a/build/universal/Column/index.ios.js
++++ b/build/universal/Column/index.ios.js
+@@ -4,32 +4,15 @@ import { transformToModifiers } from '../transformStyle';
+ const alignmentMap = {
+     start: 'leading',
+     center: 'center',
+-    end: 'trailing'
++    end: 'trailing',
+ };
+ const frameAlignmentMap = {
+     start: 'topLeading',
+     center: 'top',
+-    end: 'topTrailing'
++    end: 'topTrailing',
+ };
+-export function Column({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
+-    const modifiers = transformToModifiers(style, {
+-        onPress,
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers, {
+-        frameAlignment: frameAlignmentMap[alignment]
+-    });
+-    return /*#__PURE__*/ _jsx(VStack, {
+-        alignment: alignmentMap[alignment],
+-        spacing: spacing,
+-        modifiers: modifiers,
+-        testID: testID,
+-        children: children
+-    });
++export function Column({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
++    const modifiers = transformToModifiers(style, { onPress, onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'Column', frameAlignment: frameAlignmentMap[alignment] });
++    return (_jsx(VStack, { alignment: alignmentMap[alignment], spacing: spacing, modifiers: modifiers, testID: testID, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/FieldGroup/FieldGroup.android.js b/build/universal/FieldGroup/FieldGroup.android.js
+index 6d326910130dcd9da4a170cf80711c076fb40d7f..319bd8bab2dea2ff05b50de70d3ed3af1f2faee3 100644
+--- a/build/universal/FieldGroup/FieldGroup.android.js
++++ b/build/universal/FieldGroup/FieldGroup.android.js
+@@ -8,32 +8,15 @@ import { groupFieldGroupChildren } from './groupChildren';
+  * wraps a Jetpack Compose `LazyColumn` that mirrors the Material 3 settings
+  * layout and adapts to the enclosing `<Host>`'s theme. Pass
+  * `style={{ backgroundColor }}` to override the default background.
+- */ export function FieldGroup({ children, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++ */
++export function FieldGroup({ children, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+     const colors = useMaterialColors();
+-    if (hidden) return null;
+-    const mergedStyle = {
+-        backgroundColor: colors.surface,
+-        ...style
+-    };
+-    const modifiers = transformToModifiers(mergedStyle, {
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(LazyColumn, {
+-        verticalArrangement: {
+-            spacedBy: 24
+-        },
+-        contentPadding: {
+-            start: 16,
+-            end: 16,
+-            top: 16,
+-            bottom: 16
+-        },
+-        modifiers: modifiers,
+-        children: groupFieldGroupChildren(children)
++    if (hidden)
++        return null;
++    const mergedStyle = { backgroundColor: colors.surface, ...style };
++    const modifiers = transformToModifiers(mergedStyle, { disabled, hidden, testID }, extraModifiers, {
++        componentName: 'FieldGroup',
+     });
++    return (_jsx(LazyColumn, { verticalArrangement: { spacedBy: 24 }, contentPadding: { start: 16, end: 16, top: 16, bottom: 16 }, modifiers: modifiers, children: groupFieldGroupChildren(children) }));
+ }
+-
+-//# sourceMappingURL=FieldGroup.android.js.map
+diff --git a/build/universal/FieldGroup/FieldGroup.ios.js b/build/universal/FieldGroup/FieldGroup.ios.js
+index ae460b611c06d05ca3a83b7ba4c5129f9a28fd6b..202ff4b5f81aab9718e77c0eb194bfe38a8279b9 100644
+--- a/build/universal/FieldGroup/FieldGroup.ios.js
++++ b/build/universal/FieldGroup/FieldGroup.ios.js
+@@ -4,18 +4,8 @@ import { transformToModifiers } from '../transformStyle';
+ /**
+  * A scrollable container for grouped settings-style rows. On iOS this wraps
+  * SwiftUI's [`Form`](https://developer.apple.com/documentation/swiftui/form).
+- */ export function FieldGroup({ children, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
+-    const modifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(Form, {
+-        modifiers: modifiers,
+-        children: children
+-    });
++ */
++export function FieldGroup({ children, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
++    const modifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'FieldGroup' });
++    return _jsx(Form, { modifiers: modifiers, children: children });
+ }
+-
+-//# sourceMappingURL=FieldGroup.ios.js.map
+diff --git a/build/universal/FieldGroup/FieldSection.android.js b/build/universal/FieldGroup/FieldSection.android.js
+index eff97d167493e7ab9c289c3fc6784c330a10c152..d8df6399d996f2550d530e9ed844feaf17780702 100644
+--- a/build/universal/FieldGroup/FieldSection.android.js
++++ b/build/universal/FieldGroup/FieldSection.android.js
+@@ -1,5 +1,5 @@
+ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+-import { Column as ComposeColumn, Text as ComposeText, ListItem, useMaterialColors } from '@expo/ui/jetpack-compose';
++import { Column as ComposeColumn, Text as ComposeText, ListItem, useMaterialColors, } from '@expo/ui/jetpack-compose';
+ import { clip, fillMaxWidth, padding, Shapes } from '@expo/ui/jetpack-compose/modifiers';
+ import { useUniversalLifecycle } from '../hooks';
+ import { transformToModifiers } from '../transformStyle';
+@@ -11,70 +11,26 @@ import { getFieldItemPosition } from './types';
+  * shape, producing the Material 3 "connected list" look — fully rounded at
+  * the section's ends, slightly rounded between rows, with a 2dp gap. All
+  * colors adapt to the enclosing `<Host>`'s theme.
+- */ export function FieldSection({ children, title, style, onAppear, onDisappear, disabled, hidden, testID, titleUppercase = false, modifiers: extraModifiers }) {
++ */
++export function FieldSection({ children, title, style, onAppear, onDisappear, disabled, hidden, testID, titleUppercase = false, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+     const colors = useMaterialColors();
+-    if (hidden) return null;
++    if (hidden)
++        return null;
+     const { header, footer, rows } = extractFieldSectionSlots(children);
+-    const outerModifiers = transformToModifiers(style, {
+-        disabled,
+-        hidden,
+-        testID
+-    }, [
++    const outerModifiers = transformToModifiers(style, { disabled, hidden, testID }, [
+         fillMaxWidth(),
+-        ...extraModifiers ?? []
+-    ]);
+-    const headerNode = header ?? (title ? /*#__PURE__*/ _jsx(ComposeText, {
+-        color: colors.onSurfaceVariant,
+-        style: {
+-            typography: 'titleMedium',
+-            letterSpacing: titleUppercase ? 0.5 : undefined
+-        },
+-        children: titleUppercase ? title.toUpperCase() : title
+-    }) : null);
+-    return /*#__PURE__*/ _jsxs(ComposeColumn, {
+-        verticalArrangement: {
+-            spacedBy: 4
+-        },
+-        modifiers: outerModifiers,
+-        children: [
+-            headerNode ? /*#__PURE__*/ _jsx(ComposeColumn, {
+-                modifiers: [
+-                    padding(16, 0, 16, 8)
+-                ],
+-                children: headerNode
+-            }) : null,
+-            rows.length > 0 ? /*#__PURE__*/ _jsx(ComposeColumn, {
+-                verticalArrangement: {
+-                    spacedBy: 2
+-                },
+-                modifiers: [
+-                    fillMaxWidth()
+-                ],
+-                children: rows.map((child, index)=>{
++        ...(extraModifiers ?? []),
++    ], { componentName: 'FieldSection' });
++    const headerNode = header ??
++        (title ? (_jsx(ComposeText, { color: colors.onSurfaceVariant, style: {
++                typography: 'titleMedium',
++                letterSpacing: titleUppercase ? 0.5 : undefined,
++            }, children: titleUppercase ? title.toUpperCase() : title })) : null);
++    return (_jsxs(ComposeColumn, { verticalArrangement: { spacedBy: 4 }, modifiers: outerModifiers, children: [headerNode ? (_jsx(ComposeColumn, { modifiers: [padding(16, 0, 16, 8)], children: headerNode })) : null, rows.length > 0 ? (_jsx(ComposeColumn, { verticalArrangement: { spacedBy: 2 }, modifiers: [fillMaxWidth()], children: rows.map((child, index) => {
+                     const position = getFieldItemPosition(index, rows.length);
+-                    return /*#__PURE__*/ _jsx(ListItem, {
+-                        colors: {
+-                            containerColor: colors.surfaceContainer
+-                        },
+-                        modifiers: [
+-                            fillMaxWidth(),
+-                            clip(Shapes.RoundedCorner(cornerRadii(position)))
+-                        ],
+-                        children: /*#__PURE__*/ _jsx(ListItem.HeadlineContent, {
+-                            children: child
+-                        })
+-                    }, index);
+-                })
+-            }) : null,
+-            footer ? /*#__PURE__*/ _jsx(ComposeColumn, {
+-                modifiers: [
+-                    padding(16, 4, 16, 0)
+-                ],
+-                children: footer
+-            }) : null
+-        ]
+-    });
++                    return (_jsx(ListItem, { colors: { containerColor: colors.surfaceContainer }, modifiers: [fillMaxWidth(), clip(Shapes.RoundedCorner(cornerRadii(position)))], children: _jsx(ListItem.HeadlineContent, { children: child }) }, index));
++                }) })) : null, footer ? _jsx(ComposeColumn, { modifiers: [padding(16, 4, 16, 0)], children: footer }) : null] }));
+ }
+ /**
+  * Per-position corner radii used to produce the Material 3 grouped-list look.
+@@ -83,40 +39,19 @@ import { getFieldItemPosition } from './types';
+  * - `leading`: top corners fully rounded, bottom corners slightly rounded
+  * - `trailing`: bottom corners fully rounded, top corners slightly rounded
+  * - `middle`: all four corners slightly rounded
+- */ function cornerRadii(position) {
++ */
++function cornerRadii(position) {
+     const full = 20;
+     const small = 4;
+-    switch(position){
++    switch (position) {
+         case 'only':
+-            return {
+-                topStart: full,
+-                topEnd: full,
+-                bottomStart: full,
+-                bottomEnd: full
+-            };
++            return { topStart: full, topEnd: full, bottomStart: full, bottomEnd: full };
+         case 'leading':
+-            return {
+-                topStart: full,
+-                topEnd: full,
+-                bottomStart: small,
+-                bottomEnd: small
+-            };
++            return { topStart: full, topEnd: full, bottomStart: small, bottomEnd: small };
+         case 'trailing':
+-            return {
+-                topStart: small,
+-                topEnd: small,
+-                bottomStart: full,
+-                bottomEnd: full
+-            };
++            return { topStart: small, topEnd: small, bottomStart: full, bottomEnd: full };
+         case 'middle':
+         default:
+-            return {
+-                topStart: small,
+-                topEnd: small,
+-                bottomStart: small,
+-                bottomEnd: small
+-            };
++            return { topStart: small, topEnd: small, bottomStart: small, bottomEnd: small };
+     }
+ }
+-
+-//# sourceMappingURL=FieldSection.android.js.map
+diff --git a/build/universal/FieldGroup/FieldSection.ios.js b/build/universal/FieldGroup/FieldSection.ios.js
+index ebb89dbd315399608a14f5686f354e3f67788ed2..d07bb7ef810897a0f4eb5a2bea1716478f3a8d06 100644
+--- a/build/universal/FieldGroup/FieldSection.ios.js
++++ b/build/universal/FieldGroup/FieldSection.ios.js
+@@ -8,22 +8,9 @@ import { extractFieldSectionSlots } from './FieldSectionSlots';
+  * children and forwards them to SwiftUI's native
+  * [`Section`](https://developer.apple.com/documentation/swiftui/section),
+  * which handles row layout, dividers, and grouped-inset styling.
+- */ export function FieldSection({ children, title, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++ */
++export function FieldSection({ children, title, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     const { header, footer, rows } = extractFieldSectionSlots(children);
+-    const modifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(Section, {
+-        title: header ? undefined : title,
+-        header: header,
+-        footer: footer,
+-        modifiers: modifiers,
+-        children: rows
+-    });
++    const modifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'FieldSection' });
++    return (_jsx(Section, { title: header ? undefined : title, header: header, footer: footer, modifiers: modifiers, children: rows }));
+ }
+-
+-//# sourceMappingURL=FieldSection.ios.js.map
+diff --git a/build/universal/Icon/index.android.js b/build/universal/Icon/index.android.js
+index f80bb9324a6ae75579b8be101ad2d25e0f125adc..943c0f5a304f84fcf992f967587e6ac41a008f1f 100644
+--- a/build/universal/Icon/index.android.js
++++ b/build/universal/Icon/index.android.js
+@@ -23,50 +23,34 @@ function resolveAndroidSource(name) {
+  * `Icon` adds its own semantics with `Role.Image`, which can mask a
+  * `clickable` applied directly to it. With no `onPress`, the bare Compose
+  * `Icon` is rendered for a leaner native tree.
+- */ export function Icon({ name, size, color, accessibilityLabel, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++ */
++export function Icon({ name, size, color, accessibilityLabel, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
++    if (hidden)
++        return null;
+     const source = resolveAndroidSource(name);
+-    if (source == null) return null;
+-    const modifiers = transformToModifiers(style, {
+-        onPress,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++    if (source == null)
++        return null;
++    const modifiers = transformToModifiers(style, { onPress, disabled, hidden, testID }, extraModifiers, { componentName: 'Icon' });
+     if (onPress) {
+         // Pin the wrapping Box to the icon's size so it doesn't collapse to 0×0
+         // while the native IconView swaps painters between source changes — that
+         // would shift surrounding layout for a frame on every state-driven swap.
+-        const boxModifiers = size != null ? [
+-            sizeModifier(size, size),
+-            ...modifiers
+-        ] : modifiers;
+-        return /*#__PURE__*/ _jsx(Box, {
+-            modifiers: boxModifiers,
+-            children: /*#__PURE__*/ _jsx(ComposeIcon, {
+-                source: source,
+-                size: size,
+-                tint: color,
+-                contentDescription: accessibilityLabel
+-            })
+-        });
++        const boxModifiers = size != null ? [sizeModifier(size, size), ...modifiers] : modifiers;
++        return (_jsx(Box, { modifiers: boxModifiers, children: _jsx(ComposeIcon, { source: source, size: size, tint: color, contentDescription: accessibilityLabel }) }));
+     }
+-    return /*#__PURE__*/ _jsx(ComposeIcon, {
+-        source: source,
+-        size: size,
+-        tint: color,
+-        contentDescription: accessibilityLabel,
+-        modifiers: modifiers
+-    });
++    return (_jsx(ComposeIcon, { source: source, size: size, tint: color, contentDescription: accessibilityLabel, modifiers: modifiers }));
+ }
+-Icon.select = (spec)=>{
++Icon.select = (spec) => {
+     const value = spec.android;
+     if (value != null && typeof value.then === 'function') {
+-        throw new Error('Icon.select received a Promise for the Android side, which means a dynamic ' + "import('...') in the source was not transformed at build time. The Babel " + 'plugin `@expo/ui/babel-plugin` is required to handle this form. It is auto-loaded ' + 'by `babel-preset-expo`; if you are using a custom Babel config, add it manually:\n' + "  plugins: ['@expo/ui/babel-plugin']\n" + "Alternatively, replace `import('...')` with `require('...')` in your `Icon.select` call.");
++        throw new Error('Icon.select received a Promise for the Android side, which means a dynamic ' +
++            "import('...') in the source was not transformed at build time. The Babel " +
++            'plugin `@expo/ui/babel-plugin` is required to handle this form. It is auto-loaded ' +
++            'by `babel-preset-expo`; if you are using a custom Babel config, add it manually:\n' +
++            "  plugins: ['@expo/ui/babel-plugin']\n" +
++            "Alternatively, replace `import('...')` with `require('...')` in your `Icon.select` call.");
+     }
+     return value;
+ };
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Icon/index.ios.js b/build/universal/Icon/index.ios.js
+index d752cf5cf693d3ea043ed5fca61777c217ba5a90..ebb3e3138e30eff9cfb1289dfcc660ecf958f983 100644
+--- a/build/universal/Icon/index.ios.js
++++ b/build/universal/Icon/index.ios.js
+@@ -15,24 +15,11 @@ function resolveIosName(name) {
+ /**
+  * Universal `Icon` component. On iOS, renders an SF Symbol via SwiftUI's
+  * `Image(systemName:)`.
+- */ export function Icon({ name, size, color, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++ */
++export function Icon({ name, size, color, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     const systemName = resolveIosName(name);
+-    const modifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(SwiftUIImage, {
+-        systemName: systemName,
+-        size: size,
+-        color: color,
+-        onPress: onPress,
+-        modifiers: modifiers
+-    });
++    const modifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'Icon' });
++    return (_jsx(SwiftUIImage, { systemName: systemName, size: size, color: color, onPress: onPress, modifiers: modifiers }));
+ }
+-Icon.select = (spec)=>spec.ios;
++Icon.select = (spec) => spec.ios;
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/RNHostView/index.android.js b/build/universal/RNHostView/index.android.js
+index 5f0fc81b807663f6d2fa2bc4aac3fdcc54503c36..7a7c95cd3532675021cc6c015c6f8050893391ff 100644
+--- a/build/universal/RNHostView/index.android.js
++++ b/build/universal/RNHostView/index.android.js
+@@ -3,21 +3,9 @@ import { RNHostView as ComposeRNHostView } from '@expo/ui/jetpack-compose';
+ import { transformToModifiers } from '../transformStyle';
+ /**
+  * Hosts React Native views inside Jetpack Compose views.
+- */ export function RNHostView({ children, matchContents, style, onAppear, onDisappear, disabled, hidden, testID, onLayout, modifiers: extraModifiers }) {
+-    const modifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(ComposeRNHostView, {
+-        matchContents: matchContents,
+-        modifiers: modifiers,
+-        onLayout: onLayout,
+-        children: children
+-    });
++ */
++export function RNHostView({ children, matchContents, style, onAppear, onDisappear, disabled, hidden, testID, onLayout, modifiers: extraModifiers, }) {
++    const modifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'RNHostView' });
++    return (_jsx(ComposeRNHostView, { matchContents: matchContents, modifiers: modifiers, onLayout: onLayout, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Row/index.android.js b/build/universal/Row/index.android.js
+index 815d638a00c989a87ff554b8edb2bb9341352f7e..6be900b5da76871e411c84f97def2badb51f96a5 100644
+--- a/build/universal/Row/index.android.js
++++ b/build/universal/Row/index.android.js
+@@ -5,26 +5,13 @@ import { transformToModifiers } from '../transformStyle';
+ const alignmentMap = {
+     start: 'top',
+     center: 'center',
+-    end: 'bottom'
++    end: 'bottom',
+ };
+-export function Row({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Row({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
+-    const modifiers = transformToModifiers(style, {
+-        onPress: disabled ? undefined : onPress,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
+-    return /*#__PURE__*/ _jsx(ComposeRow, {
+-        verticalAlignment: alignmentMap[alignment],
+-        horizontalArrangement: spacing != null ? {
+-            spacedBy: spacing
+-        } : undefined,
+-        modifiers: modifiers,
+-        children: children
+-    });
++    if (hidden)
++        return null;
++    const modifiers = transformToModifiers(style, { onPress: disabled ? undefined : onPress, disabled, hidden, testID }, extraModifiers, { componentName: 'Row' });
++    return (_jsx(ComposeRow, { verticalAlignment: alignmentMap[alignment], horizontalArrangement: spacing != null ? { spacedBy: spacing } : undefined, modifiers: modifiers, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Row/index.ios.js b/build/universal/Row/index.ios.js
+index a3beb1bd96f1d988cd99c22d15451de7b87a6fea..2d7c445017b5dc930585f06ac8f4f85bf8f2e48d 100644
+--- a/build/universal/Row/index.ios.js
++++ b/build/universal/Row/index.ios.js
+@@ -4,32 +4,15 @@ import { transformToModifiers } from '../transformStyle';
+ const alignmentMap = {
+     start: 'top',
+     center: 'center',
+-    end: 'bottom'
++    end: 'bottom',
+ };
+ const frameAlignmentMap = {
+     start: 'topLeading',
+     center: 'leading',
+-    end: 'bottomLeading'
++    end: 'bottomLeading',
+ };
+-export function Row({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
+-    const modifiers = transformToModifiers(style, {
+-        onPress,
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers, {
+-        frameAlignment: frameAlignmentMap[alignment]
+-    });
+-    return /*#__PURE__*/ _jsx(HStack, {
+-        alignment: alignmentMap[alignment],
+-        spacing: spacing,
+-        modifiers: modifiers,
+-        testID: testID,
+-        children: children
+-    });
++export function Row({ children, alignment = 'start', spacing, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
++    const modifiers = transformToModifiers(style, { onPress, onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'Row', frameAlignment: frameAlignmentMap[alignment] });
++    return (_jsx(HStack, { alignment: alignmentMap[alignment], spacing: spacing, modifiers: modifiers, testID: testID, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/ScrollView/index.android.js b/build/universal/ScrollView/index.android.js
+index 820c844923b0c214bb13ba12476f35f461bde807..791510b1be9d42654e8053e7b9c100462f6ed49f 100644
+--- a/build/universal/ScrollView/index.android.js
++++ b/build/universal/ScrollView/index.android.js
+@@ -3,32 +3,14 @@ import { Column, Row } from '@expo/ui/jetpack-compose';
+ import { horizontalScroll, verticalScroll } from '@expo/ui/jetpack-compose/modifiers';
+ import { useUniversalLifecycle } from '../hooks';
+ import { transformToModifiers } from '../transformStyle';
+-export function ScrollView({ children, direction = 'vertical', style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function ScrollView({ children, direction = 'vertical', style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
+-    const modifiers = transformToModifiers(style, {
+-        onPress: disabled ? undefined : onPress,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++    if (hidden)
++        return null;
++    const modifiers = transformToModifiers(style, { onPress: disabled ? undefined : onPress, disabled, hidden, testID }, extraModifiers, { componentName: 'ScrollView' });
+     if (direction === 'horizontal') {
+-        return /*#__PURE__*/ _jsx(Row, {
+-            modifiers: [
+-                ...modifiers,
+-                horizontalScroll()
+-            ],
+-            children: children
+-        });
++        return _jsx(Row, { modifiers: [...modifiers, horizontalScroll()], children: children });
+     }
+-    return /*#__PURE__*/ _jsx(Column, {
+-        modifiers: [
+-            ...modifiers,
+-            verticalScroll()
+-        ],
+-        children: children
+-    });
++    return _jsx(Column, { modifiers: [...modifiers, verticalScroll()], children: children });
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/ScrollView/index.ios.js b/build/universal/ScrollView/index.ios.js
+index e0a2cb20d7f2495a90643a9776a96219c56c95db..45d815a613968fbe6e3984164fec9f0eb47e34ce 100644
+--- a/build/universal/ScrollView/index.ios.js
++++ b/build/universal/ScrollView/index.ios.js
+@@ -2,27 +2,21 @@ import { jsx as _jsx } from "react/jsx-runtime";
+ import { Group, ScrollView as SwiftUIScrollView } from '@expo/ui/swift-ui';
+ import { frame, padding } from '@expo/ui/swift-ui/modifiers';
+ import { transformToModifiers } from '../transformStyle';
+-export function ScrollView({ children, direction = 'vertical', showsIndicators = true, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function ScrollView({ children, direction = 'vertical', showsIndicators = true, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     // Extract padding from style — it goes on the inner Group so content is
+     // inset after stretching to full width.
+     const { padding: paddingAll, paddingHorizontal, paddingVertical, paddingTop, paddingBottom, paddingLeft, paddingRight, ...styleWithoutPadding } = style ?? {};
+-    const scrollModifiers = transformToModifiers(Object.keys(styleWithoutPadding).length > 0 ? styleWithoutPadding : undefined, {
+-        onPress,
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++    const scrollModifiers = transformToModifiers(Object.keys(styleWithoutPadding).length > 0 ? styleWithoutPadding : undefined, { onPress, onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'ScrollView' });
+     // SwiftUI ScrollView centers content by default. Stretch content to fill
+     // the scroll area to match Android/web behavior.
+-    const innerModifiers = [
+-        frame({
+-            maxWidth: Infinity,
+-            alignment: 'topLeading'
+-        })
+-    ];
+-    const hasPadding = paddingAll != null || paddingHorizontal != null || paddingVertical != null || paddingTop != null || paddingBottom != null || paddingLeft != null || paddingRight != null;
++    const innerModifiers = [frame({ maxWidth: Infinity, alignment: 'topLeading' })];
++    const hasPadding = paddingAll != null ||
++        paddingHorizontal != null ||
++        paddingVertical != null ||
++        paddingTop != null ||
++        paddingBottom != null ||
++        paddingLeft != null ||
++        paddingRight != null;
+     if (hasPadding) {
+         innerModifiers.push(padding({
+             all: paddingAll,
+@@ -31,20 +25,9 @@ export function ScrollView({ children, direction = 'vertical', showsIndicators =
+             top: paddingTop,
+             bottom: paddingBottom,
+             leading: paddingLeft,
+-            trailing: paddingRight
++            trailing: paddingRight,
+         }));
+     }
+-    return /*#__PURE__*/ _jsx(SwiftUIScrollView, {
+-        axes: direction,
+-        showsIndicators: showsIndicators,
+-        modifiers: scrollModifiers,
+-        testID: testID,
+-        children: /*#__PURE__*/ _jsx(Group, {
+-            modifiers: innerModifiers,
+-            children: children
+-        })
+-    });
++    return (_jsx(SwiftUIScrollView, { axes: direction, showsIndicators: showsIndicators, modifiers: scrollModifiers, testID: testID, children: _jsx(Group, { modifiers: innerModifiers, children: children }) }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/Spacer/index.android.js b/build/universal/Spacer/index.android.js
+index 04f505bcb813e7144c3e1a6250842fcf600dfd83..54bef2f3344254523702b25c96863ff57a00cef9 100644
+--- a/build/universal/Spacer/index.android.js
++++ b/build/universal/Spacer/index.android.js
+@@ -1,6 +1,6 @@
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { Spacer as ComposeSpacer } from '@expo/ui/jetpack-compose';
+-import { height as heightModifier, size as sizeModifier, weight as weightModifier, width as widthModifier } from '@expo/ui/jetpack-compose/modifiers';
++import { height as heightModifier, size as sizeModifier, weight as weightModifier, width as widthModifier, } from '@expo/ui/jetpack-compose/modifiers';
+ import { useUniversalLifecycle } from '../hooks';
+ import { transformToModifiers } from '../transformStyle';
+ /**
+@@ -10,9 +10,11 @@ import { transformToModifiers } from '../transformStyle';
+  * On Android, a fixed-size spacer applies `size(size, size)` so it works in
+  * both horizontal and vertical containers. A flexible spacer uses Compose's
+  * `weight(1)` modifier to fill remaining space.
+- */ export function Spacer({ size, flexible = false, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++ */
++export function Spacer({ size, flexible = false, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
++    if (hidden)
++        return null;
+     const layoutMods = [];
+     if (flexible) {
+         layoutMods.push(weightModifier(1));
+@@ -23,21 +25,14 @@ import { transformToModifiers } from '../transformStyle';
+             layoutMods.push(widthModifier(size));
+             layoutMods.push(heightModifier(size));
+         }
+-    } else if (size != null) {
++    }
++    else if (size != null) {
+         layoutMods.push(sizeModifier(size, size));
+     }
+-    const modifiers = transformToModifiers(style, {
+-        disabled,
+-        hidden,
+-        testID
+-    }, [
++    const modifiers = transformToModifiers(style, { disabled, hidden, testID }, [
+         ...layoutMods,
+-        ...extraModifiers ?? []
+-    ]);
+-    return /*#__PURE__*/ _jsx(ComposeSpacer, {
+-        modifiers: modifiers
+-    });
++        ...(extraModifiers ?? []),
++    ], { componentName: 'Spacer' });
++    return _jsx(ComposeSpacer, { modifiers: modifiers });
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Spacer/index.ios.js b/build/universal/Spacer/index.ios.js
+index ffbf86a24aa59d7835382c32f4a12940a1341437..08bc2d3932543216f01ab8528642c39217ddc3f3 100644
+--- a/build/universal/Spacer/index.ios.js
++++ b/build/universal/Spacer/index.ios.js
+@@ -13,35 +13,13 @@ import { transformToModifiers } from '../transformStyle';
+  * infinity ideal propagates up and forces the enclosing `HStack` / `VStack`
+  * to stretch, which causes sibling Spacers to share the extra space equally
+  * instead of each rendering at their requested size.
+- */ export function Spacer({ size, flexible = false, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
+-    const baseModifiers = transformToModifiers(style, {
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++ */
++export function Spacer({ size, flexible = false, style, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
++    const baseModifiers = transformToModifiers(style, { onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'Spacer' });
+     if (flexible) {
+-        return /*#__PURE__*/ _jsx(SwiftUISpacer, {
+-            minLength: size,
+-            modifiers: baseModifiers,
+-            testID: testID
+-        });
++        return _jsx(SwiftUISpacer, { minLength: size, modifiers: baseModifiers, testID: testID });
+     }
+-    const sizeModifier = size != null ? [
+-        frame({
+-            width: size,
+-            height: size
+-        })
+-    ] : [];
+-    return /*#__PURE__*/ _jsx(SwiftUISpacer, {
+-        modifiers: [
+-            ...sizeModifier,
+-            ...baseModifiers
+-        ],
+-        testID: testID
+-    });
++    const sizeModifier = size != null ? [frame({ width: size, height: size })] : [];
++    return _jsx(SwiftUISpacer, { modifiers: [...sizeModifier, ...baseModifiers], testID: testID });
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/Text/index.android.js b/build/universal/Text/index.android.js
+index 9c8ef33178793ea5263b93e1705fa4e455c37004..2f671fa53479dde3f142f7bc8759ec18e17b1e70 100644
+--- a/build/universal/Text/index.android.js
++++ b/build/universal/Text/index.android.js
+@@ -5,33 +5,27 @@ import { transformToModifiers } from '../transformStyle';
+ const textAlignMap = {
+     left: 'start',
+     center: 'center',
+-    right: 'end'
++    right: 'end',
+ };
+-export function Text({ children, textStyle, numberOfLines, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Text({ children, textStyle, numberOfLines, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     useUniversalLifecycle(onAppear, onDisappear);
+-    if (hidden) return null;
+-    const modifiers = transformToModifiers(style, {
+-        onPress: disabled ? undefined : onPress,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++    if (hidden)
++        return null;
++    const modifiers = transformToModifiers(style, { onPress: disabled ? undefined : onPress, disabled, hidden, testID }, extraModifiers, { componentName: 'Text' });
+     // Build Compose Text style object
+     const composeTextStyle = {};
+-    if (textStyle?.fontSize != null) composeTextStyle.fontSize = textStyle.fontSize;
+-    if (textStyle?.fontWeight != null) composeTextStyle.fontWeight = textStyle.fontWeight;
+-    if (textStyle?.fontFamily != null) composeTextStyle.fontFamily = textStyle.fontFamily;
+-    if (textStyle?.textAlign != null) composeTextStyle.textAlign = textAlignMap[textStyle.textAlign];
+-    if (textStyle?.letterSpacing != null) composeTextStyle.letterSpacing = textStyle.letterSpacing;
+-    if (textStyle?.lineHeight != null) composeTextStyle.lineHeight = textStyle.lineHeight;
+-    return /*#__PURE__*/ _jsx(ComposeText, {
+-        color: textStyle?.color,
+-        maxLines: numberOfLines,
+-        style: Object.keys(composeTextStyle).length > 0 ? composeTextStyle : undefined,
+-        modifiers: modifiers,
+-        children: children
+-    });
++    if (textStyle?.fontSize != null)
++        composeTextStyle.fontSize = textStyle.fontSize;
++    if (textStyle?.fontWeight != null)
++        composeTextStyle.fontWeight = textStyle.fontWeight;
++    if (textStyle?.fontFamily != null)
++        composeTextStyle.fontFamily = textStyle.fontFamily;
++    if (textStyle?.textAlign != null)
++        composeTextStyle.textAlign = textAlignMap[textStyle.textAlign];
++    if (textStyle?.letterSpacing != null)
++        composeTextStyle.letterSpacing = textStyle.letterSpacing;
++    if (textStyle?.lineHeight != null)
++        composeTextStyle.lineHeight = textStyle.lineHeight;
++    return (_jsx(ComposeText, { color: textStyle?.color, maxLines: numberOfLines, style: Object.keys(composeTextStyle).length > 0 ? composeTextStyle : undefined, modifiers: modifiers, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/Text/index.ios.js b/build/universal/Text/index.ios.js
+index d2ef7f7f75b2270224d1e29d1c26ca4c06597d0d..797d0cd78d13feb9f75802b1401c19f0e2f9e8de 100644
+--- a/build/universal/Text/index.ios.js
++++ b/build/universal/Text/index.ios.js
+@@ -1,6 +1,6 @@
+ import { jsx as _jsx } from "react/jsx-runtime";
+ import { Text as SwiftUIText } from '@expo/ui/swift-ui';
+-import { font, foregroundStyle, kerning, lineLimit, lineSpacing, multilineTextAlignment } from '@expo/ui/swift-ui/modifiers';
++import { font, foregroundStyle, kerning, lineLimit, lineSpacing, multilineTextAlignment, } from '@expo/ui/swift-ui/modifiers';
+ import { omitUserOverridden } from '../modifierUtils';
+ import { transformToModifiers } from '../transformStyle';
+ const fontWeightMap = {
+@@ -14,22 +14,24 @@ const fontWeightMap = {
+     '600': 'semibold',
+     '700': 'bold',
+     '800': 'heavy',
+-    '900': 'black'
++    '900': 'black',
+ };
+ const textAlignMap = {
+     left: 'leading',
+     center: 'center',
+-    right: 'trailing'
++    right: 'trailing',
+ };
+-export function Text({ children, textStyle, numberOfLines, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers }) {
++export function Text({ children, textStyle, numberOfLines, style, onPress, onAppear, onDisappear, disabled, hidden, testID, modifiers: extraModifiers, }) {
+     // Build text-specific modifiers before the universal ones
+     const textModifiers = [];
+     if (textStyle) {
+-        if (typeof textStyle.fontSize === 'number' || textStyle.fontWeight != null || textStyle.fontFamily != null) {
++        if (typeof textStyle.fontSize === 'number' ||
++            textStyle.fontWeight != null ||
++            textStyle.fontFamily != null) {
+             textModifiers.push(font({
+                 size: textStyle.fontSize,
+                 weight: textStyle.fontWeight ? fontWeightMap[textStyle.fontWeight] : undefined,
+-                family: textStyle.fontFamily
++                family: textStyle.fontFamily,
+             }));
+         }
+         if (textStyle.color) {
+@@ -53,25 +55,9 @@ export function Text({ children, textStyle, numberOfLines, style, onPress, onApp
+     if (typeof numberOfLines === 'number') {
+         textModifiers.push(lineLimit(numberOfLines));
+     }
+-    const universalModifiers = transformToModifiers(style, {
+-        onPress,
+-        onAppear,
+-        onDisappear,
+-        disabled,
+-        hidden,
+-        testID
+-    }, extraModifiers);
++    const universalModifiers = transformToModifiers(style, { onPress, onAppear, onDisappear, disabled, hidden, testID }, extraModifiers, { componentName: 'Text' });
+     // A user-supplied modifier replaces any text-derived modifier of the same type.
+-    const modifiers = [
+-        ...omitUserOverridden(textModifiers, extraModifiers),
+-        ...universalModifiers
+-    ];
+-    return /*#__PURE__*/ _jsx(SwiftUIText, {
+-        modifiers: modifiers,
+-        testID: testID,
+-        children: children
+-    });
++    const modifiers = [...omitUserOverridden(textModifiers, extraModifiers), ...universalModifiers];
++    return (_jsx(SwiftUIText, { modifiers: modifiers, testID: testID, children: children }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/TextInput/index.android.js b/build/universal/TextInput/index.android.js
+index 8479c7e9ea3a4bdcfe9a2d4fbfe2ec7c34af87ae..05878a8c41a06a7ef3144ee2ac76363976bfbc17 100644
+--- a/build/universal/TextInput/index.android.js
++++ b/build/universal/TextInput/index.android.js
+@@ -1,16 +1,18 @@
+ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+-import { BasicTextField, Box, Text, useNativeState } from '@expo/ui/jetpack-compose';
+-import { fillMaxWidth, onSizeChanged, semantics, testID as testIDModifier } from '@expo/ui/jetpack-compose/modifiers';
++import { BasicTextField, Box, Text, useNativeState, } from '@expo/ui/jetpack-compose';
++import { fillMaxWidth, onSizeChanged, semantics, testID as testIDModifier, } from '@expo/ui/jetpack-compose/modifiers';
+ import { useImperativeHandle, useRef } from 'react';
+ import { transformToModifiers } from '../transformStyle';
+ import { enterKeyHintToReturnKeyType, inputModeToKeyboardType, resolveEditable } from './utils';
+ function mapReturnKeyType(value) {
+-    if (value === 'google' || value === 'yahoo') return 'search';
+-    if (value === 'join' || value === 'route' || value === 'emergency-call') return 'default';
++    if (value === 'google' || value === 'yahoo')
++        return 'search';
++    if (value === 'join' || value === 'route' || value === 'emergency-call')
++        return 'default';
+     return value;
+ }
+ function mapKeyboardType(value) {
+-    switch(value){
++    switch (value) {
+         case 'default':
+             return 'text';
+         case 'email-address':
+@@ -36,126 +38,72 @@ function mapKeyboardType(value) {
+             return 'text';
+     }
+ }
+-export function TextInput({ ref, value, onChangeText, placeholder, autoFocus, editable: editableProp, multiline, keyboardType: keyboardTypeProp, autoCapitalize, autoCorrect, returnKeyType: returnKeyTypeProp, onSubmitEditing, onFocus, onBlur, cursorColor, textAlign, readOnly, inputMode, enterKeyHint, defaultValue, numberOfLines: numberOfLinesProp, rows, underlineColorAndroid, testID, placeholderTextColor, textStyle, style, secureTextEntry, autoComplete, onContentSizeChange, maxLength, caretHidden, selectionColor, selectionHandleColor, selection, onSelectionChange, selectTextOnFocus, modifiers: userModifiers }) {
++export function TextInput({ ref, value, onChangeText, placeholder, autoFocus, editable: editableProp, multiline, keyboardType: keyboardTypeProp, autoCapitalize, autoCorrect, returnKeyType: returnKeyTypeProp, onSubmitEditing, onFocus, onBlur, cursorColor, textAlign, readOnly, inputMode, enterKeyHint, defaultValue, numberOfLines: numberOfLinesProp, rows, underlineColorAndroid, testID, placeholderTextColor, textStyle, style, secureTextEntry, autoComplete, onContentSizeChange, maxLength, caretHidden, selectionColor, selectionHandleColor, selection, onSelectionChange, selectTextOnFocus, modifiers: userModifiers, }) {
+     const editable = resolveEditable(editableProp, readOnly);
+     const numberOfLines = numberOfLinesProp ?? rows;
+     const keyboardType = keyboardTypeProp ?? inputModeToKeyboardType(inputMode);
+     const returnKeyType = returnKeyTypeProp ?? enterKeyHintToReturnKeyType(enterKeyHint);
+     const initialFallbackRef = useRef(defaultValue ?? '');
+     const fallback = useNativeState(initialFallbackRef.current);
+-    const state = value ?? fallback;
++    const state = (value ?? fallback);
+     const innerRef = useRef(null);
+     const isFocusedRef = useRef(false);
+-    useImperativeHandle(ref, ()=>({
+-            focus: ()=>{
+-                innerRef.current?.focus();
+-            },
+-            blur: ()=>{
+-                innerRef.current?.blur();
+-            },
+-            clear: ()=>{
+-                innerRef.current?.clear();
+-            },
+-            isFocused: ()=>isFocusedRef.current,
+-            setSelection: (start, end)=>innerRef.current?.setSelection(start, end) ?? Promise.resolve()
+-        }), []);
+-    const handleFocusChanged = (focused)=>{
++    useImperativeHandle(ref, () => ({
++        focus: () => {
++            innerRef.current?.focus();
++        },
++        blur: () => {
++            innerRef.current?.blur();
++        },
++        clear: () => {
++            innerRef.current?.clear();
++        },
++        isFocused: () => isFocusedRef.current,
++        setSelection: (start, end) => innerRef.current?.setSelection(start, end) ?? Promise.resolve(),
++    }), []);
++    const handleFocusChanged = (focused) => {
+         isFocusedRef.current = focused;
+         if (focused && selectTextOnFocus) {
+             innerRef.current?.setSelection(0, state.value.length);
+         }
+-        if (focused) onFocus?.();
+-        else onBlur?.();
++        if (focused)
++            onFocus?.();
++        else
++            onBlur?.();
+     };
+-    const keyboardOptions = keyboardType || autoCapitalize || autoCorrect !== undefined || returnKeyType ? {
+-        ...keyboardType ? {
+-            keyboardType: mapKeyboardType(keyboardType)
+-        } : null,
+-        ...autoCapitalize ? {
+-            capitalization: autoCapitalize
+-        } : null,
+-        ...autoCorrect !== undefined ? {
+-            autoCorrectEnabled: autoCorrect
+-        } : null,
+-        ...returnKeyType ? {
+-            imeAction: mapReturnKeyType(returnKeyType)
+-        } : null
+-    } : undefined;
+-    const keyboardActions = onSubmitEditing ? {
+-        onDone: onSubmitEditing,
+-        onGo: onSubmitEditing,
+-        onNext: onSubmitEditing,
+-        onSearch: onSubmitEditing,
+-        onSend: onSubmitEditing,
+-        onPrevious: onSubmitEditing
+-    } : undefined;
+-    return /*#__PURE__*/ _jsx(BasicTextField, {
+-        ref: innerRef,
+-        modifiers: [
+-            ...userModifiers ?? [],
+-            ...transformToModifiers(style, {}),
+-            ...testID ? [
+-                testIDModifier(testID)
+-            ] : [],
+-            ...autoComplete ? [
+-                semantics({
+-                    contentType: autoComplete
+-                })
+-            ] : [],
+-            ...onContentSizeChange ? [
+-                onSizeChanged(onContentSizeChange)
+-            ] : []
+-        ],
+-        value: state,
+-        autoFocus: autoFocus,
+-        readOnly: editable === false,
+-        singleLine: !multiline,
+-        maxLines: multiline && numberOfLines && numberOfLines > 0 ? numberOfLines : undefined,
+-        minLines: multiline && numberOfLines && numberOfLines > 0 ? numberOfLines : undefined,
+-        cursorColor: caretHidden ? 'transparent' : cursorColor ?? selectionColor,
+-        textStyle: textStyle || textAlign && textAlign !== 'auto' ? {
+-            ...textStyle,
+-            ...textAlign && textAlign !== 'auto' ? {
+-                textAlign
+-            } : null
+-        } : undefined,
+-        visualTransformation: secureTextEntry ? 'password' : undefined,
+-        textSelectionColors: selectionColor || selectionHandleColor ? {
+-            handleColor: selectionHandleColor ?? selectionColor,
+-            backgroundColor: selectionColor
+-        } : undefined,
+-        keyboardOptions: keyboardOptions,
+-        keyboardActions: keyboardActions,
+-        onValueChange: onChangeText,
+-        maxLength: maxLength,
+-        onFocusChanged: handleFocusChanged,
+-        selection: selection,
+-        onSelectionChange: onSelectionChange,
+-        children: /*#__PURE__*/ _jsx(BasicTextField.DecorationBox, {
+-            children: /*#__PURE__*/ _jsxs(Box, {
+-                modifiers: [
+-                    fillMaxWidth()
+-                ],
+-                contentAlignment: textAlign === 'center' ? 'topCenter' : textAlign === 'right' ? 'topEnd' : undefined,
+-                children: [
+-                    placeholder != null ? /*#__PURE__*/ _jsx(BasicTextField.Placeholder, {
+-                        children: /*#__PURE__*/ _jsx(Text, {
+-                            color: placeholderTextColor,
+-                            modifiers: [
+-                                fillMaxWidth()
+-                            ],
+-                            style: textAlign && textAlign !== 'auto' ? {
+-                                textAlign
+-                            } : undefined,
+-                            children: placeholder
+-                        })
+-                    }) : null,
+-                    /*#__PURE__*/ _jsx(BasicTextField.InnerTextField, {})
+-                ]
+-            })
+-        })
+-    });
++    const keyboardOptions = keyboardType || autoCapitalize || autoCorrect !== undefined || returnKeyType
++        ? {
++            ...(keyboardType ? { keyboardType: mapKeyboardType(keyboardType) } : null),
++            ...(autoCapitalize ? { capitalization: autoCapitalize } : null),
++            ...(autoCorrect !== undefined ? { autoCorrectEnabled: autoCorrect } : null),
++            ...(returnKeyType ? { imeAction: mapReturnKeyType(returnKeyType) } : null),
++        }
++        : undefined;
++    const keyboardActions = onSubmitEditing
++        ? {
++            onDone: onSubmitEditing,
++            onGo: onSubmitEditing,
++            onNext: onSubmitEditing,
++            onSearch: onSubmitEditing,
++            onSend: onSubmitEditing,
++            onPrevious: onSubmitEditing,
++        }
++        : undefined;
++    return (_jsx(BasicTextField, { ref: innerRef, modifiers: [
++            ...transformToModifiers(style, {}, userModifiers, { componentName: 'TextInput' }),
++            ...(testID ? [testIDModifier(testID)] : []),
++            ...(autoComplete ? [semantics({ contentType: autoComplete })] : []),
++            ...(onContentSizeChange ? [onSizeChanged(onContentSizeChange)] : []),
++        ], value: state, autoFocus: autoFocus, readOnly: editable === false, singleLine: !multiline, maxLines: multiline && numberOfLines && numberOfLines > 0 ? numberOfLines : undefined, minLines: multiline && numberOfLines && numberOfLines > 0 ? numberOfLines : undefined, cursorColor: caretHidden ? 'transparent' : (cursorColor ?? selectionColor), textStyle: textStyle || (textAlign && textAlign !== 'auto')
++            ? {
++                ...textStyle,
++                ...(textAlign && textAlign !== 'auto' ? { textAlign } : null),
++            }
++            : undefined, visualTransformation: secureTextEntry ? 'password' : undefined, textSelectionColors: selectionColor || selectionHandleColor
++            ? {
++                handleColor: selectionHandleColor ?? selectionColor,
++                backgroundColor: selectionColor,
++            }
++            : undefined, keyboardOptions: keyboardOptions, keyboardActions: keyboardActions, onValueChange: onChangeText, maxLength: maxLength, onFocusChanged: handleFocusChanged, selection: selection, onSelectionChange: onSelectionChange, children: _jsx(BasicTextField.DecorationBox, { children: _jsxs(Box, { modifiers: [fillMaxWidth()], contentAlignment: textAlign === 'center' ? 'topCenter' : textAlign === 'right' ? 'topEnd' : undefined, children: [placeholder != null ? (_jsx(BasicTextField.Placeholder, { children: _jsx(Text, { color: placeholderTextColor, modifiers: [fillMaxWidth()], style: textAlign && textAlign !== 'auto' ? { textAlign } : undefined, children: placeholder }) })) : null, _jsx(BasicTextField.InnerTextField, {})] }) }) }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.android.js.map
+diff --git a/build/universal/TextInput/index.ios.js b/build/universal/TextInput/index.ios.js
+index b47f2b0e61cb4c87a1c1282000f33dc1ed2befce..629ee5633307a2d9fd4ac2f3edd1fc462135d2b7 100644
+--- a/build/universal/TextInput/index.ios.js
++++ b/build/universal/TextInput/index.ios.js
+@@ -1,143 +1,123 @@
+ import { jsx as _jsx } from "react/jsx-runtime";
+-import { SecureField, Text, TextField, useNativeState } from '@expo/ui/swift-ui';
+-import { autocorrectionDisabled, disabled as disabledMod, foregroundStyle, keyboardType as keyboardTypeMod, lineLimit, multilineTextAlignment, onGeometryChange, onSubmit, submitLabel, textContentType, textInputAutocapitalization, tint } from '@expo/ui/swift-ui/modifiers';
++import { SecureField, Text, TextField, useNativeState, } from '@expo/ui/swift-ui';
++import { autocorrectionDisabled, disabled as disabledMod, foregroundStyle, keyboardType as keyboardTypeMod, lineLimit, multilineTextAlignment, onGeometryChange, onSubmit, submitLabel, textContentType, textInputAutocapitalization, tint, } from '@expo/ui/swift-ui/modifiers';
+ import { useImperativeHandle, useRef } from 'react';
+ import { transformToModifiers } from '../transformStyle';
+-import { autoCompleteToTextContentType, enterKeyHintToReturnKeyType, inputModeToKeyboardType, resolveEditable } from './utils';
++import { autoCompleteToTextContentType, enterKeyHintToReturnKeyType, inputModeToKeyboardType, resolveEditable, } from './utils';
+ function mapReturnKeyType(value) {
+-    if (value === 'google' || value === 'yahoo') return 'search';
+-    if (value === 'default' || value === 'none' || value === 'previous' || value === 'emergency-call') {
++    if (value === 'google' || value === 'yahoo')
++        return 'search';
++    if (value === 'default' ||
++        value === 'none' ||
++        value === 'previous' ||
++        value === 'emergency-call') {
+         return 'return';
+     }
+     return value;
+ }
+ function mapKeyboardType(value) {
+-    if (value === 'numeric') return 'decimal-pad';
+-    if (value === 'number-pad') return 'numeric';
+-    if (value === 'visible-password') return 'default';
++    if (value === 'numeric')
++        return 'decimal-pad';
++    if (value === 'number-pad')
++        return 'numeric';
++    if (value === 'visible-password')
++        return 'default';
+     return value;
+ }
+-export function TextInput({ ref, value, onChangeText, placeholder, autoFocus, editable: editableProp, multiline, keyboardType: keyboardTypeProp, autoCapitalize, autoCorrect, returnKeyType: returnKeyTypeProp, onSubmitEditing, onFocus, onBlur, cursorColor, textAlign, readOnly, inputMode, enterKeyHint, defaultValue, numberOfLines: numberOfLinesProp, rows, testID, placeholderTextColor, style, textStyle, secureTextEntry, autoComplete, onContentSizeChange, maxLength, caretHidden, selectionColor, selection, onSelectionChange, selectTextOnFocus, modifiers: userModifiers }) {
++export function TextInput({ ref, value, onChangeText, placeholder, autoFocus, editable: editableProp, multiline, keyboardType: keyboardTypeProp, autoCapitalize, autoCorrect, returnKeyType: returnKeyTypeProp, onSubmitEditing, onFocus, onBlur, cursorColor, textAlign, readOnly, inputMode, enterKeyHint, defaultValue, numberOfLines: numberOfLinesProp, rows, testID, placeholderTextColor, style, textStyle, secureTextEntry, autoComplete, onContentSizeChange, maxLength, caretHidden, selectionColor, selection, onSelectionChange, selectTextOnFocus, modifiers: userModifiers, }) {
+     const editable = resolveEditable(editableProp, readOnly);
+     const keyboardType = keyboardTypeProp ?? inputModeToKeyboardType(inputMode);
+     const returnKeyType = returnKeyTypeProp ?? enterKeyHintToReturnKeyType(enterKeyHint);
+     const initialFallbackRef = useRef(defaultValue ?? '');
+     const fallback = useNativeState(initialFallbackRef.current);
+-    const state = value ?? fallback;
++    const state = (value ?? fallback);
+     const textFieldRef = useRef(null);
+     const secureFieldRef = useRef(null);
+     const isFocusedRef = useRef(false);
+-    useImperativeHandle(ref, ()=>({
+-            focus: ()=>{
+-                if (secureTextEntry) secureFieldRef.current?.focus();
+-                else textFieldRef.current?.focus();
+-            },
+-            blur: ()=>{
+-                if (secureTextEntry) secureFieldRef.current?.blur();
+-                else textFieldRef.current?.blur();
+-            },
+-            clear: ()=>{
+-                if (secureTextEntry) secureFieldRef.current?.clear();
+-                else textFieldRef.current?.clear();
+-            },
+-            isFocused: ()=>isFocusedRef.current,
+-            setSelection: (start, end)=>{
+-                if (secureTextEntry) {
+-                    if (__DEV__) {
+-                        console.warn("TextInput.setSelection() was ignored: SwiftUI's SecureField doesn't expose " + 'programmatic selection. Remove `secureTextEntry` if you need to apply ' + 'selection changes.');
+-                    }
+-                    return Promise.resolve();
++    useImperativeHandle(ref, () => ({
++        focus: () => {
++            if (secureTextEntry)
++                secureFieldRef.current?.focus();
++            else
++                textFieldRef.current?.focus();
++        },
++        blur: () => {
++            if (secureTextEntry)
++                secureFieldRef.current?.blur();
++            else
++                textFieldRef.current?.blur();
++        },
++        clear: () => {
++            if (secureTextEntry)
++                secureFieldRef.current?.clear();
++            else
++                textFieldRef.current?.clear();
++        },
++        isFocused: () => isFocusedRef.current,
++        setSelection: (start, end) => {
++            if (secureTextEntry) {
++                if (__DEV__) {
++                    console.warn("TextInput.setSelection() was ignored: SwiftUI's SecureField doesn't expose " +
++                        'programmatic selection. Remove `secureTextEntry` if you need to apply ' +
++                        'selection changes.');
+                 }
+-                return textFieldRef.current?.setSelection(start, end) ?? Promise.resolve();
++                return Promise.resolve();
+             }
+-        }), [
+-        secureTextEntry
+-    ]);
+-    const handleFocusChange = (focused)=>{
++            return textFieldRef.current?.setSelection(start, end) ?? Promise.resolve();
++        },
++    }), [secureTextEntry]);
++    const handleFocusChange = (focused) => {
+         isFocusedRef.current = focused;
+         if (focused && selectTextOnFocus && !secureTextEntry) {
+             textFieldRef.current?.setSelection(0, state.value.length);
+         }
+-        if (focused) onFocus?.();
+-        else onBlur?.();
++        if (focused)
++            onFocus?.();
++        else
++            onBlur?.();
+     };
+     const modifiers = [
+-        ...userModifiers ?? [],
+-        ...transformToModifiers(style, {}, undefined, {
+-            textStyle
+-        })
++        ...transformToModifiers(style, {}, userModifiers, { componentName: 'TextInput', textStyle }),
+     ];
+-    if (editable === false) modifiers.push(disabledMod(true));
+-    if (keyboardType) modifiers.push(keyboardTypeMod(mapKeyboardType(keyboardType)));
++    if (editable === false)
++        modifiers.push(disabledMod(true));
++    if (keyboardType)
++        modifiers.push(keyboardTypeMod(mapKeyboardType(keyboardType)));
+     if (autoCapitalize) {
+         modifiers.push(textInputAutocapitalization(autoCapitalize === 'none' ? 'never' : autoCapitalize));
+     }
+-    if (autoCorrect === false) modifiers.push(autocorrectionDisabled(true));
+-    if (returnKeyType) modifiers.push(submitLabel(mapReturnKeyType(returnKeyType)));
++    if (autoCorrect === false)
++        modifiers.push(autocorrectionDisabled(true));
++    if (returnKeyType)
++        modifiers.push(submitLabel(mapReturnKeyType(returnKeyType)));
+     if (onSubmitEditing) {
+-        modifiers.push(onSubmit(()=>onSubmitEditing(state.value)));
++        modifiers.push(onSubmit(() => onSubmitEditing(state.value)));
+     }
+-    if (caretHidden) modifiers.push(tint('transparent'));
+-    else if (selectionColor) modifiers.push(tint(selectionColor));
+-    else if (cursorColor) modifiers.push(tint(cursorColor));
+-    if (textAlign === 'left') modifiers.push(multilineTextAlignment('leading'));
+-    else if (textAlign === 'right') modifiers.push(multilineTextAlignment('trailing'));
+-    else if (textAlign === 'center') modifiers.push(multilineTextAlignment('center'));
++    if (caretHidden)
++        modifiers.push(tint('transparent'));
++    else if (selectionColor)
++        modifiers.push(tint(selectionColor));
++    else if (cursorColor)
++        modifiers.push(tint(cursorColor));
++    if (textAlign === 'left')
++        modifiers.push(multilineTextAlignment('leading'));
++    else if (textAlign === 'right')
++        modifiers.push(multilineTextAlignment('trailing'));
++    else if (textAlign === 'center')
++        modifiers.push(multilineTextAlignment('center'));
+     const numberOfLines = numberOfLinesProp ?? rows;
+     if (multiline && numberOfLines && numberOfLines > 0) {
+-        modifiers.push(lineLimit(numberOfLines, {
+-            reservesSpace: true
+-        }));
++        modifiers.push(lineLimit(numberOfLines, { reservesSpace: true }));
+     }
+     const mappedContentType = autoCompleteToTextContentType(autoComplete);
+     if (mappedContentType) {
+         modifiers.push(textContentType(mappedContentType));
+     }
+-    if (onContentSizeChange) modifiers.push(onGeometryChange(onContentSizeChange));
++    if (onContentSizeChange)
++        modifiers.push(onGeometryChange(onContentSizeChange));
+     if (secureTextEntry) {
+-        return /*#__PURE__*/ _jsx(SecureField, {
+-            ref: secureFieldRef,
+-            text: state,
+-            placeholder: placeholder,
+-            autoFocus: autoFocus,
+-            onTextChange: onChangeText,
+-            onFocusChange: handleFocusChange,
+-            maxLength: maxLength,
+-            modifiers: modifiers.length > 0 ? modifiers : undefined,
+-            testID: testID,
+-            children: placeholderTextColor && placeholder ? /*#__PURE__*/ _jsx(SecureField.Placeholder, {
+-                children: /*#__PURE__*/ _jsx(Text, {
+-                    modifiers: [
+-                        foregroundStyle(placeholderTextColor)
+-                    ],
+-                    children: placeholder
+-                })
+-            }) : null
+-        });
++        return (_jsx(SecureField, { ref: secureFieldRef, text: state, placeholder: placeholder, autoFocus: autoFocus, onTextChange: onChangeText, onFocusChange: handleFocusChange, maxLength: maxLength, modifiers: modifiers.length > 0 ? modifiers : undefined, testID: testID, children: placeholderTextColor && placeholder ? (_jsx(SecureField.Placeholder, { children: _jsx(Text, { modifiers: [foregroundStyle(placeholderTextColor)], children: placeholder }) })) : null }));
+     }
+-    return /*#__PURE__*/ _jsx(TextField, {
+-        ref: textFieldRef,
+-        text: state,
+-        placeholder: placeholder,
+-        autoFocus: autoFocus,
+-        axis: multiline ? 'vertical' : 'horizontal',
+-        onTextChange: onChangeText,
+-        onFocusChange: handleFocusChange,
+-        selection: selection,
+-        onSelectionChange: onSelectionChange,
+-        maxLength: maxLength,
+-        modifiers: modifiers.length > 0 ? modifiers : undefined,
+-        testID: testID,
+-        children: placeholderTextColor && placeholder ? /*#__PURE__*/ _jsx(TextField.Placeholder, {
+-            children: /*#__PURE__*/ _jsx(Text, {
+-                modifiers: [
+-                    foregroundStyle(placeholderTextColor)
+-                ],
+-                children: placeholder
+-            })
+-        }) : null
+-    });
++    return (_jsx(TextField, { ref: textFieldRef, text: state, placeholder: placeholder, autoFocus: autoFocus, axis: multiline ? 'vertical' : 'horizontal', onTextChange: onChangeText, onFocusChange: handleFocusChange, selection: selection, onSelectionChange: onSelectionChange, maxLength: maxLength, modifiers: modifiers.length > 0 ? modifiers : undefined, testID: testID, children: placeholderTextColor && placeholder ? (_jsx(TextField.Placeholder, { children: _jsx(Text, { modifiers: [foregroundStyle(placeholderTextColor)], children: placeholder }) })) : null }));
+ }
+ export * from './types';
+-
+-//# sourceMappingURL=index.ios.js.map
+diff --git a/build/universal/modifierUtils.js b/build/universal/modifierUtils.js
+index 7375869a3549f19ee51b67757a1fa415f884f357..1f9d49fe51e2d0f342b016088ffda888d5c15b34 100644
+--- a/build/universal/modifierUtils.js
++++ b/build/universal/modifierUtils.js
+@@ -8,12 +8,120 @@
+  * functional props (for example `onPress`, `onAppear`, `disabled`) must not
+  * go through this filter, or a user modifier of the same type would silently
+  * disable the prop.
+- */ export function omitUserOverridden(derived, userModifiers) {
++ */
++export function omitUserOverridden(derived, userModifiers, preservedTypes) {
+     if (!userModifiers?.length) {
+         return derived;
+     }
+-    const userTypes = new Set(userModifiers.map((modifier)=>modifier.$type));
+-    return derived.filter((modifier)=>!userTypes.has(modifier.$type));
++    const userTypes = new Set(userModifiers.map((modifier) => modifier.$type));
++    return derived.filter((modifier) => preservedTypes?.has(modifier.$type) || !userTypes.has(modifier.$type));
++}
++const PERCENTAGE_PATTERN = /^(?:\d+(?:\.\d+)?|\.\d+)%$/;
++const warnedInvalidDimensions = new Set();
++function isDevelopment() {
++    const globals = globalThis;
++    return globals.__DEV__ ?? globals.process?.env?.NODE_ENV !== 'production';
++}
++function warnInvalidDimension(componentName, axis, value) {
++    if (!isDevelopment())
++        return;
++    const warningKey = `${componentName}:${axis}`;
++    if (warnedInvalidDimensions.has(warningKey))
++        return;
++    warnedInvalidDimensions.add(warningKey);
++    console.warn(`[Expo UI] Ignoring invalid ${axis} on ${componentName}: ${String(value)}. ` +
++        'Expected a finite, non-negative number or percentage.');
++}
++function serializeDimension(value, componentName, axis) {
++    if (value == null)
++        return {};
++    if (typeof value === 'number') {
++        if (Number.isFinite(value) && value >= 0)
++            return { points: value };
++        warnInvalidDimension(componentName, axis, value);
++        return {};
++    }
++    if (typeof value === 'string' && PERCENTAGE_PATTERN.test(value)) {
++        const percentage = Number(value.slice(0, -1));
++        if (Number.isFinite(percentage) && percentage >= 0) {
++            return { fraction: percentage / 100 };
++        }
++    }
++    warnInvalidDimension(componentName, axis, value);
++    return {};
++}
++export function serializeUniversalDimensions(style, componentName = 'universal component') {
++    const width = serializeDimension(style?.width, componentName, 'width');
++    const height = serializeDimension(style?.height, componentName, 'height');
++    return {
++        widthPoints: width.points,
++        widthFraction: width.fraction,
++        heightPoints: height.points,
++        heightFraction: height.fraction,
++    };
++}
++export function getUserSizingOverrides(userModifiers, platform) {
++    let width = false;
++    let height = false;
++    for (const modifier of userModifiers ?? []) {
++        if (platform === 'android') {
++            if (modifier.$type === 'size' ||
++                modifier.$type === 'fillMaxSize' ||
++                modifier.$type === 'weight') {
++                width = true;
++                height = true;
++            }
++            else if (modifier.$type === 'width' ||
++                modifier.$type === 'fillMaxWidth' ||
++                modifier.$type === 'wrapContentWidth' ||
++                (modifier.$type === 'defaultMinSize' && modifier.minWidth != null)) {
++                width = true;
++            }
++            else if (modifier.$type === 'height' ||
++                modifier.$type === 'fillMaxHeight' ||
++                modifier.$type === 'wrapContentHeight' ||
++                (modifier.$type === 'defaultMinSize' && modifier.minHeight != null)) {
++                height = true;
++            }
++            continue;
++        }
++        if (modifier.$type === 'frame') {
++            width ||=
++                modifier.width != null ||
++                    modifier.minWidth != null ||
++                    modifier.idealWidth != null ||
++                    modifier.maxWidth != null;
++            height ||=
++                modifier.height != null ||
++                    modifier.minHeight != null ||
++                    modifier.idealHeight != null ||
++                    modifier.maxHeight != null;
++        }
++        else if (modifier.$type === 'containerRelativeFrame') {
++            width ||= modifier.axes === 'horizontal' || modifier.axes === 'both';
++            height ||= modifier.axes === 'vertical' || modifier.axes === 'both';
++        }
++        else if (modifier.$type === 'fixedSize') {
++            const hasExplicitAxis = modifier.horizontal != null || modifier.vertical != null;
++            width ||= hasExplicitAxis ? modifier.horizontal === true : true;
++            height ||= hasExplicitAxis ? modifier.vertical === true : true;
++        }
++    }
++    return { width, height };
++}
++export function omitUserOverriddenDimensions(dimensions, userModifiers, platform) {
++    const overrides = getUserSizingOverrides(userModifiers, platform);
++    return {
++        widthPoints: overrides.width ? undefined : dimensions.widthPoints,
++        widthFraction: overrides.width ? undefined : dimensions.widthFraction,
++        heightPoints: overrides.height ? undefined : dimensions.heightPoints,
++        heightFraction: overrides.height ? undefined : dimensions.heightFraction,
++    };
++}
++export function createUniversalLayoutModifier(dimensions) {
++    const hasDimension = Object.values(dimensions).some((value) => value != null);
++    return hasDimension ? { $type: 'universalLayout', ...dimensions } : undefined;
++}
++export function resetUniversalDimensionWarningsForTests() {
++    warnedInvalidDimensions.clear();
+ }
+-
+-//# sourceMappingURL=modifierUtils.js.map
+diff --git a/build/universal/transformStyle.android.d.ts b/build/universal/transformStyle.android.d.ts
+index 3557796d7a20e1b23cd06f8bac3ce93bbce4e0a2..63a34aca398fd401d25c70af6717ea8ce9203709 100644
+--- a/build/universal/transformStyle.android.d.ts
++++ b/build/universal/transformStyle.android.d.ts
+@@ -12,4 +12,6 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
+  * Style-derived modifiers yield to user-supplied modifiers of the same
+  * `$type`, so the escape hatch can override anything derived from props.
+  */
+-export declare function transformToModifiers(style: UniversalStyle | undefined, props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>, extraModifiers?: ModifierConfig[]): ModifierConfig[];
++export declare function transformToModifiers(style: UniversalStyle | undefined, props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>, extraModifiers?: ModifierConfig[], options?: {
++    componentName?: string;
++}): ModifierConfig[];
+diff --git a/build/universal/transformStyle.android.js b/build/universal/transformStyle.android.js
+index ab3e51766e657c41165bdf442928cff3a998ccdd..f17f8b5e4533d18a5eabc48325a428d4b0021a83 100644
+--- a/build/universal/transformStyle.android.js
++++ b/build/universal/transformStyle.android.js
+@@ -1,5 +1,5 @@
+-import { alpha, background, border, clickable, clip, height, padding, paddingAll, Shapes, size, testID as testIDModifier, width } from '@expo/ui/jetpack-compose/modifiers';
+-import { omitUserOverridden } from './modifierUtils';
++import { alpha, background, border, clickable, clip, height, padding, paddingAll, Shapes, size, testID as testIDModifier, width, } from '@expo/ui/jetpack-compose/modifiers';
++import { createUniversalLayoutModifier, omitUserOverridden, omitUserOverriddenDimensions, serializeUniversalDimensions, } from './modifierUtils';
+ /**
+  * Converts universal style/event/lifecycle/behavior props into a Jetpack
+  * Compose modifier array.
+@@ -11,17 +11,27 @@ import { omitUserOverridden } from './modifierUtils';
+  *
+  * Style-derived modifiers yield to user-supplied modifiers of the same
+  * `$type`, so the escape hatch can override anything derived from props.
+- */ export function transformToModifiers(style, props, extraModifiers) {
++ */
++export function transformToModifiers(style, props, extraModifiers, options) {
+     let mods = [];
++    const dimensions = omitUserOverriddenDimensions(serializeUniversalDimensions(style, options?.componentName), extraModifiers, 'android');
++    const fixedWidth = dimensions.widthPoints;
++    const fixedHeight = dimensions.heightPoints;
++    const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
++    if (universalLayoutModifier)
++        mods.push(universalLayoutModifier);
++    // Fixed sizing is applied directly. Percentages remain as parent data for
++    // the owning universal layout to resolve against its content box.
++    if (fixedWidth != null && fixedHeight != null) {
++        mods.push(size(fixedWidth, fixedHeight));
++    }
++    else {
++        if (fixedWidth != null)
++            mods.push(width(fixedWidth));
++        if (fixedHeight != null)
++            mods.push(height(fixedHeight));
++    }
+     if (style) {
+-        // Sizing (outermost)
+-        if (style.width != null && style.height != null) {
+-            mods.push(size(style.width, style.height));
+-        } else if (style.width != null) {
+-            mods.push(width(style.width));
+-        } else if (style.height != null) {
+-            mods.push(height(style.height));
+-        }
+         // Border + background + borderRadius handling.
+         // Compose's border() doesn't accept a shape, so when borderRadius is set
+         // alongside border, we simulate a rounded border using layered backgrounds:
+@@ -38,7 +48,8 @@ import { omitUserOverridden } from './modifierUtils';
+             if (style.backgroundColor) {
+                 mods.push(background(String(style.backgroundColor)));
+             }
+-        } else {
++        }
++        else {
+             if (hasBorder) {
+                 mods.push(border(style.borderWidth, String(style.borderColor)));
+             }
+@@ -61,7 +72,8 @@ import { omitUserOverridden } from './modifierUtils';
+             if (top || bottom || start || end) {
+                 if (top === bottom && bottom === start && start === end) {
+                     mods.push(paddingAll(top));
+-                } else {
++                }
++                else {
+                     mods.push(padding(start, top, end, bottom));
+                 }
+             }
+@@ -75,14 +87,16 @@ import { omitUserOverridden } from './modifierUtils';
+     // type. The event and behavior modifiers below are never dropped.
+     mods = omitUserOverridden(mods, extraModifiers);
+     // Events — Compose uses clickable modifier
+-    if (props.onPress) mods.push(clickable(props.onPress));
++    if (props.onPress)
++        mods.push(clickable(props.onPress));
+     // Behavior
+-    if (props.hidden) mods.push(alpha(0));
+-    if (props.testID) mods.push(testIDModifier(props.testID));
++    if (props.hidden)
++        mods.push(alpha(0));
++    if (props.testID)
++        mods.push(testIDModifier(props.testID));
+     // disabled: handled at component level (Button → enabled prop; others → skip clickable)
+     // Escape hatch — user-supplied modifiers come last
+-    if (extraModifiers) mods.push(...extraModifiers);
++    if (extraModifiers)
++        mods.push(...extraModifiers);
+     return mods;
+ }
+-
+-//# sourceMappingURL=transformStyle.android.js.map
+diff --git a/build/universal/transformStyle.ios.d.ts b/build/universal/transformStyle.ios.d.ts
+index 52215c37f9edd237fa0880d26c710b3a39ff44bb..0d7d0bd1f4588ee53248d11f3693b9fdcc90a2ac 100644
+--- a/build/universal/transformStyle.ios.d.ts
++++ b/build/universal/transformStyle.ios.d.ts
+@@ -14,6 +14,8 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
+  * `$type`, so the escape hatch can override anything derived from props.
+  */
+ export declare function transformToModifiers(style: UniversalStyle | undefined, props: Pick<UniversalBaseProps, 'onPress' | 'onAppear' | 'onDisappear' | 'disabled' | 'hidden' | 'testID'>, extraModifiers?: ModifierConfig[], options?: {
++    /** Component name included in invalid-dimension development warnings. */
++    componentName?: string;
+     /** Alignment for the frame modifier (used by Column/Row). */
+     frameAlignment?: Parameters<typeof frame>[0]['alignment'];
+     /** Text-styling props for text-rendering components. */
+diff --git a/build/universal/transformStyle.ios.js b/build/universal/transformStyle.ios.js
+index 029cc92ad0077b5f881f8810a72619802370a01f..a3f19fd21ca4ce8d9e82240b3564d59d1ac30088 100644
+--- a/build/universal/transformStyle.ios.js
++++ b/build/universal/transformStyle.ios.js
+@@ -1,5 +1,5 @@
+-import { background, border, clipShape, contentShape, disabled as disabledMod, font, foregroundStyle, frame, hidden as hiddenMod, kerning, lineSpacing, multilineTextAlignment, onAppear, onDisappear, onTapGesture, opacity, padding, shapes } from '@expo/ui/swift-ui/modifiers';
+-import { omitUserOverridden } from './modifierUtils';
++import { background, border, clipShape, contentShape, disabled as disabledMod, font, foregroundStyle, frame, hidden as hiddenMod, kerning, lineSpacing, multilineTextAlignment, onAppear, onDisappear, onTapGesture, opacity, padding, shapes, } from '@expo/ui/swift-ui/modifiers';
++import { createUniversalLayoutModifier, omitUserOverridden, omitUserOverriddenDimensions, serializeUniversalDimensions, } from './modifierUtils';
+ const FONT_WEIGHT_MAP = {
+     '100': 'ultraLight',
+     '200': 'thin',
+@@ -11,7 +11,7 @@ const FONT_WEIGHT_MAP = {
+     '800': 'heavy',
+     '900': 'black',
+     normal: 'regular',
+-    bold: 'bold'
++    bold: 'bold',
+ };
+ /**
+  * Converts universal style/event/lifecycle/behavior props into a SwiftUI
+@@ -24,33 +24,50 @@ const FONT_WEIGHT_MAP = {
+  *
+  * Style-derived modifiers yield to user-supplied modifiers of the same
+  * `$type`, so the escape hatch can override anything derived from props.
+- */ export function transformToModifiers(style, props, extraModifiers, options) {
++ */
++export function transformToModifiers(style, props, extraModifiers, options) {
+     let mods = [];
++    const dimensions = omitUserOverriddenDimensions(serializeUniversalDimensions(style, options?.componentName), extraModifiers, 'ios');
++    const fixedWidth = dimensions.widthPoints;
++    const fixedHeight = dimensions.heightPoints;
+     // Text styling (innermost — applies to text content before container modifiers)
+     const textStyle = options?.textStyle;
+     if (textStyle) {
+-        if (textStyle.fontFamily != null || textStyle.fontSize != null || textStyle.fontWeight != null) {
++        if (textStyle.fontFamily != null ||
++            textStyle.fontSize != null ||
++            textStyle.fontWeight != null) {
+             mods.push(font({
+                 family: textStyle.fontFamily,
+                 size: textStyle.fontSize,
+-                weight: textStyle.fontWeight ? FONT_WEIGHT_MAP[textStyle.fontWeight] : undefined
++                weight: textStyle.fontWeight ? FONT_WEIGHT_MAP[textStyle.fontWeight] : undefined,
+             }));
+         }
+-        if (textStyle.color != null) mods.push(foregroundStyle(textStyle.color));
+-        if (textStyle.letterSpacing != null) mods.push(kerning(textStyle.letterSpacing));
++        if (textStyle.color != null)
++            mods.push(foregroundStyle(textStyle.color));
++        if (textStyle.letterSpacing != null)
++            mods.push(kerning(textStyle.letterSpacing));
+         if (textStyle.lineHeight != null) {
+             // Approximation: SwiftUI's true `lineHeight(_:)` modifier exists only on iOS 26+.
+             // Users who need exact spacing on iOS 26+ can use `lineHeight()` via the `modifiers` prop.
+             const baseFontSize = textStyle.fontSize ?? 17;
+             mods.push(lineSpacing(Math.max(0, textStyle.lineHeight - baseFontSize)));
+         }
+-        if (textStyle.textAlign === 'left') mods.push(multilineTextAlignment('leading'));
+-        else if (textStyle.textAlign === 'right') mods.push(multilineTextAlignment('trailing'));
+-        else if (textStyle.textAlign === 'center') mods.push(multilineTextAlignment('center'));
++        if (textStyle.textAlign === 'left')
++            mods.push(multilineTextAlignment('leading'));
++        else if (textStyle.textAlign === 'right')
++            mods.push(multilineTextAlignment('trailing'));
++        else if (textStyle.textAlign === 'center')
++            mods.push(multilineTextAlignment('center'));
+     }
+     if (style) {
+         // Padding (innermost)
+-        const hasPadding = style.padding != null || style.paddingHorizontal != null || style.paddingVertical != null || style.paddingTop != null || style.paddingBottom != null || style.paddingLeft != null || style.paddingRight != null;
++        const hasPadding = style.padding != null ||
++            style.paddingHorizontal != null ||
++            style.paddingVertical != null ||
++            style.paddingTop != null ||
++            style.paddingBottom != null ||
++            style.paddingLeft != null ||
++            style.paddingRight != null;
+         if (hasPadding) {
+             mods.push(padding({
+                 all: style.padding,
+@@ -59,27 +76,30 @@ const FONT_WEIGHT_MAP = {
+                 top: style.paddingTop,
+                 bottom: style.paddingBottom,
+                 leading: style.paddingLeft,
+-                trailing: style.paddingRight
+-            }));
+-        }
+-        // Sizing (before background so background fills the frame)
+-        if (style.width != null || style.height != null) {
+-            mods.push(frame({
+-                width: style.width,
+-                height: style.height,
+-                alignment: options?.frameAlignment
++                trailing: style.paddingRight,
+             }));
+         }
++    }
++    // Fixed sizing is applied directly. Percentages remain as layout values for
++    // the owning universal layout to resolve against its content box.
++    if (fixedWidth != null || fixedHeight != null) {
++        mods.push(frame({
++            width: fixedWidth,
++            height: fixedHeight,
++            alignment: options?.frameAlignment,
++        }));
++    }
++    const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
++    if (universalLayoutModifier)
++        mods.push(universalLayoutModifier);
++    if (style) {
+         // Background (fills the frame area including padding)
+         if (style.backgroundColor) {
+             mods.push(background(style.backgroundColor));
+         }
+         // Border (before clip so the clip rounds the border corners too)
+         if (style.borderWidth != null && style.borderColor != null) {
+-            mods.push(border({
+-                content: style.borderColor,
+-                width: style.borderWidth
+-            }));
++            mods.push(border({ content: style.borderColor, width: style.borderWidth }));
+         }
+         // Clip (border radius — rounds both background and border)
+         if (style.borderRadius != null) {
+@@ -92,19 +112,25 @@ const FONT_WEIGHT_MAP = {
+     }
+     // A user-supplied modifier replaces any style-derived modifier of the same
+     // type. The event, lifecycle, and behavior modifiers below are never dropped.
+-    mods = omitUserOverridden(mods, extraModifiers);
++    // Axis-aware sizing precedence has already removed only the dimensions set
++    // by a user frame. Preserve any derived frame that still owns the other axis.
++    mods = omitUserOverridden(mods, extraModifiers, new Set(['frame', 'universalLayout']));
+     // Events. SwiftUI only hit-tests drawn content, so the `contentShape` lets
+     // taps on empty space (for example a `Spacer` in a `Row`) reach `onPress`.
+-    if (props.onPress) mods.push(contentShape(shapes.rectangle()), onTapGesture(props.onPress));
++    if (props.onPress)
++        mods.push(contentShape(shapes.rectangle()), onTapGesture(props.onPress));
+     // Lifecycle
+-    if (props.onAppear) mods.push(onAppear(props.onAppear));
+-    if (props.onDisappear) mods.push(onDisappear(props.onDisappear));
++    if (props.onAppear)
++        mods.push(onAppear(props.onAppear));
++    if (props.onDisappear)
++        mods.push(onDisappear(props.onDisappear));
+     // Behavior
+-    if (props.disabled) mods.push(disabledMod(true));
+-    if (props.hidden) mods.push(hiddenMod(true));
++    if (props.disabled)
++        mods.push(disabledMod(true));
++    if (props.hidden)
++        mods.push(hiddenMod(true));
+     // Escape hatch — user-supplied modifiers come last
+-    if (extraModifiers) mods.push(...extraModifiers);
++    if (extraModifiers)
++        mods.push(...extraModifiers);
+     return mods;
+ }
+-
+-//# sourceMappingURL=transformStyle.ios.js.map
+diff --git a/build/universal/types.d.ts b/build/universal/types.d.ts
+index 728ce36a49579535ad06719d3b2f5197251fa920..696d27e2442d9d0eb65d94c89644b982c94a14f3 100644
+--- a/build/universal/types.d.ts
++++ b/build/universal/types.d.ts
+@@ -5,7 +5,13 @@ import type { ModifierConfig } from '../types';
+  * and Jetpack Compose modifiers. On web, passes through to React Native StyleSheet.
+  * @docsInline
+  */
+-export type UniversalStyle = Pick<ViewStyle, 'padding' | 'paddingHorizontal' | 'paddingVertical' | 'paddingTop' | 'paddingBottom' | 'paddingLeft' | 'paddingRight' | 'backgroundColor' | 'borderRadius' | 'borderWidth' | 'borderColor' | 'opacity' | 'width' | 'height'>;
++export type UniversalDimension = number | `${number}%` | null;
++export type UniversalStyle = Pick<ViewStyle, 'padding' | 'paddingHorizontal' | 'paddingVertical' | 'paddingTop' | 'paddingBottom' | 'paddingLeft' | 'paddingRight' | 'backgroundColor' | 'borderRadius' | 'borderWidth' | 'borderColor' | 'opacity'> & {
++    /** Fixed logical pixels or a percentage of the immediate parent's content width. */
++    width?: UniversalDimension;
++    /** Fixed logical pixels or a percentage of the immediate parent's content height. */
++    height?: UniversalDimension;
++};
+ /**
+  * Base props inherited by all universal components.
+  * @docsInline
+diff --git a/build/universal/types.js b/build/universal/types.js
+index 4572d3ffd03babbaaa4d0339ad42623c6bbba9a9..cb0ff5c3b541f646105198ee23ac0fc3d805023e 100644
+--- a/build/universal/types.js
++++ b/build/universal/types.js
+@@ -1,6 +1 @@
+-/**
+- * Cross-axis alignment for layout components such as `Column` and `Row`.
+- * @docsInline
+- */ export { };
+-
+-//# sourceMappingURL=types.js.map
++export {};
+diff --git a/ios/HStackView.swift b/ios/HStackView.swift
+index 1fd86e540c9c3a8582c1324a9c3e3484ae0891ec..86522638838628e95c4ba387a07c9ffb147d5ac3 100644
+--- a/ios/HStackView.swift
++++ b/ios/HStackView.swift
+@@ -33,16 +33,29 @@ public final class HStackViewProps: UIBaseViewProps {
+ 
+ public struct HStackView: ExpoSwiftUI.View {
+   @ObservedObject public var props: HStackViewProps
++  @Environment(\.layoutDirection) private var layoutDirection
+ 
+   public init(props: HStackViewProps) {
+     self.props = props
+   }
+ 
+   public var body: some View {
+-    HStack(
+-      alignment: props.alignment?.toVerticalAlignment() ?? .center,
+-      spacing: props.spacing.map { CGFloat($0) }) {
++    if #available(iOS 16.0, tvOS 16.0, macOS 13.0, *) {
++      ParentAwareHStackLayout(
++        alignment: props.alignment ?? .center,
++        spacing: props.spacing.map { CGFloat($0) },
++        layoutDirection: layoutDirection,
++        ownDimensions: universalLayoutDimensions(from: props.modifiers)
++      ) {
+         Children()
++      }
++    } else {
++      HStack(
++        alignment: props.alignment?.toVerticalAlignment() ?? .center,
++        spacing: props.spacing.map { CGFloat($0) }
++      ) {
++        Children()
++      }
+     }
+   }
+ }
+diff --git a/ios/HostView.swift b/ios/HostView.swift
+index 89e16c496e4af8a52e44384332082f2e408dbeab..c9642b840f8fbbd8ebae75ce12b8f1d4f09e1988 100644
+--- a/ios/HostView.swift
++++ b/ios/HostView.swift
+@@ -64,7 +64,7 @@ struct HostView: ExpoSwiftUI.View, ExpoSwiftUI.WithHostingView {
+       // swiftlint:disable:next identifier_name
+       let HostLayout = props.useViewportSizeMeasurement
+         ? AnyLayout(ViewportSizeMeasurementLayout(layoutDirection: layoutDirection, hostingView: props.hostingView))
+-        : AnyLayout(ZStackLayout(alignment: alignment))
++        : AnyLayout(ParentAwareHostLayout(layoutDirection: layoutDirection))
+       HostLayout {
+         Children()
+       }
+@@ -113,6 +113,26 @@ struct HostView: ExpoSwiftUI.View, ExpoSwiftUI.WithHostingView {
+ 
+ }
+ 
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++private struct ParentAwareHostLayout: Layout {
++  let layoutDirection: LayoutDirection
++
++  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
++    subviews.reduce(.zero) { size, subview in
++      let childSize = subview.sizeThatFits(proposal)
++      return CGSize(width: max(size.width, childSize.width), height: max(size.height, childSize.height))
++    }
++  }
++
++  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
++    for subview in subviews {
++      let childSize = subview.sizeThatFits(ProposedViewSize(bounds.size))
++      let x = layoutDirection == .rightToLeft ? bounds.maxX - childSize.width : bounds.minX
++      subview.place(at: CGPoint(x: x, y: bounds.minY), proposal: ProposedViewSize(bounds.size))
++    }
++  }
++}
++
+ /**
+  A Layout designed for the `useViewportSizeMeasurement` behavior.
+  If parent's proposedViewSize is zero or nil, it will try to use the viewport size to expand its children size.
+@@ -270,3 +290,229 @@ private struct LayoutDirectionModifier: ViewModifier {
+     }
+   }
+ }
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++internal struct UniversalPercentageLayout: Layout {
++  let dimensions: UniversalLayoutDimensions
++
++  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
++    guard let subview = subviews.first else { return .zero }
++    let resolvedProposal = proposal.resolving(dimensions)
++    let childSize = subview.sizeThatFits(resolvedProposal)
++    return CGSize(
++      width: dimensions.widthFraction != nil ? resolvedProposal.width ?? childSize.width : childSize.width,
++      height: dimensions.heightFraction != nil ? resolvedProposal.height ?? childSize.height : childSize.height
++    )
++  }
++
++  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
++    guard let subview = subviews.first else { return }
++    subview.place(at: bounds.origin, proposal: ProposedViewSize(bounds.size))
++  }
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++internal struct ParentAwareHStackLayout: Layout {
++  let alignment: VerticalAlignmentOptions
++  let spacing: CGFloat?
++  let layoutDirection: LayoutDirection
++  let ownDimensions: UniversalLayoutDimensions
++
++  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
++    measure(proposal: proposal, subviews: subviews).size
++  }
++
++  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
++    let measurement = measure(proposal: ProposedViewSize(bounds.size), subviews: subviews)
++    var cursor = layoutDirection == .rightToLeft ? bounds.maxX : bounds.minX
++    for index in subviews.indices {
++      let size = measurement.sizes[index]
++      if layoutDirection == .rightToLeft { cursor -= size.width }
++      let y = bounds.minY + verticalOffset(
++        for: index,
++        containerHeight: bounds.height,
++        measurement: measurement
++      )
++      subviews[index].place(at: CGPoint(x: cursor, y: y), proposal: measurement.proposals[index])
++      if layoutDirection == .rightToLeft {
++        cursor -= measurement.spacings[index]
++      } else {
++        cursor += size.width + measurement.spacings[index]
++      }
++    }
++  }
++
++  private func measure(proposal: ProposedViewSize, subviews: Subviews) -> StackMeasurement {
++    let definiteWidth = ownDimensions.hasWidth ? proposal.width : nil
++    let definiteHeight = ownDimensions.hasHeight ? proposal.height : nil
++    let proposals = subviews.map {
++      proposalForSubview(
++        $0,
++        parentWidth: definiteWidth,
++        parentHeight: definiteHeight,
++        unconstrainedAxis: .horizontal
++      )
++    }
++    let viewDimensions = zip(subviews, proposals).map { $0.dimensions(in: $1) }
++    let sizes = viewDimensions.map { CGSize(width: $0.width, height: $0.height) }
++    let spacings = stackSpacings(subviews: subviews, axis: .horizontal, explicit: spacing)
++    let contentWidth = sizes.reduce(0) { $0 + $1.width } + spacings.reduce(0, +)
++    let contentHeight: CGFloat
++    if alignment == .firstTextBaseline || alignment == .lastTextBaseline {
++      let guide = alignment.toVerticalAlignment()
++      let above = viewDimensions.map { $0[guide] }.max() ?? 0
++      let below = viewDimensions.map { $0.height - $0[guide] }.max() ?? 0
++      contentHeight = above + below
++    } else {
++      contentHeight = sizes.map(\.height).max() ?? 0
++    }
++    return StackMeasurement(
++      size: CGSize(width: definiteWidth ?? contentWidth, height: definiteHeight ?? contentHeight),
++      sizes: sizes,
++      proposals: proposals,
++      spacings: spacings,
++      dimensions: viewDimensions
++    )
++  }
++
++  private func verticalOffset(
++    for index: Int,
++    containerHeight: CGFloat,
++    measurement: StackMeasurement
++  ) -> CGFloat {
++    let childHeight = measurement.sizes[index].height
++    switch alignment {
++    case .top:
++      return 0
++    case .center:
++      return (containerHeight - childHeight) / 2
++    case .bottom:
++      return containerHeight - childHeight
++    case .firstTextBaseline, .lastTextBaseline:
++      let guide = alignment.toVerticalAlignment()
++      let reference = measurement.dimensions.map { $0[guide] }.max() ?? 0
++      return reference - measurement.dimensions[index][guide]
++    }
++  }
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++internal struct ParentAwareVStackLayout: Layout {
++  let alignment: HorizontalAlignmentOptions
++  let spacing: CGFloat?
++  let layoutDirection: LayoutDirection
++  let ownDimensions: UniversalLayoutDimensions
++
++  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
++    measure(proposal: proposal, subviews: subviews).size
++  }
++
++  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
++    let measurement = measure(proposal: ProposedViewSize(bounds.size), subviews: subviews)
++    var cursor = bounds.minY
++    for index in subviews.indices {
++      let size = measurement.sizes[index]
++      let x = bounds.minX + horizontalOffset(childWidth: size.width, containerWidth: bounds.width)
++      subviews[index].place(at: CGPoint(x: x, y: cursor), proposal: measurement.proposals[index])
++      cursor += size.height + measurement.spacings[index]
++    }
++  }
++
++  private func measure(proposal: ProposedViewSize, subviews: Subviews) -> StackMeasurement {
++    let definiteWidth = ownDimensions.hasWidth ? proposal.width : nil
++    let definiteHeight = ownDimensions.hasHeight ? proposal.height : nil
++    let proposals = subviews.map {
++      proposalForSubview(
++        $0,
++        parentWidth: definiteWidth,
++        parentHeight: definiteHeight,
++        unconstrainedAxis: .vertical
++      )
++    }
++    let viewDimensions = zip(subviews, proposals).map { $0.dimensions(in: $1) }
++    let sizes = viewDimensions.map { CGSize(width: $0.width, height: $0.height) }
++    let spacings = stackSpacings(subviews: subviews, axis: .vertical, explicit: spacing)
++    let contentWidth = sizes.map(\.width).max() ?? 0
++    let contentHeight = sizes.reduce(0) { $0 + $1.height } + spacings.reduce(0, +)
++    return StackMeasurement(
++      size: CGSize(width: definiteWidth ?? contentWidth, height: definiteHeight ?? contentHeight),
++      sizes: sizes,
++      proposals: proposals,
++      spacings: spacings,
++      dimensions: viewDimensions
++    )
++  }
++
++  private func horizontalOffset(childWidth: CGFloat, containerWidth: CGFloat) -> CGFloat {
++    switch alignment {
++    case .center:
++      return (containerWidth - childWidth) / 2
++    case .leading:
++      return layoutDirection == .rightToLeft ? containerWidth - childWidth : 0
++    case .trailing:
++      return layoutDirection == .rightToLeft ? 0 : containerWidth - childWidth
++    }
++  }
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++private struct StackMeasurement {
++  let size: CGSize
++  let sizes: [CGSize]
++  let proposals: [ProposedViewSize]
++  let spacings: [CGFloat]
++  let dimensions: [ViewDimensions]
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++private func proposalForSubview(
++  _ subview: LayoutSubview,
++  parentWidth: CGFloat?,
++  parentHeight: CGFloat?,
++  unconstrainedAxis: Axis
++) -> ProposedViewSize {
++  let dimensions = subview[UniversalLayoutDimensionsKey.self]
++  let width = dimensions.widthFraction != nil ? parentWidth : nil
++  let height = dimensions.heightFraction != nil ? parentHeight : nil
++  return ProposedViewSize(
++    width: unconstrainedAxis == .horizontal && dimensions.widthFraction == nil ? nil : width,
++    height: unconstrainedAxis == .vertical && dimensions.heightFraction == nil ? nil : height
++  )
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++private func stackSpacings(subviews: LayoutSubviews, axis: Axis, explicit: CGFloat?) -> [CGFloat] {
++  subviews.indices.map { index in
++    guard index < subviews.count - 1 else { return 0 }
++    return explicit ?? subviews[index].spacing.distance(to: subviews[index + 1].spacing, along: axis)
++  }
++}
++
++private extension UniversalLayoutDimensions {
++  var hasWidth: Bool { widthPoints != nil || widthFraction != nil }
++  var hasHeight: Bool { heightPoints != nil || heightFraction != nil }
++}
++
++private extension ProposedViewSize {
++  func resolving(_ dimensions: UniversalLayoutDimensions) -> ProposedViewSize {
++    ProposedViewSize(
++      width: dimensions.widthFraction.flatMap { fraction in width.map { $0 * fraction } } ?? width,
++      height: dimensions.heightFraction.flatMap { fraction in height.map { $0 * fraction } } ?? height
++    )
++  }
++}
++
++internal func universalLayoutDimensions(from modifiers: ModifierArray?) -> UniversalLayoutDimensions {
++  guard let values = modifiers?.last(where: { $0["$type"] as? String == "universalLayout" }) else {
++    return UniversalLayoutDimensions()
++  }
++  func dimension(_ key: String) -> CGFloat? {
++    (values[key] as? NSNumber).map { CGFloat(truncating: $0) }
++  }
++  return UniversalLayoutDimensions(
++    widthPoints: dimension("widthPoints"),
++    widthFraction: dimension("widthFraction"),
++    heightPoints: dimension("heightPoints"),
++    heightFraction: dimension("heightFraction")
++  )
++}
+diff --git a/ios/Modifiers/ViewModifierRegistry.swift b/ios/Modifiers/ViewModifierRegistry.swift
+index 4df03dd528b4026d9ccb373786ae35ed0b62a0de..acf7f7b804b516d8a186f4577664cb21eef8f436 100644
+--- a/ios/Modifiers/ViewModifierRegistry.swift
++++ b/ios/Modifiers/ViewModifierRegistry.swift
+@@ -82,6 +82,50 @@ internal struct FrameModifier: ViewModifier, Record {
+   }
+ }
+ 
++internal struct UniversalLayoutDimensions: Equatable {
++  var widthPoints: CGFloat?
++  var widthFraction: CGFloat?
++  var heightPoints: CGFloat?
++  var heightFraction: CGFloat?
++}
++
++@available(iOS 16.0, tvOS 16.0, macOS 13.0, *)
++internal struct UniversalLayoutDimensionsKey: LayoutValueKey {
++  static let defaultValue = UniversalLayoutDimensions()
++}
++
++internal struct UniversalLayoutModifier: ViewModifier, Record {
++  @Field var widthPoints: CGFloat?
++  @Field var widthFraction: CGFloat?
++  @Field var heightPoints: CGFloat?
++  @Field var heightFraction: CGFloat?
++
++  private func validated(_ value: CGFloat?) -> CGFloat? {
++    value.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil }
++  }
++
++  @ViewBuilder
++  func body(content: Content) -> some View {
++    if #available(iOS 16.0, tvOS 16.0, macOS 13.0, *) {
++      let dimensions = UniversalLayoutDimensions(
++        widthPoints: validated(widthPoints),
++        widthFraction: validated(widthFraction),
++        heightPoints: validated(heightPoints),
++        heightFraction: validated(heightFraction)
++      )
++      UniversalPercentageLayout(dimensions: dimensions) {
++        content
++      }
++      .layoutValue(
++        key: UniversalLayoutDimensionsKey.self,
++        value: dimensions
++      )
++    } else {
++      content
++    }
++  }
++}
++
+ internal struct PaddingModifier: ViewModifier, Record {
+   @Field var all: PaddingValue?
+   @Field var horizontal: PaddingValue?
+@@ -1842,6 +1886,10 @@ extension ViewModifierRegistry {
+       return try FrameModifier(from: params, appContext: appContext)
+     }
+ 
++    register("universalLayout") { params, appContext, _ in
++      return try UniversalLayoutModifier(from: params, appContext: appContext)
++    }
++
+     register("padding") { params, appContext, _ in
+       return try PaddingModifier(from: params, appContext: appContext)
+     }
+diff --git a/ios/VStackView.swift b/ios/VStackView.swift
+index fa92cd90c6e919c7e0dde8d6ea96e22ee6336ab3..838f893323d291060e41283c5ba8b3ffee1286df 100644
+--- a/ios/VStackView.swift
++++ b/ios/VStackView.swift
+@@ -27,16 +27,29 @@ public final class VStackViewProps: UIBaseViewProps {
+ 
+ public struct VStackView: ExpoSwiftUI.View {
+   @ObservedObject public var props: VStackViewProps
++  @Environment(\.layoutDirection) private var layoutDirection
+ 
+   public init(props: VStackViewProps) {
+     self.props = props
+   }
+ 
+   public var body: some View {
+-    VStack(
+-      alignment: props.alignment?.toHorizontalAlignment() ?? .center,
+-      spacing: props.spacing.map { CGFloat($0) }) {
++    if #available(iOS 16.0, tvOS 16.0, macOS 13.0, *) {
++      ParentAwareVStackLayout(
++        alignment: props.alignment ?? .center,
++        spacing: props.spacing.map { CGFloat($0) },
++        layoutDirection: layoutDirection,
++        ownDimensions: universalLayoutDimensions(from: props.modifiers)
++      ) {
+         Children()
++      }
++    } else {
++      VStack(
++        alignment: props.alignment?.toHorizontalAlignment() ?? .center,
++        spacing: props.spacing.map { CGFloat($0) }
++      ) {
++        Children()
++      }
+     }
+   }
+ }
+diff --git a/src/universal/Button/index.android.tsx b/src/universal/Button/index.android.tsx
+index 00dea35c2d542539a4d819c95466893166e7a976..1ace32ba83bff31b0af2e324d0af59d3d0d232ad 100644
+--- a/src/universal/Button/index.android.tsx
++++ b/src/universal/Button/index.android.tsx
+@@ -26,7 +26,9 @@ export function Button({
+ 
+   if (hidden) return null;
+ 
+-  const modifiers = transformToModifiers(style, { disabled, hidden, testID }, extraModifiers);
++  const modifiers = transformToModifiers(style, { disabled, hidden, testID }, extraModifiers, {
++    componentName: 'Button',
++  });
+ 
+   const content = children ?? <Text>{label ?? ''}</Text>;
+   const commonProps = {
+diff --git a/src/universal/Button/index.ios.tsx b/src/universal/Button/index.ios.tsx
+index 2b7f10a3c19b7cdc8c38879eb60104a16241dcd5..98a4cecb045f9be7263f7fed1e5be577b8597d7a 100644
+--- a/src/universal/Button/index.ios.tsx
++++ b/src/universal/Button/index.ios.tsx
+@@ -28,7 +28,8 @@ export function Button({
+   // A user-supplied buttonStyle modifier replaces the variant's.
+   const buttonSpecificModifiers: ModifierConfig[] = omitUserOverridden(
+     [buttonStyle(variantButtonStyle[variant])],
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Button' }
+   );
+ 
+   const universalModifiers = transformToModifiers(
+diff --git a/src/universal/Collapsible/index.ios.tsx b/src/universal/Collapsible/index.ios.tsx
+index 73ba5146e298ce6671ef2adc9b2162e795396511..b1d9a24ba07ebf122025d885a057ab75454e13a9 100644
+--- a/src/universal/Collapsible/index.ios.tsx
++++ b/src/universal/Collapsible/index.ios.tsx
+@@ -14,7 +14,10 @@ export function Collapsible({
+   children,
+ }: CollapsibleProps) {
+   const labelTextModifiers = labelStyle
+-    ? transformToModifiers(undefined, {}, undefined, { textStyle: labelStyle })
++    ? transformToModifiers(undefined, {}, undefined, {
++        componentName: 'Collapsible',
++        textStyle: labelStyle,
++      })
+     : undefined;
+ 
+   return (
+diff --git a/src/universal/Column/index.android.tsx b/src/universal/Column/index.android.tsx
+index 4133a8fee48b77698929201d463f82be83ed0d8f..4f43b223a18a5583b9c9bde146ff83a357f00c45 100644
+--- a/src/universal/Column/index.android.tsx
++++ b/src/universal/Column/index.android.tsx
+@@ -31,7 +31,8 @@ export function Column({
+   const modifiers = transformToModifiers(
+     style,
+     { onPress: disabled ? undefined : onPress, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Column' }
+   );
+ 
+   return (
+diff --git a/src/universal/Column/index.ios.tsx b/src/universal/Column/index.ios.tsx
+index 0be802a786b1f12ff99fa9bade43c837713600c3..18e8ec1e7d0e6c176565f3e4d8a6348b1a975929 100644
+--- a/src/universal/Column/index.ios.tsx
++++ b/src/universal/Column/index.ios.tsx
+@@ -33,7 +33,7 @@ export function Column({
+     style,
+     { onPress, onAppear, onDisappear, disabled, hidden, testID },
+     extraModifiers,
+-    { frameAlignment: frameAlignmentMap[alignment] }
++    { componentName: 'Column', frameAlignment: frameAlignmentMap[alignment] }
+   );
+ 
+   return (
+diff --git a/src/universal/FieldGroup/FieldGroup.android.tsx b/src/universal/FieldGroup/FieldGroup.android.tsx
+index 772db56f0f218b2ae528bc97cede71368c2b8d83..ecdb9057bab1d4a5192ed6daf79848bff7d21b00 100644
+--- a/src/universal/FieldGroup/FieldGroup.android.tsx
++++ b/src/universal/FieldGroup/FieldGroup.android.tsx
+@@ -27,7 +27,9 @@ export function FieldGroup({
+   if (hidden) return null;
+ 
+   const mergedStyle = { backgroundColor: colors.surface, ...style };
+-  const modifiers = transformToModifiers(mergedStyle, { disabled, hidden, testID }, extraModifiers);
++  const modifiers = transformToModifiers(mergedStyle, { disabled, hidden, testID }, extraModifiers, {
++    componentName: 'FieldGroup',
++  });
+ 
+   return (
+     <LazyColumn
+diff --git a/src/universal/FieldGroup/FieldGroup.ios.tsx b/src/universal/FieldGroup/FieldGroup.ios.tsx
+index 8aeccaffaf890ea3e9b580b9cc192c7990624a38..f54d36017ea9dbff4e74fccd7b3e5f4a6f42d1e8 100644
+--- a/src/universal/FieldGroup/FieldGroup.ios.tsx
++++ b/src/universal/FieldGroup/FieldGroup.ios.tsx
+@@ -20,7 +20,8 @@ export function FieldGroup({
+   const modifiers = transformToModifiers(
+     style,
+     { onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'FieldGroup' }
+   );
+ 
+   return <Form modifiers={modifiers}>{children}</Form>;
+diff --git a/src/universal/FieldGroup/FieldSection.android.tsx b/src/universal/FieldGroup/FieldSection.android.tsx
+index a89bccbadb771edd739354f59bbdefb899c43682..75d37e40849ae820c36cfaee509a199862f4f2dc 100644
+--- a/src/universal/FieldGroup/FieldSection.android.tsx
++++ b/src/universal/FieldGroup/FieldSection.android.tsx
+@@ -40,7 +40,7 @@ export function FieldSection({
+   const outerModifiers = transformToModifiers(style, { disabled, hidden, testID }, [
+     fillMaxWidth(),
+     ...(extraModifiers ?? []),
+-  ]);
++  ], { componentName: 'FieldSection' });
+ 
+   const headerNode =
+     header ??
+diff --git a/src/universal/FieldGroup/FieldSection.ios.tsx b/src/universal/FieldGroup/FieldSection.ios.tsx
+index 4f78b4ff8a01a4d9f0dbd0b7ea99486981e7e83c..8744eb8e168bd5b1188b73d751f64f64b20f1c1d 100644
+--- a/src/universal/FieldGroup/FieldSection.ios.tsx
++++ b/src/universal/FieldGroup/FieldSection.ios.tsx
+@@ -27,7 +27,8 @@ export function FieldSection({
+   const modifiers = transformToModifiers(
+     style,
+     { onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'FieldSection' }
+   );
+ 
+   return (
+diff --git a/src/universal/Icon/index.android.tsx b/src/universal/Icon/index.android.tsx
+index 5c4e8348d6fe82d09e69701d7cdc2619a208be5c..7dbd63ae9b7e293bbb90cd2f0dba09bae157f619 100644
+--- a/src/universal/Icon/index.android.tsx
++++ b/src/universal/Icon/index.android.tsx
+@@ -52,7 +52,8 @@ export function Icon({
+   const modifiers = transformToModifiers(
+     style,
+     { onPress, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Icon' }
+   );
+ 
+   if (onPress) {
+diff --git a/src/universal/Icon/index.ios.tsx b/src/universal/Icon/index.ios.tsx
+index f298aa8844c0c70a6aa70f34663b3af0272caa75..b2c19ec6018e1e1327413acf5712d48c54c8ac1e 100644
+--- a/src/universal/Icon/index.ios.tsx
++++ b/src/universal/Icon/index.ios.tsx
+@@ -37,7 +37,8 @@ export function Icon({
+   const modifiers = transformToModifiers(
+     style,
+     { onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Icon' }
+   );
+ 
+   return (
+diff --git a/src/universal/RNHostView/index.android.tsx b/src/universal/RNHostView/index.android.tsx
+index 9c9199d800991b24ceef1d31b8e461618540f24d..30b99d1816f63b98080ddeebcd9013714878c791 100644
+--- a/src/universal/RNHostView/index.android.tsx
++++ b/src/universal/RNHostView/index.android.tsx
+@@ -21,7 +21,8 @@ export function RNHostView({
+   const modifiers = transformToModifiers(
+     style,
+     { onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'RNHostView' }
+   );
+ 
+   return (
+diff --git a/src/universal/Row/index.android.tsx b/src/universal/Row/index.android.tsx
+index 48370850f98a1d319e434c3184ab6dedfeeb5498..b6a3d78729763d777743cab3ab7da1132a933a3f 100644
+--- a/src/universal/Row/index.android.tsx
++++ b/src/universal/Row/index.android.tsx
+@@ -31,7 +31,8 @@ export function Row({
+   const modifiers = transformToModifiers(
+     style,
+     { onPress: disabled ? undefined : onPress, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Row' }
+   );
+ 
+   return (
+diff --git a/src/universal/Row/index.ios.tsx b/src/universal/Row/index.ios.tsx
+index c7084b4916eaa60145af4593a5024280e47fba0f..23cdf868c7aa2cd9ce43f5bb338a53751d2c4c4f 100644
+--- a/src/universal/Row/index.ios.tsx
++++ b/src/universal/Row/index.ios.tsx
+@@ -33,7 +33,7 @@ export function Row({
+     style,
+     { onPress, onAppear, onDisappear, disabled, hidden, testID },
+     extraModifiers,
+-    { frameAlignment: frameAlignmentMap[alignment] }
++    { componentName: 'Row', frameAlignment: frameAlignmentMap[alignment] }
+   );
+ 
+   return (
+diff --git a/src/universal/ScrollView/index.android.tsx b/src/universal/ScrollView/index.android.tsx
+index de983cd9fc690a39ed4dbf45d8872100b69a860d..2e35c6ffed33d0d085b8c8719df8387ceba1c3d8 100644
+--- a/src/universal/ScrollView/index.android.tsx
++++ b/src/universal/ScrollView/index.android.tsx
+@@ -24,7 +24,8 @@ export function ScrollView({
+   const modifiers = transformToModifiers(
+     style,
+     { onPress: disabled ? undefined : onPress, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'ScrollView' }
+   );
+ 
+   if (direction === 'horizontal') {
+diff --git a/src/universal/ScrollView/index.ios.tsx b/src/universal/ScrollView/index.ios.tsx
+index 5b85c783d49e9d162bcf7617cf1d82a4b0d2ef1d..0042ebc4572fdddc2a4a688d2e3a5ee1b5b39223 100644
+--- a/src/universal/ScrollView/index.ios.tsx
++++ b/src/universal/ScrollView/index.ios.tsx
+@@ -34,7 +34,8 @@ export function ScrollView({
+   const scrollModifiers = transformToModifiers(
+     Object.keys(styleWithoutPadding).length > 0 ? (styleWithoutPadding as typeof style) : undefined,
+     { onPress, onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'ScrollView' }
+   );
+ 
+   // SwiftUI ScrollView centers content by default. Stretch content to fill
+diff --git a/src/universal/Spacer/index.android.tsx b/src/universal/Spacer/index.android.tsx
+index 653b72017ec3314af7ff934d166aee790946ca88..1de7ffc353ae84c0f090e87fd4047791d38ec449 100644
+--- a/src/universal/Spacer/index.android.tsx
++++ b/src/universal/Spacer/index.android.tsx
+@@ -51,7 +51,7 @@ export function Spacer({
+   const modifiers = transformToModifiers(style, { disabled, hidden, testID }, [
+     ...layoutMods,
+     ...(extraModifiers ?? []),
+-  ]);
++  ], { componentName: 'Spacer' });
+ 
+   return <ComposeSpacer modifiers={modifiers} />;
+ }
+diff --git a/src/universal/Spacer/index.ios.tsx b/src/universal/Spacer/index.ios.tsx
+index 49c981155330f831334b7d00e87d03f5f5be6605..95d97d0d3b57bcdd791e6dff2cb1724f489e8e18 100644
+--- a/src/universal/Spacer/index.ios.tsx
++++ b/src/universal/Spacer/index.ios.tsx
+@@ -30,7 +30,8 @@ export function Spacer({
+   const baseModifiers = transformToModifiers(
+     style,
+     { onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Spacer' }
+   );
+ 
+   if (flexible) {
+diff --git a/src/universal/Text/index.android.tsx b/src/universal/Text/index.android.tsx
+index 531bc663e56edc7321042ec84bcd79b18dcb4ffe..204e9f8edfbcdf1fbd7f0fe6265ac6fe6eb442ca 100644
+--- a/src/universal/Text/index.android.tsx
++++ b/src/universal/Text/index.android.tsx
+@@ -30,7 +30,8 @@ export function Text({
+   const modifiers = transformToModifiers(
+     style,
+     { onPress: disabled ? undefined : onPress, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Text' }
+   );
+ 
+   // Build Compose Text style object
+diff --git a/src/universal/Text/index.ios.tsx b/src/universal/Text/index.ios.tsx
+index 6f9d7f8daa1b499865d65307eda80551ecee291f..99e68ea3c9ec6afded1bf9c385b9cbbde4a227d1 100644
+--- a/src/universal/Text/index.ios.tsx
++++ b/src/universal/Text/index.ios.tsx
+@@ -96,7 +96,8 @@ export function Text({
+   const universalModifiers = transformToModifiers(
+     style,
+     { onPress, onAppear, onDisappear, disabled, hidden, testID },
+-    extraModifiers
++    extraModifiers,
++    { componentName: 'Text' }
+   );
+ 
+   // A user-supplied modifier replaces any text-derived modifier of the same type.
+diff --git a/src/universal/TextInput/index.android.tsx b/src/universal/TextInput/index.android.tsx
+index 1b7fd0de40b2fe6869639af3217f7b71debc3414..dbb3ba99cf306b0f60bfd6bf3fc59615e7fcc8b5 100644
+--- a/src/universal/TextInput/index.android.tsx
++++ b/src/universal/TextInput/index.android.tsx
+@@ -158,8 +158,7 @@ export function TextInput({
+     <BasicTextField
+       ref={innerRef}
+       modifiers={[
+-        ...(userModifiers ?? []),
+-        ...transformToModifiers(style, {}),
++        ...transformToModifiers(style, {}, userModifiers, { componentName: 'TextInput' }),
+         ...(testID ? [testIDModifier(testID)] : []),
+         ...(autoComplete ? [semantics({ contentType: autoComplete })] : []),
+         ...(onContentSizeChange ? [onSizeChanged(onContentSizeChange)] : []),
+diff --git a/src/universal/TextInput/index.ios.tsx b/src/universal/TextInput/index.ios.tsx
+index 1859c88c1e8c894357a9ca9ecc328fadf4cc483a..3bf350072ce375a0477d7faa4f0a3e6d473c0751 100644
+--- a/src/universal/TextInput/index.ios.tsx
++++ b/src/universal/TextInput/index.ios.tsx
+@@ -148,8 +148,7 @@ export function TextInput({
+   };
+ 
+   const modifiers: ModifierConfig[] = [
+-    ...(userModifiers ?? []),
+-    ...transformToModifiers(style, {}, undefined, { textStyle }),
++    ...transformToModifiers(style, {}, userModifiers, { componentName: 'TextInput', textStyle }),
+   ];
+   if (editable === false) modifiers.push(disabledMod(true));
+   if (keyboardType) modifiers.push(keyboardTypeMod(mapKeyboardType(keyboardType)));
+diff --git a/src/universal/modifierUtils.ts b/src/universal/modifierUtils.ts
+index f7fc7a177a8c9715aa24873ebea2d9fd940b3082..7161d58319c7d7986545865bedea728e98972f19 100644
+--- a/src/universal/modifierUtils.ts
++++ b/src/universal/modifierUtils.ts
+@@ -13,11 +13,177 @@ import type { ModifierConfig } from '../types';
+  */
+ export function omitUserOverridden<T extends { $type: string }>(
+   derived: T[],
+-  userModifiers?: readonly ModifierConfig[]
++  userModifiers?: readonly ModifierConfig[],
++  preservedTypes?: ReadonlySet<string>
+ ): T[] {
+   if (!userModifiers?.length) {
+     return derived;
+   }
+   const userTypes = new Set(userModifiers.map((modifier) => modifier.$type));
+-  return derived.filter((modifier) => !userTypes.has(modifier.$type));
++  return derived.filter(
++    (modifier) => preservedTypes?.has(modifier.$type) || !userTypes.has(modifier.$type)
++  );
++}
++export type UniversalDimension = number | `${number}%` | null;
++
++export type SerializedUniversalDimensions = {
++  widthPoints?: number;
++  widthFraction?: number;
++  heightPoints?: number;
++  heightFraction?: number;
++};
++
++export type UniversalLayoutPlatform = 'android' | 'ios';
++
++type UniversalDimensionStyle = {
++  width?: unknown;
++  height?: unknown;
++};
++
++type DimensionAxis = 'width' | 'height';
++
++const PERCENTAGE_PATTERN = /^(?:\d+(?:\.\d+)?|\.\d+)%$/;
++const warnedInvalidDimensions = new Set<string>();
++
++function isDevelopment(): boolean {
++  const globals = globalThis as typeof globalThis & {
++    __DEV__?: boolean;
++    process?: { env?: { NODE_ENV?: string } };
++  };
++  return globals.__DEV__ ?? globals.process?.env?.NODE_ENV !== 'production';
++}
++
++function warnInvalidDimension(componentName: string, axis: DimensionAxis, value: unknown): void {
++  if (!isDevelopment()) return;
++
++  const warningKey = `${componentName}:${axis}`;
++  if (warnedInvalidDimensions.has(warningKey)) return;
++  warnedInvalidDimensions.add(warningKey);
++
++  console.warn(
++    `[Expo UI] Ignoring invalid ${axis} on ${componentName}: ${String(value)}. ` +
++      'Expected a finite, non-negative number or percentage.'
++  );
++}
++
++function serializeDimension(
++  value: unknown,
++  componentName: string,
++  axis: DimensionAxis
++): { points?: number; fraction?: number } {
++  if (value == null) return {};
++
++  if (typeof value === 'number') {
++    if (Number.isFinite(value) && value >= 0) return { points: value };
++    warnInvalidDimension(componentName, axis, value);
++    return {};
++  }
++
++  if (typeof value === 'string' && PERCENTAGE_PATTERN.test(value)) {
++    const percentage = Number(value.slice(0, -1));
++    if (Number.isFinite(percentage) && percentage >= 0) {
++      return { fraction: percentage / 100 };
++    }
++  }
++
++  warnInvalidDimension(componentName, axis, value);
++  return {};
++}
++
++export function serializeUniversalDimensions(
++  style: UniversalDimensionStyle | undefined,
++  componentName = 'universal component'
++): SerializedUniversalDimensions {
++  const width = serializeDimension(style?.width, componentName, 'width');
++  const height = serializeDimension(style?.height, componentName, 'height');
++
++  return {
++    widthPoints: width.points,
++    widthFraction: width.fraction,
++    heightPoints: height.points,
++    heightFraction: height.fraction,
++  };
++}
++
++export function getUserSizingOverrides(
++  userModifiers: readonly ModifierConfig[] | undefined,
++  platform: UniversalLayoutPlatform
++): { width: boolean; height: boolean } {
++  let width = false;
++  let height = false;
++
++  for (const modifier of userModifiers ?? []) {
++    if (platform === 'android') {
++      if (
++        modifier.$type === 'size' ||
++        modifier.$type === 'fillMaxSize' ||
++        modifier.$type === 'weight'
++      ) {
++        width = true;
++        height = true;
++      } else if (
++        modifier.$type === 'width' ||
++        modifier.$type === 'fillMaxWidth' ||
++        modifier.$type === 'wrapContentWidth' ||
++        (modifier.$type === 'defaultMinSize' && modifier.minWidth != null)
++      ) {
++        width = true;
++      } else if (
++        modifier.$type === 'height' ||
++        modifier.$type === 'fillMaxHeight' ||
++        modifier.$type === 'wrapContentHeight' ||
++        (modifier.$type === 'defaultMinSize' && modifier.minHeight != null)
++      ) {
++        height = true;
++      }
++      continue;
++    }
++
++    if (modifier.$type === 'frame') {
++      width ||=
++        modifier.width != null ||
++        modifier.minWidth != null ||
++        modifier.idealWidth != null ||
++        modifier.maxWidth != null;
++      height ||=
++        modifier.height != null ||
++        modifier.minHeight != null ||
++        modifier.idealHeight != null ||
++        modifier.maxHeight != null;
++    } else if (modifier.$type === 'containerRelativeFrame') {
++      width ||= modifier.axes === 'horizontal' || modifier.axes === 'both';
++      height ||= modifier.axes === 'vertical' || modifier.axes === 'both';
++    } else if (modifier.$type === 'fixedSize') {
++      const hasExplicitAxis = modifier.horizontal != null || modifier.vertical != null;
++      width ||= hasExplicitAxis ? modifier.horizontal === true : true;
++      height ||= hasExplicitAxis ? modifier.vertical === true : true;
++    }
++  }
++
++  return { width, height };
++}
++
++export function omitUserOverriddenDimensions(
++  dimensions: SerializedUniversalDimensions,
++  userModifiers: readonly ModifierConfig[] | undefined,
++  platform: UniversalLayoutPlatform
++): SerializedUniversalDimensions {
++  const overrides = getUserSizingOverrides(userModifiers, platform);
++  return {
++    widthPoints: overrides.width ? undefined : dimensions.widthPoints,
++    widthFraction: overrides.width ? undefined : dimensions.widthFraction,
++    heightPoints: overrides.height ? undefined : dimensions.heightPoints,
++    heightFraction: overrides.height ? undefined : dimensions.heightFraction,
++  };
++}
++
++export function createUniversalLayoutModifier(
++  dimensions: SerializedUniversalDimensions
++): ModifierConfig | undefined {
++  const hasDimension = Object.values(dimensions).some((value) => value != null);
++  return hasDimension ? { $type: 'universalLayout', ...dimensions } : undefined;
++}
++
++export function resetUniversalDimensionWarningsForTests(): void {
++  warnedInvalidDimensions.clear();
+ }
+diff --git a/src/universal/transformStyle.android.ts b/src/universal/transformStyle.android.ts
+index f73443a33e101375850fded8167027f1381bef28..37d67a691983379764ffe97b89735ba0385aec3b 100644
+--- a/src/universal/transformStyle.android.ts
++++ b/src/universal/transformStyle.android.ts
+@@ -14,7 +14,12 @@ import {
+   type ModifierConfig,
+ } from '@expo/ui/jetpack-compose/modifiers';
+ 
+-import { omitUserOverridden } from './modifierUtils';
++import {
++  createUniversalLayoutModifier,
++  omitUserOverridden,
++  omitUserOverriddenDimensions,
++  serializeUniversalDimensions,
++} from './modifierUtils';
+ import type { UniversalBaseProps, UniversalStyle } from './types';
+ 
+ /**
+@@ -32,20 +37,31 @@ import type { UniversalBaseProps, UniversalStyle } from './types';
+ export function transformToModifiers(
+   style: UniversalStyle | undefined,
+   props: Pick<UniversalBaseProps, 'onPress' | 'disabled' | 'hidden' | 'testID'>,
+-  extraModifiers?: ModifierConfig[]
++  extraModifiers?: ModifierConfig[],
++  options?: { componentName?: string }
+ ): ModifierConfig[] {
+   let mods: ModifierConfig[] = [];
++  const dimensions = omitUserOverriddenDimensions(
++    serializeUniversalDimensions(style, options?.componentName),
++    extraModifiers,
++    'android'
++  );
++  const fixedWidth = dimensions.widthPoints;
++  const fixedHeight = dimensions.heightPoints;
++  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
+ 
+-  if (style) {
+-    // Sizing (outermost)
+-    if (style.width != null && style.height != null) {
+-      mods.push(size(style.width as number, style.height as number));
+-    } else if (style.width != null) {
+-      mods.push(width(style.width as number));
+-    } else if (style.height != null) {
+-      mods.push(height(style.height as number));
+-    }
++  if (universalLayoutModifier) mods.push(universalLayoutModifier);
+ 
++  // Fixed sizing is applied directly. Percentages remain as parent data for
++  // the owning universal layout to resolve against its content box.
++  if (fixedWidth != null && fixedHeight != null) {
++    mods.push(size(fixedWidth, fixedHeight));
++  } else {
++    if (fixedWidth != null) mods.push(width(fixedWidth));
++    if (fixedHeight != null) mods.push(height(fixedHeight));
++  }
++
++  if (style) {
+     // Border + background + borderRadius handling.
+     // Compose's border() doesn't accept a shape, so when borderRadius is set
+     // alongside border, we simulate a rounded border using layered backgrounds:
+diff --git a/src/universal/transformStyle.ios.ts b/src/universal/transformStyle.ios.ts
+index da1dae8ddf79872df54a2946b0b138f5d49e042c..9e96c5831a04182c5e682ba76fc68482d5a4cff6 100644
+--- a/src/universal/transformStyle.ios.ts
++++ b/src/universal/transformStyle.ios.ts
+@@ -21,7 +21,12 @@ import {
+ } from '@expo/ui/swift-ui/modifiers';
+ 
+ import type { UniversalTextStyle } from './Text/types';
+-import { omitUserOverridden } from './modifierUtils';
++import {
++  createUniversalLayoutModifier,
++  omitUserOverridden,
++  omitUserOverriddenDimensions,
++  serializeUniversalDimensions,
++} from './modifierUtils';
+ import type { UniversalBaseProps, UniversalStyle } from './types';
+ 
+ const FONT_WEIGHT_MAP: Record<string, Parameters<typeof font>[0]['weight']> = {
+@@ -54,10 +59,17 @@ export function transformToModifiers(
+   style: UniversalStyle | undefined,
+   props: Pick<
+     UniversalBaseProps,
+-    'onPress' | 'onAppear' | 'onDisappear' | 'disabled' | 'hidden' | 'testID'
++    | 'onPress'
++    | 'onAppear'
++    | 'onDisappear'
++    | 'disabled'
++    | 'hidden'
++    | 'testID'
+   >,
+   extraModifiers?: ModifierConfig[],
+   options?: {
++    /** Component name included in invalid-dimension development warnings. */
++    componentName?: string;
+     /** Alignment for the frame modifier (used by Column/Row). */
+     frameAlignment?: Parameters<typeof frame>[0]['alignment'];
+     /** Text-styling props for text-rendering components. */
+@@ -65,6 +77,13 @@ export function transformToModifiers(
+   }
+ ): ModifierConfig[] {
+   let mods: ModifierConfig[] = [];
++  const dimensions = omitUserOverriddenDimensions(
++    serializeUniversalDimensions(style, options?.componentName),
++    extraModifiers,
++    'ios'
++  );
++  const fixedWidth = dimensions.widthPoints;
++  const fixedHeight = dimensions.heightPoints;
+ 
+   // Text styling (innermost — applies to text content before container modifiers)
+   const textStyle = options?.textStyle;
+@@ -119,18 +138,24 @@ export function transformToModifiers(
+         })
+       );
+     }
++  }
+ 
+-    // Sizing (before background so background fills the frame)
+-    if (style.width != null || style.height != null) {
+-      mods.push(
+-        frame({
+-          width: style.width as number | undefined,
+-          height: style.height as number | undefined,
+-          alignment: options?.frameAlignment,
+-        })
+-      );
+-    }
++  // Fixed sizing is applied directly. Percentages remain as layout values for
++  // the owning universal layout to resolve against its content box.
++  if (fixedWidth != null || fixedHeight != null) {
++    mods.push(
++      frame({
++        width: fixedWidth,
++        height: fixedHeight,
++        alignment: options?.frameAlignment,
++      })
++    );
++  }
+ 
++  const universalLayoutModifier = createUniversalLayoutModifier(dimensions);
++  if (universalLayoutModifier) mods.push(universalLayoutModifier);
++
++  if (style) {
+     // Background (fills the frame area including padding)
+     if (style.backgroundColor) {
+       mods.push(background(style.backgroundColor));
+@@ -154,7 +179,9 @@ export function transformToModifiers(
+ 
+   // A user-supplied modifier replaces any style-derived modifier of the same
+   // type. The event, lifecycle, and behavior modifiers below are never dropped.
+-  mods = omitUserOverridden(mods, extraModifiers);
++  // Axis-aware sizing precedence has already removed only the dimensions set
++  // by a user frame. Preserve any derived frame that still owns the other axis.
++  mods = omitUserOverridden(mods, extraModifiers, new Set(['frame', 'universalLayout']));
+ 
+   // Events. SwiftUI only hit-tests drawn content, so the `contentShape` lets
+   // taps on empty space (for example a `Spacer` in a `Row`) reach `onPress`.
+diff --git a/src/universal/types.ts b/src/universal/types.ts
+index 446a1a00a2f0cbbdb05ea32cfdf58bb00ab51c42..f8245257dc8ec910fe1e4e3505bca6aa1d157f5a 100644
+--- a/src/universal/types.ts
++++ b/src/universal/types.ts
+@@ -1,6 +1,9 @@
+ import type { ViewStyle } from 'react-native';
+ 
+ import type { ModifierConfig } from '../types';
++import type { UniversalDimension } from './modifierUtils';
++
++export type { UniversalDimension } from './modifierUtils';
+ 
+ /**
+  * Subset of React Native `ViewStyle` that maps cleanly to both SwiftUI modifiers
+@@ -21,9 +24,12 @@ export type UniversalStyle = Pick<
+   | 'borderWidth'
+   | 'borderColor'
+   | 'opacity'
+-  | 'width'
+-  | 'height'
+->;
++> & {
++  /** Fixed logical pixels or a percentage of the immediate parent's content width. */
++  width?: UniversalDimension;
++  /** Fixed logical pixels or a percentage of the immediate parent's content height. */
++  height?: UniversalDimension;
++};
+ 
+ /**
+  * Base props inherited by all universal components.

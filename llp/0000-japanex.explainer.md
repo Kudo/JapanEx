@@ -112,7 +112,7 @@
 
 [confirmed] (Kudo Chien, 2026-08-18) Platform-specific implementations are permitted when required by platform capabilities or Expo limitations. User-visible behavior should otherwise remain consistent across iOS, Android, and web.
 
-[observed] Expo SDK 57 is pinned throughout the project, and repository instructions require consulting the exact versioned Expo 57 documentation before changing code (`package.json` and `AGENTS.md`).
+[observed] Expo SDK 58 (preview) is pinned throughout the project, and repository instructions require consulting the exact versioned Expo 58 documentation before changing code (`package.json` and `AGENTS.md`).
 
 ## Verification contract
 

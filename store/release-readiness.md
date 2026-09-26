@@ -6,7 +6,7 @@ Last checked: 2026-09-26. This records evidence for the current worktree; it is 
 
 - `bun run verify`: data validation, 45 tests, TypeScript, and Expo lint passed.
 - `bun run export:web`: static web export passed.
-- Expo SDK 57 packages were updated to Expo Doctor's expected patch versions. The custom `@expo/ui` percentage-layout patch was rebased onto `@expo/ui@57.0.20`; a frozen offline Bun install reapplied it, and Expo Doctor passed all 21 checks.
+- Expo SDK 58 packages were updated to Expo Doctor's expected patch versions. The custom `@expo/ui` percentage-layout patch was rebased onto `@expo/ui@57.0.20`; a frozen offline Bun install reapplied it, and Expo Doctor passed all 21 checks.
 - After updating CocoaPods, an unsigned iOS Release simulator build succeeded with the rebased patch. The app installed and launched on the isolated iPhone QA simulator; its Map screen rendered with the saved score, prefecture map, zoom controls, and tabs in the expected positions.
 - The Play icon is a 512 × 512 RGBA PNG under 1 MB. The three localized feature graphics are opaque RGB PNGs at 1024 × 500. Draft phone screenshots are opaque 1080 × 1920 PNGs, and the existing tablet sets contain four opaque PNGs each. The tablet drafts use 5:8 while Google's current large-screen guidance calls for 9:16 portrait captures; all eight tablet images need recapture from the final build.
 - Japanese and Traditional Chinese store descriptions now describe the actual system share-sheet flow without promising a save action that every device may not offer. The obsolete duplicate Play privacy-policy draft was removed; `public/privacy/index.html` is the published policy source.
