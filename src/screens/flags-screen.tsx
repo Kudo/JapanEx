@@ -227,7 +227,8 @@ function FlagCardSeparator() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1 },
+  // @ref LLP 0000#prefecture-data-map-and-flags
+  screen: { flex: 1, width: '100%' },
   content: {
     alignSelf: 'center',
     paddingHorizontal: 18,

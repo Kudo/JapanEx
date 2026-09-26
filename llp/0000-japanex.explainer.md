@@ -54,6 +54,8 @@
 
 [observed] The map UI is split across `japan-map.tsx`, map region/flag components, camera/layout utilities, and screen-level interaction state. Pure map camera and annotation behavior has dependency-free Node coverage (`src/components/japan-map.tsx`, `src/components/map-*`, `src/utils/map-*`, and matching tests).
 
+[observed] The Flags screen sets its root width explicitly to fill the native `FlatList` viewport. With flex alone, an iPadOS 18 Release simulator rendered the two-column gallery and filters in a clipped half-width area; the explicit width restored the full two-column layout on iPadOS 18 and also rendered correctly on iPadOS 26 and iPhone (`src/screens/flags-screen.tsx` and `store/release-readiness.md`).
+
 ### Adaptive accessibility layout
 
 [observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).

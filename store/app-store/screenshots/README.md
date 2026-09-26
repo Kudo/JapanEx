@@ -1,8 +1,8 @@
 # App Store screenshots
 
-Capture these from the final signed build after the UI and export smoke test. Keep the unedited source captures here until the publisher has reviewed them.
+Review screenshots against the final signed build after the UI and export smoke test. Apple permits screenshots captured from Simulator for App Store submission; recapture any screen whose final signed UI differs. Keep captures free of fabricated progress, private data, and altered controls. See [Apple's Xcode capture guidance](https://developer.apple.com/documentation/xcode/capturing-screenshots-and-videos-from-devices).
 
-`draft-simulator/` contains an eight-image review set captured on 2026-09-25 from the local iOS Release simulator app. It covers the Map, Hokkaido detail, Flags, and Settings on an iPhone 17 Pro Max and a 13-inch iPad. The app's import flow set five prefectures to representative levels for a score of 14; the display name was left empty. The captures have a 9:41 status bar, native pixel dimensions, and no alpha channel. These are layout and listing-copy drafts; recapture the upload set from the final signed build and check it against that build before submission.
+`draft-simulator/` contains an eight-image English review set captured from local iOS Release simulator builds on 2026-09-25 and 2026-09-26. It covers Map, Hokkaido detail, Flags, and Settings on an iPhone 17 Pro Max and a 13-inch iPad Pro. The app's import flow set five prefectures to representative levels for a score of 14; the display name was left empty. The updated iPad set was captured on iPadOS 18 after the Flags width fix, and the iPhone Settings image shows the shorter display-name copy. The captures have a 9:41 status bar and native pixel dimensions. Each file is an opaque PNG; the iPad simulator's fully opaque alpha channel was removed without changing visible pixels. These remain review drafts until compared with the final signed app.
 
 | Directory | Device class | Suggested portrait pixel size |
 | --- | --- | --- |
