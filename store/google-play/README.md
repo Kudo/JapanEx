@@ -34,7 +34,7 @@ English screenshot drafts are in `screenshots/`:
 
 Each set uses the same sequence: map, Hokkaido detail, flag gallery, and settings. See `screenshots/README.md` for captions and capture details.
 
-The Flags and Settings screens changed after these captures. Recapture `03-flags.png` and `04-settings.png` on each device size from the final release build before uploading any set.
+The Flags and Settings screens changed after these captures. Recapture those two phone images and every tablet image from the final release build. The current tablet drafts are 5:8; Google's large-screen guidance calls for 9:16 portrait captures.
 
 ## How to use this pack
 
@@ -45,6 +45,8 @@ The Flags and Settings screens changed after these captures. Recapture `03-flags
 5. Verify the published privacy policy at https://japanex.expo.app/privacy/ and add a monitored support email.
 6. Upload the screenshots and feature graphic described in `submission-details.md`.
 7. Recheck every declaration against the final production AAB before submitting for review.
+
+The public policy's source is [`public/privacy/index.html`](../../public/privacy/index.html); use that page for Play Console rather than a separate policy draft.
 
 Google Play listing limits and asset requirements can change. The current references used for this pack are:
 

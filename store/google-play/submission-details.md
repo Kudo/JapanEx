@@ -70,8 +70,8 @@ JapanEx does not browse, import, or save to the user's photo library. The Expo c
 | Play Store icon | 512 × 512 px, 32-bit PNG | Ready at `assets/app-icon.png` |
 | Feature graphic | 1024 × 500 px, JPEG or 24-bit PNG without alpha | Ready in English, Japanese, and Traditional Chinese under `assets/` |
 | Phone screenshots | At least 2; use at least 4 portrait 1080 × 1920 px screenshots for recommendation eligibility | Drafts under `screenshots/phone/en-US/`; recapture Flags and Settings |
-| 7-inch tablet screenshots | Portrait PNG screenshots captured from the tablet layout | Drafts under `screenshots/7-inch-tablet/en-US/`; recapture Flags and Settings |
-| 10-inch tablet screenshots | Portrait PNG screenshots captured from the tablet layout | Drafts under `screenshots/10-inch-tablet/en-US/`; recapture Flags and Settings |
+| 7-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Current 5:8 drafts under `screenshots/7-inch-tablet/en-US/`; recapture all four |
+| 10-inch tablet screenshots | 9:16 portrait PNG captures of the tablet layout | Current 5:8 drafts under `screenshots/10-inch-tablet/en-US/`; recapture all four |
 
 Google Play accepts up to eight screenshots per supported device type. The phone, 7-inch tablet, and 10-inch tablet drafts were captured from an earlier release APK in English with representative on-device progress. The Flags and Settings screens have changed since those captures.
 
@@ -103,7 +103,7 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 - Replace the support-email placeholder with a monitored address.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
 - Inspect the merged production manifest and confirm that no photo, video, or storage permission is present.
-- Recapture the Flags and Settings screenshots for each device size from the final release build.
+- Recapture the phone Flags and Settings screenshots and all eight tablet screenshots from the final release build. Use native 9:16 tablet captures rather than resizing the 5:8 drafts.
 - Upload localized listing text, release notes, screenshots, app icon, and the matching localized feature graphic.
 - Complete Data safety, Ads, App access, Target audience, Content rating, and all other dashboard declarations.
 - Run the production build through internal testing and review its pre-launch report.

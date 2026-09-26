@@ -2,17 +2,17 @@
 
 These screenshots were captured from the Android release APK in English with representative local progress. They are unframed, portrait PNGs with a normalized 10:00 status bar.
 
-`03-flags.png` in each set shows the previous collection heading and count, and `04-settings.png` shows the previous score layout and privacy wording. Recapture those six files from the final release build before store upload, then check that all screenshots match the submitted app.
+`03-flags.png` in each set shows the previous collection heading and count, and `04-settings.png` shows the previous score layout and privacy wording. Recapture those two phone images and all eight tablet images from the final release build before store upload, then check that every screenshot matches the submitted app.
 
-The current tablet captures use a 5:8 portrait ratio. Google's [preview-asset guidance](https://support.google.com/googleplay/android-developer/answer/9866151) recommends 9:16 portrait screenshots for large-screen promotion. When recapturing, prefer a matching 9:16 tablet emulator or device profile if it preserves an accurate in-app view; do not stretch or crop controls to force that ratio. Check the final files in Play Console before upload.
+The current tablet captures use a 5:8 portrait ratio. Google's [preview-asset guidance](https://support.google.com/googleplay/android-developer/answer/9866151) says to use 9:16 portrait screenshots for large screens. Capture the final tablet sets directly from 9:16 tablet device profiles, such as 1080 × 1920 for 7-inch and 1440 × 2560 for 10-inch if those profiles show the actual tablet UI. Do not stretch or crop the existing images to force that ratio. Check the final files in Play Console before upload.
 
 ## Upload sets
 
-| Play Console slot | Directory | Dimensions | Files |
-| --- | --- | --- | --- |
-| Phone screenshots | `phone/en-US/` | 1080 × 1920 | 4 |
-| 7-inch tablet screenshots | `7-inch-tablet/en-US/` | 1200 × 1920 | 4 |
-| 10-inch tablet screenshots | `10-inch-tablet/en-US/` | 1600 × 2560 | 4 |
+| Play Console slot | Directory | Current draft dimensions | Final capture target | Files |
+| --- | --- | --- | --- | --- |
+| Phone screenshots | `phone/en-US/` | 1080 × 1920 | 1080 × 1920 | 4 |
+| 7-inch tablet screenshots | `7-inch-tablet/en-US/` | 1200 × 1920 | 9:16 native capture | 4 |
+| 10-inch tablet screenshots | `10-inch-tablet/en-US/` | 1600 × 2560 | 9:16 native capture | 4 |
 
 ## Sequence and alt text
 
