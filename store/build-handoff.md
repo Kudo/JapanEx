@@ -1,6 +1,6 @@
 # Signed build handoff
 
-Build from the final reviewed JapanEx worktree. Android production build 9 (`d7f03afd-37a2-4d03-902e-f00c1b699d2c`) and iOS preview build 2 (`6c191d50-bb8f-431e-bbb5-41edfdfbab75`) were built from `0f3e23e`. Android build 9 exposed an intermittent image-export race that is fixed locally but requires a replacement signed build. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and local runtime checks.
+Build from the final reviewed JapanEx worktree. Android production build 11 (`80a818f9-5486-412f-b063-2a5d34683e1f`) and iOS preview build 2 (`121ce517-5dcc-4f25-a587-e2d30b1a4054`) finished from `0405bd6`, including the image-export fix and Android filled flag icon. Build 11 replaces Android build 9, which exposed an intermittent image-export race. The iOS preview is AdHoc-signed for registered devices and is not an App Store archive. The [release readiness log](release-readiness.md) records artifact inspections and local runtime checks.
 
 ## Local gate before EAS
 
