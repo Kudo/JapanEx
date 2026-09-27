@@ -15,7 +15,7 @@ This document separates facts verified from the repository from publisher-owned 
 | Pricing | Free — confirm with publisher |
 | Category | Travel & Local |
 | Website | https://japanex.expo.app |
-| Privacy policy URL | https://japanex.expo.app/privacy/ — redeploy the revised `kudo@csie.io` contact and verify the live page before submission |
+| Privacy policy URL | https://japanex.expo.app/privacy/ — live page showed `kudo@csie.io` and matched its repository source byte for byte on 2026-09-27 |
 | Support email | `kudo@csie.io` — supplied by publisher; verify delivery before submission |
 | Support phone | Optional |
 

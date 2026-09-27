@@ -6,7 +6,7 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 | App Store Connect item | Candidate | Basis to verify |
 | --- | --- | --- |
-| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The live page returned HTTP 200 on 2026-09-26. Recheck it after deploying the revised privacy contact. |
+| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The live page showed `kudo@csie.io` and matched its repository source byte for byte on 2026-09-27. |
 | Data collection | **No, we do not collect data from this app** | Tracker data is stored on-device; no app-owned tracker upload or analytics call was found in the current source. The iOS EAS preview IPA contains 13 privacy manifests, all declaring no collected data. |
 | Tracking | **No** | The current source includes no ads or cross-app tracking integration; those same preview IPA manifests declare tracking `false`. |
 | Privacy choices URL | Leave blank unless the publisher wants a separate choices page | The policy already explains local deletion and backup limits. Apple lists this URL as optional. |
