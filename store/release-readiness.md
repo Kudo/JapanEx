@@ -77,7 +77,7 @@ Last checked: 2026-09-27. This records current artifact evidence and earlier val
 - Repeat PNG export with flags on and off from a Play internal-track install, including exact dimensions, artwork bounds, and share-sheet cancellation. Recheck the fixed Settings field at 2× text on the new signed build.
 - Complete an internal Google Play test of build 11 and review its pre-launch report. The inspected build-11 AAB requests no unused overlay, photo, video, or storage permission.
 - Compare the twelve current Play screenshot drafts with the final signed build and recapture any screen whose delivered UI differs. Verify the 9:16 tablet sets and phone set in Play Console before upload.
-- Verify delivery to `support@dozastudio.dev`, complete Play Console declarations, and verify app-link opening with the Play App Signing certificate. The updated public support/privacy pages and association files are live.
+- Verify delivery to `support@dozastudio.dev` for support and `kudo@csie.io` for privacy, complete Play Console declarations, and verify app-link opening with the Play App Signing certificate. The revised privacy contact must be deployed before submission.
 - Review the `store/app-store/` listing draft and compare its simulator screenshots with the production build; recapture any screen whose signed UI differs.
 - Confirm the signed production iOS build has no Expo development menu. A development-menu overlay appeared during repeated custom-scheme automation on the local simulator build; the current profile and native compile gates indicate it should be inactive in a production build, but the signed archive and TestFlight launch remain the deciding evidence.
 

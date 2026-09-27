@@ -6,7 +6,7 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 | App Store Connect item | Candidate | Basis to verify |
 | --- | --- | --- |
-| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The live page returned HTTP 200 and matched the Kudo Chien source byte for byte on 2026-09-26. |
+| Privacy Policy URL | `https://japanex.expo.app/privacy/` | The live page returned HTTP 200 on 2026-09-26. Recheck it after deploying the revised privacy contact. |
 | Data collection | **No, we do not collect data from this app** | Tracker data is stored on-device; no app-owned tracker upload or analytics call was found in the current source. The iOS EAS preview IPA contains 13 privacy manifests, all declaring no collected data. |
 | Tracking | **No** | The current source includes no ads or cross-app tracking integration; those same preview IPA manifests declare tracking `false`. |
 | Privacy choices URL | Leave blank unless the publisher wants a separate choices page | The policy already explains local deletion and backup limits. Apple lists this URL as optional. |
@@ -24,5 +24,5 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 1. Inspect the signed production archive's privacy report, embedded manifests, and bundled SDKs. The AdHoc preview IPA is not the store artifact.
 2. Check actual outbound traffic during fresh launch, map editing, sharing, and link opening; revisit the candidate answers if a dependency sends user or device data.
-3. Recheck that the deployed policy and support pages show the publisher-supplied Kudo Chien name and `support@dozastudio.dev` address, and verify that the inbox receives requests.
+3. Recheck that the deployed policy shows Kudo Chien and `kudo@csie.io`, and the support page shows `support@dozastudio.dev`. Verify that both inboxes receive requests.
 4. Enter the answers in App Store Connect and review the product-page privacy preview before publishing them.
