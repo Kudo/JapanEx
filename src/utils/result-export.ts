@@ -1,7 +1,9 @@
 import { File, Paths } from 'expo-file-system';
+import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as Sharing from 'expo-sharing';
 import type Svg from 'react-native-svg';
 
+import { RESULT_CARD_PIXEL_SIZE } from '@/utils/result-card-size';
 import { captureSvg } from '@/utils/svg-capture';
 
 export type ResultAsset = {
@@ -11,16 +13,51 @@ export type ResultAsset = {
 };
 
 export async function createResultAsset(svg: Svg | null): Promise<ResultAsset> {
-  const base64 = await captureSvg(svg);
   const fileName = `japanex-${Date.now()}.png`;
-  const file = new File(Paths.cache, fileName);
-  file.create({ overwrite: true, intermediates: true });
-  file.write(decodeBase64(base64));
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const base64 = await captureSvg(svg);
+    const sourceFile = new File(Paths.cache, `source-${attempt}-${fileName}`);
+    sourceFile.create({ overwrite: true, intermediates: true });
+    try {
+      // @ref LLP 0000#result-rendering-and-export — await the PNG write before native image decoding.
+      await sourceFile.write(base64, { encoding: 'base64' });
 
-  return { uri: file.uri, fileName, mimeType: 'image/png' };
+      // @ref LLP 0000#result-rendering-and-export — native pixel rounding can miss 2048 by a few pixels.
+      const context = ImageManipulator.manipulate(sourceFile.uri);
+      context.resize({ width: RESULT_CARD_PIXEL_SIZE, height: RESULT_CARD_PIXEL_SIZE });
+      let image;
+      try {
+        image = await context.renderAsync();
+      } catch (error) {
+        if (process.env.EXPO_OS !== 'android' || attempt > 0) {
+          throw error;
+        }
+        // @ref LLP 0000#result-rendering-and-export — Android can reject a newly captured flags image once.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
+        continue;
+      }
+
+      const result = await image.saveAsync({ format: SaveFormat.PNG });
+      if (result.width !== RESULT_CARD_PIXEL_SIZE || result.height !== RESULT_CARD_PIXEL_SIZE) {
+        new File(result.uri).delete();
+        throw new Error('Result image has the wrong dimensions');
+      }
+
+      const file = new File(result.uri);
+      await file.move(new File(Paths.cache, fileName));
+      return { uri: file.uri, fileName, mimeType: 'image/png' };
+    } finally {
+      if (sourceFile.exists) {
+        sourceFile.delete();
+      }
+    }
+  }
+  throw new Error('Result image could not be decoded');
 }
 
-export async function shareResult(asset: ResultAsset): Promise<void> {
+export async function shareResult(asset: ResultAsset): Promise<boolean> {
   if (!(await Sharing.isAvailableAsync())) {
     throw new Error('Sharing is unavailable on this device');
   }
@@ -29,9 +66,5 @@ export async function shareResult(asset: ResultAsset): Promise<void> {
     mimeType: asset.mimeType,
     UTI: 'public.png',
   });
-}
-
-function decodeBase64(base64: string): Uint8Array {
-  const binary = globalThis.atob(base64);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return true;
 }

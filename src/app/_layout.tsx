@@ -40,9 +40,9 @@ export default function RootLayout() {
               name="import"
               options={{
                 presentation: 'formSheet',
-                sheetAllowedDetents: [0.5, 1],
+                // @ref LLP 0000#sharing-and-import
+                sheetAllowedDetents: [1],
                 sheetGrabberVisible: true,
-                sheetInitialDetentIndex: 0,
               }}
             />
             <Stack.Screen name="+not-found" />

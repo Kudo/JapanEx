@@ -7,6 +7,8 @@ import { useTracker } from '@/state/tracker-context';
 
 const FLAG_ICON =
   process.env.EXPO_OS === 'android' ? require('../../assets/icons/flag.xml') : undefined;
+const FLAG_FILLED_ICON =
+  process.env.EXPO_OS === 'android' ? require('../../assets/icons/flag-filled.xml') : undefined;
 const TRANSLATE_ICON =
   process.env.EXPO_OS === 'android'
     ? require('../../assets/icons/translate.xml')
@@ -39,7 +41,9 @@ export function LanguageStackToolbar({
               ? showFlags
                 ? 'flag.fill'
                 : 'flag'
-              : FLAG_ICON
+              : showFlags
+                ? FLAG_FILLED_ICON
+                : FLAG_ICON
           }
           onPress={onToggleFlags}
           selected={showFlags}

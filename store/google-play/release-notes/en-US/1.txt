@@ -1,0 +1,7 @@
+Initial release.
+
+• Track six experience levels across all 47 Japanese prefectures
+• Explore an interactive map and prefecture flag gallery
+• Share a high-resolution result image
+• Share a view-only link to your map
+• Use the app offline in English, Japanese, or Traditional Chinese

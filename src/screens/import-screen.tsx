@@ -1,6 +1,6 @@
 import { Button, Column, Host } from '@expo/ui';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -13,13 +13,23 @@ export function ImportScreen() {
   const theme = useAppTheme();
   const cardStyle = useBoundedContentStyle(620, 40);
   const router = useRouter();
+  const { fontScale } = useWindowDimensions();
   const params = useLocalSearchParams<ImportParams>();
   const { state, replaceState } = useTracker();
   const result = parseImportParams(params);
+  const cancelImport = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/');
+    }
+  };
 
   return (
     <>
+      {/* @ref LLP 0000#adaptive-accessibility-layout */}
       <ScrollView
+        key={fontScale}
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
         contentContainerStyle={styles.screen}
@@ -51,14 +61,16 @@ export function ImportScreen() {
                 style={styles.nativeHost}
               >
                 <Column style={{ width: '100%' }} spacing={10}>
+                  {/* @ref LLP 0000#sharing-and-import */}
                   <Button
                     label={t(state.locale, 'importConfirm')}
+                    style={{ width: '100%' }}
                     onPress={() => {
                       replaceState(result.state);
                       router.replace('/');
                     }}
                   />
-                  <Button label={t(state.locale, 'cancel')} variant="text" onPress={() => router.replace('/')} />
+                  <Button label={t(state.locale, 'cancel')} variant="text" onPress={cancelImport} />
                 </Column>
               </Host>
             </>

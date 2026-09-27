@@ -3,9 +3,10 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Share, StyleSheet, Text as RNText, useWindowDimensions, View } from 'react-native';
 
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
 import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
@@ -39,6 +40,7 @@ export function SettingsScreen() {
 function ReadySettingsScreen() {
   const theme = useAppTheme();
   const contentStyle = useBoundedContentStyle(720);
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const router = useRouter();
   const { state, score, setDisplayName, setLocale, resetLevels } = useTracker();
   const nameValue = useNativeState(state.displayName);
@@ -68,14 +70,13 @@ function ReadySettingsScreen() {
       showsVerticalScrollIndicator={false}
       contentContainerStyle={[styles.content, contentStyle]}
     >
-      <View style={[styles.summary, { backgroundColor: theme.hero }]}>
+      <View style={[styles.summary, largeText && styles.summaryLarge, { backgroundColor: theme.hero }]}>
         <View style={[styles.scoreSeal, { backgroundColor: theme.accent }]}>
-          <RNText selectable style={[styles.score, { color: theme.heroText }]}>{score}</RNText>
-          <RNText selectable style={[styles.scoreMax, { color: theme.heroText }]}>/ 235</RNText>
+          <RNText selectable numberOfLines={1} adjustsFontSizeToFit maxFontSizeMultiplier={1.5} style={[styles.score, { color: theme.heroText }]}>{score}</RNText>
         </View>
-        <View style={styles.summaryCopy}>
+        <View style={[styles.summaryCopy, largeText && styles.summaryCopyLarge]}>
           <RNText style={[styles.summaryEyebrow, { color: theme.heroMuted }]}>
-            {t(state.locale, 'score')}
+            {t(state.locale, 'score')} {t(state.locale, 'maxScore')}
           </RNText>
           <RNText style={[styles.subtitle, { color: theme.heroText }]}>
             {t(state.locale, 'settingsSubtitle')}
@@ -107,9 +108,9 @@ function ReadySettingsScreen() {
             textStyle={{ color: theme.text, fontSize: 16, lineHeight: 20 }}
             style={{
               width: '100%',
-              height: 48,
+              height: largeText ? 76 : 48,
               paddingHorizontal: 14,
-              paddingVertical: 13,
+              paddingVertical: largeText ? 12 : 13,
               backgroundColor: theme.surface,
               borderColor: theme.border,
               borderWidth: 1,
@@ -117,6 +118,10 @@ function ReadySettingsScreen() {
             }}
           />
         </Host>
+        {/* @ref LLP 0000#adaptive-accessibility-layout */}
+        <RNText style={[styles.nameHint, { color: theme.secondaryText }]}>
+          {t(state.locale, 'displayNameHint')}
+        </RNText>
       </View>
 
       <View
@@ -168,6 +173,11 @@ function ReadySettingsScreen() {
               variant="outlined"
               onPress={() => Linking.openURL('https://japanex.expo.app/privacy/')}
             />
+            <Button
+              label={t(state.locale, 'helpSupport')}
+              variant="outlined"
+              onPress={() => Linking.openURL('https://japanex.expo.app/support/')}
+            />
             <Button label={t(state.locale, 'resetProgress')} variant="text" onPress={confirmReset} />
           </Column>
         </Host>
@@ -198,6 +208,7 @@ const styles = StyleSheet.create({
     gap: 18,
     boxShadow: '0 14px 34px rgba(24, 43, 53, 0.18)',
   },
+  summaryLarge: { flexDirection: 'column', alignItems: 'stretch' },
   scoreSeal: {
     width: 96,
     height: 96,
@@ -207,8 +218,8 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '-3deg' }],
   },
   score: { fontSize: 38, lineHeight: 42, fontWeight: '900', fontVariant: ['tabular-nums'] },
-  scoreMax: { fontSize: 12, fontWeight: '800', opacity: 0.9 },
   summaryCopy: { flex: 1, gap: 6 },
+  summaryCopyLarge: { flex: 0 },
   summaryEyebrow: { fontSize: 12, fontWeight: '900', letterSpacing: 1, textTransform: 'uppercase' },
   subtitle: { fontSize: 16, lineHeight: 23, fontWeight: '700' },
   sectionCard: {
@@ -220,5 +231,6 @@ const styles = StyleSheet.create({
     boxShadow: '0 6px 18px rgba(34, 48, 56, 0.07)',
   },
   sectionTitle: { fontSize: 15, fontWeight: '900', letterSpacing: 0.2 },
+  nameHint: { fontSize: 13, lineHeight: 19 },
   status: { textAlign: 'center', fontSize: 14 },
 });

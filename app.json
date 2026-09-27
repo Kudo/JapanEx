@@ -22,6 +22,7 @@
     },
     "android": {
       "package": "dev.expo.kudo.japanex",
+      "allowBackup": true,
       "intentFilters": [
         {
           "action": "VIEW",
@@ -46,6 +47,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_EXTERNAL_STORAGE",
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_AUDIO",
@@ -79,7 +81,11 @@
             "enableMinifyInReleaseBuilds": true
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

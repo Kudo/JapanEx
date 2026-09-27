@@ -1,7 +1,7 @@
 import { Button, Column, Host } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useRef, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, PixelRatio, ScrollView, StyleSheet, Text, View } from 'react-native';
 import type Svg from 'react-native-svg';
 
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -15,7 +15,11 @@ import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, shareResult } from '@/utils/result-export';
 import { buildShareUrl } from '@/utils/share-state';
-import { RESULT_CARD_RENDER_SIZE } from '@/utils/svg-capture';
+import { getResultCardRenderSize } from '@/utils/result-card-size';
+import { withTimeout } from '@/utils/promise-timeout';
+
+// @ref LLP 0000#result-rendering-and-export
+const RESULT_CARD_READY_TIMEOUT_MS = 15_000;
 
 type MapScreenProps = {
   showFlags: boolean;
@@ -28,9 +32,13 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');
-  const [isExporting, setIsExporting] = useState(false);
+  const [exportPhase, setExportPhase] = useState<'idle' | 'preparing' | 'sharing'>('idle');
+  const isExporting = exportPhase !== 'idle';
+  const renderSize = getResultCardRenderSize(process.env.EXPO_OS, PixelRatio.get());
   const resultRef = useRef<Svg | null>(null);
   const resolveResultRef = useRef<((result: Svg) => void) | null>(null);
+  const layoutReadyRef = useRef(false);
+  const resolveLayoutReadyRef = useRef<(() => void) | null>(null);
   const flagsReadyRef = useRef(false);
   const resolveFlagsReadyRef = useRef<(() => void) | null>(null);
 
@@ -48,35 +56,63 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
     resolveFlagsReadyRef.current = null;
   }, []);
 
+  const handleResultLayout = useCallback(() => {
+    layoutReadyRef.current = true;
+    resolveLayoutReadyRef.current?.();
+    resolveLayoutReadyRef.current = null;
+  }, []);
+
   const waitForResultCard = async () => {
     const resultCard = resultRef.current ?? await new Promise<Svg>((resolve) => {
       resolveResultRef.current = resolve;
     });
 
-    if (showFlags && !flagsReadyRef.current) {
+    if (!layoutReadyRef.current) {
       await new Promise<void>((resolve) => {
-        resolveFlagsReadyRef.current = resolve;
+        resolveLayoutReadyRef.current = resolve;
       });
+    }
+
+    if (showFlags) {
+      if (!flagsReadyRef.current) {
+        await new Promise<void>((resolve) => {
+          resolveFlagsReadyRef.current = resolve;
+        });
+      } else {
+        // @ref LLP 0000#result-rendering-and-export — cached flags may not report onLoad after remounting.
+        await new Promise<void>((resolve) => {
+          requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+        });
+      }
     }
 
     return resultCard;
   };
 
   const handleShareResult = async () => {
-    flagsReadyRef.current = false;
-    setIsExporting(true);
+    layoutReadyRef.current = false;
+    setExportPhase('preparing');
     setStatus('');
     try {
-      const resultCard = await waitForResultCard();
+      const resultCard = await withTimeout(
+        waitForResultCard(),
+        RESULT_CARD_READY_TIMEOUT_MS,
+        'Result card did not become ready',
+      );
       const asset = await createResultAsset(resultCard);
-      await shareResult(asset);
-      setStatus(t(state.locale, 'imageShared'));
-    } catch {
+      setExportPhase('sharing');
+      const wasShared = await shareResult(asset);
+      if (wasShared) {
+        setStatus(t(state.locale, 'imageShared'));
+      }
+    } catch (error) {
+      console.error('Result image export failed', error);
       setStatus(t(state.locale, 'exportFailed'));
     } finally {
       resolveResultRef.current = null;
+      resolveLayoutReadyRef.current = null;
       resolveFlagsReadyRef.current = null;
-      setIsExporting(false);
+      setExportPhase('idle');
     }
   };
 
@@ -130,6 +166,17 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
               />
             </Column>
           </Host>
+          {exportPhase === 'preparing' ? (
+            <View style={styles.exportProgress}>
+              <ActivityIndicator color={theme.accent} />
+              <Text
+                accessibilityLiveRegion="polite"
+                style={[styles.exportProgressText, { color: theme.secondaryText }]}
+              >
+                {t(state.locale, 'preparingImage')}
+              </Text>
+            </View>
+          ) : null}
         </View>
 
         {status ? (
@@ -149,7 +196,7 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
       </ScrollView>
 
       {isExporting ? (
-        <View style={styles.exportSurface}>
+        <View style={[styles.exportSurface, { left: -renderSize * 2, width: renderSize, height: renderSize }]}>
           <ResultCard
             ref={handleResultRef}
             locale={state.locale}
@@ -157,7 +204,9 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
             score={score}
             levels={state.levels}
             onFlagsReady={handleFlagsReady}
+            onLayout={handleResultLayout}
             showFlags={showFlags}
+            renderSize={renderSize}
           />
         </View>
       ) : null}
@@ -184,13 +233,12 @@ const styles = StyleSheet.create({
     borderCurve: 'continuous',
     padding: 16,
   },
+  exportProgress: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 12 },
+  exportProgressText: { flex: 1, fontSize: 14, lineHeight: 20 },
   status: { fontSize: 14, lineHeight: 20, textAlign: 'center' },
   exportSurface: {
     position: 'absolute',
-    left: -RESULT_CARD_RENDER_SIZE * 2,
     top: 0,
-    width: RESULT_CARD_RENDER_SIZE,
-    height: RESULT_CARD_RENDER_SIZE,
     opacity: 0,
     pointerEvents: 'none',
   },

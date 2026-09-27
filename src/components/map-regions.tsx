@@ -3,6 +3,7 @@ import { G, Polygon, Rect, Text as SvgText } from 'react-native-svg';
 import { LEVEL_COLORS } from '@/constants/app-theme';
 import { PREFECTURES } from '@/data/prefectures';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
+import { experienceAccessibilityLabel } from '@/i18n/translations';
 import { getPrefectureMapAnnotations } from '@/utils/map-layout';
 
 const LABEL_COLOR = '#17212B';
@@ -31,6 +32,11 @@ export function MapRegions({
     <>
       {PREFECTURES.map((prefecture) => {
         const selectPrefecture = () => onSelect?.(prefecture.code);
+        const accessibilityLabel = experienceAccessibilityLabel(
+          locale,
+          prefecture.names[locale],
+          levels[prefecture.code],
+        );
         const shapeInteractionProps =
           onSelect && process.env.EXPO_OS !== 'web'
             ? { onPress: selectPrefecture }
@@ -48,12 +54,12 @@ export function MapRegions({
                   }
                 },
                 tabIndex: 0,
-                'aria-label': prefecture.names[locale],
+                'aria-label': accessibilityLabel,
               }
             : {
                 onPress: selectPrefecture,
                 accessible: true,
-                accessibilityLabel: prefecture.names[locale],
+                accessibilityLabel,
               }
           : undefined;
 

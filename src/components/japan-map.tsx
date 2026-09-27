@@ -1,6 +1,6 @@
-import { Button, Host, Row } from '@expo/ui';
+import { Button, Column, Host, Row } from '@expo/ui';
 import { useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   runOnJS,
@@ -12,6 +12,7 @@ import Svg, { Rect } from 'react-native-svg';
 
 import { MapFlags } from '@/components/map-flags';
 import { MapRegions } from '@/components/map-regions';
+import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
 import { t } from '@/i18n/translations';
@@ -31,6 +32,7 @@ type JapanMapProps = {
 
 export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps) {
   const theme = useAppTheme();
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const [zoomLevel, setZoomLevel] = useState(MIN_ZOOM);
   const [mapFrameWidth, setMapFrameWidth] = useState(0);
   const scale = useSharedValue(MIN_ZOOM);
@@ -158,6 +160,28 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
     setMapFrameWidth(width);
   };
 
+  const zoomButtons = (
+    <>
+      <Button
+        label={t(locale, 'zoomOut')}
+        variant="outlined"
+        disabled={zoomLevel <= MIN_ZOOM}
+        onPress={() => animateToZoom(zoomLevel - ZOOM_STEP)}
+      />
+      <Button
+        label={t(locale, 'resetView')}
+        variant="text"
+        onPress={() => animateToZoom(MIN_ZOOM)}
+      />
+      <Button
+        label={t(locale, 'zoomIn')}
+        variant="outlined"
+        disabled={zoomLevel >= MAX_ZOOM}
+        onPress={() => animateToZoom(zoomLevel + ZOOM_STEP)}
+      />
+    </>
+  );
+
   return (
     <View style={styles.wrapper}>
       <GestureDetector gesture={gesture}>
@@ -189,26 +213,20 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
         </View>
       </GestureDetector>
 
-      <Host matchContents seedColor={theme.accent}>
-        <Row spacing={8} alignment="center">
-          <Button
-            label={t(locale, 'zoomOut')}
-            variant="outlined"
-            disabled={zoomLevel <= MIN_ZOOM}
-            onPress={() => animateToZoom(zoomLevel - ZOOM_STEP)}
-          />
-          <Button
-            label={t(locale, 'resetView')}
-            variant="text"
-            onPress={() => animateToZoom(MIN_ZOOM)}
-          />
-          <Button
-            label={t(locale, 'zoomIn')}
-            variant="outlined"
-            disabled={zoomLevel >= MAX_ZOOM}
-            onPress={() => animateToZoom(zoomLevel + ZOOM_STEP)}
-          />
-        </Row>
+      <Host
+        matchContents={largeText ? { vertical: true } : true}
+        seedColor={theme.accent}
+        style={largeText && styles.zoomControlsLarge}
+      >
+        {largeText ? (
+          <Column style={{ width: '100%' }} spacing={8} alignment="center">
+            {zoomButtons}
+          </Column>
+        ) : (
+          <Row spacing={8} alignment="center">
+            {zoomButtons}
+          </Row>
+        )}
       </Host>
     </View>
   );
@@ -228,6 +246,7 @@ const styles = StyleSheet.create({
     gap: 12,
     alignItems: 'center',
   },
+  zoomControlsLarge: { alignSelf: 'stretch' },
   mapFrame: {
     width: '100%',
     maxWidth: 680,
