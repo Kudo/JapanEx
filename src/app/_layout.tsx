@@ -1,11 +1,11 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router/react-navigation';
 import { Stack } from 'expo-router/stack';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { AppStack } from '@/components/app-stack';
 import { useAppTheme } from '@/constants/app-theme';
+import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 import { TrackerProvider } from '@/state/tracker-context';
 
 export const unstable_settings = {
@@ -13,7 +13,7 @@ export const unstable_settings = {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const colorScheme = useAppColorScheme();
   const theme = useAppTheme();
   const navigationTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
   const themedNavigation = {

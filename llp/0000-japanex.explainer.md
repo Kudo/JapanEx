@@ -30,7 +30,11 @@
 
 ### Application shell and navigation
 
-[observed] `src/app/_layout.tsx` is the runtime composition root. It installs the gesture root, tracker provider, navigation theme, root stack, and status bar. The tab layout selects native tabs on native platforms and a web-specific layout through `_layout.web.tsx` (`src/app/_layout.tsx` and `src/app/(tabs)/_layout*`).
+[observed] `src/app/_layout.tsx` is the runtime composition root. It installs the gesture root, tracker provider, navigation theme, root stack, and status bar. The single tab route imports platform-specific tab components: native tabs on iOS and Android, and a web tab layout. Keeping the variants outside `src/app` avoids a duplicate route entry that made Expo Router's lazy web route map request a module ID Metro did not define (`src/app/_layout.tsx`, `src/app/(tabs)/_layout.tsx`, and `src/components/tab-layout.*`).
+
+[observed] Static web pages render before the browser's color preference is available to React. The web palette therefore uses CSS variables selected by `prefers-color-scheme` for the first paint, while the navigation color-scheme hook reconciles with the browser after hydration and listens for changes. The root HTML also sets the browser control color scheme and page background, and aligns Expo UI web controls with the app's neutral colors (`src/app/+html.tsx`, `src/constants/app-theme.web.ts`, and `src/hooks/use-app-color-scheme.web.ts`).
+
+[observed] Native screens place the map's flag toggle and language menu in `Stack.Toolbar`. The web stack uses `headerRight`; its map-specific toolbar composes the flag toggle with the shared language picker so both controls appear in the header (`src/components/language-stack-toolbar.tsx`, `src/components/language-stack-toolbar.web.tsx`, and `src/components/app-stack.tsx`).
 
 [observed] Route modules remain thin. Shared stack behavior lives in `src/components/app-stack.tsx`; tab and stack route groups separate the map/flags experience from settings while allowing the map and flags tabs to share prefecture detail routes (`src/app` and `src/components/app-stack.tsx`).
 
