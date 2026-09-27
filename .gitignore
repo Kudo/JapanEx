@@ -36,6 +36,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# local release notes
+/store/release-readiness.md
+/store/build-handoff.md
+
 example
 
 # generated native folders
