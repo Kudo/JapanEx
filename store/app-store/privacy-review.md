@@ -24,5 +24,5 @@ This is a source-based draft for the publisher's App Store Connect answers, not 
 
 1. Inspect the signed production archive's privacy report, embedded manifests, and bundled SDKs. The AdHoc preview IPA is not the store artifact.
 2. Check actual outbound traffic during fresh launch, map editing, sharing, and link opening; revisit the candidate answers if a dependency sends user or device data.
-3. Recheck that the deployed policy shows Kudo Chien and `kudo@csie.io`, and the support page shows `support@dozastudio.dev`. Verify that both inboxes receive requests.
+3. Recheck that the deployed policy and support page show Kudo Chien and `kudo@csie.io`. Verify that the inbox receives requests.
 4. Enter the answers in App Store Connect and review the product-page privacy preview before publishing them.

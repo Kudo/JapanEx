@@ -33,4 +33,4 @@ Do not use `--auto-submit` for this verification round. Save each new production
 4. Check HTTPS link handoff with the final signing certificates. A custom-scheme link or config introspection alone does not prove universal/app-link verification.
 5. Compare the App Store and Play screenshot drafts with the delivered signed UI and recapture any mismatch. Verify the Play phone and both 9:16 tablet sets in Play Console. Review the Play pre-launch report before wider rollout.
 
-Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The privacy page should show Kudo Chien and `kudo@csie.io`; the support page should show `support@dozastudio.dev`. Verify both inboxes before store submission.
+Keep the iOS and Android build IDs with the completed results in [release-readiness.md](release-readiness.md). The privacy and support pages should show Kudo Chien and `kudo@csie.io`. Verify the inbox before store submission.

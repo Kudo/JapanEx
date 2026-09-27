@@ -16,7 +16,7 @@ This document separates facts verified from the repository from publisher-owned 
 | Category | Travel & Local |
 | Website | https://japanex.expo.app |
 | Privacy policy URL | https://japanex.expo.app/privacy/ — redeploy the revised `kudo@csie.io` contact and verify the live page before submission |
-| Support email | `support@dozastudio.dev` — supplied by publisher; verify delivery before submission |
+| Support email | `kudo@csie.io` — supplied by publisher; verify delivery before submission |
 | Support phone | Optional |
 
 For tags, open Play Console's suggested tags and select no more than five that are visibly supported by the listing and initial app experience. Prefer travel-map, travel-planning, or trip-recording tags if Google offers them; do not select navigation because JapanEx does not provide routes or live location.
@@ -101,7 +101,7 @@ Use `assets/feature-graphic-base.png` as the text-free master if another localiz
 
 ## Before review
 
-- Verify that `support@dozastudio.dev` receives support requests and `kudo@csie.io` receives privacy requests; recheck that the deployed support and privacy pages show their respective addresses and Kudo Chien.
+- Verify that `kudo@csie.io` receives support and privacy requests; recheck that the deployed support and privacy pages show this address and Kudo Chien.
 - Confirm that the published privacy policy URL still loads publicly without authentication or an editable document UI.
 - Inspect the replacement production AAB's merged manifest and confirm that no photo, video, or storage permission is present.
 - Compare the twelve local Release screenshot drafts with the final Play-signed build; recapture any screen whose delivered UI differs. Verify all three sets in Play Console before upload.
