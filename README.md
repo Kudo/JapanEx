@@ -26,9 +26,9 @@ Shared links default to `https://japanex.expo.app/view`. Set `EXPO_PUBLIC_SHARE_
 
 The web export includes the Apple App Site Association and Android Digital Asset Links files for `japanex.expo.app`. The app config enables iOS Universal Links and verified Android App Links for `/view`.
 
-The website uses Safari's Smart App Banner for iOS and a web manifest that prefers the native Google Play app on Android. When Chrome emits a Play `beforeinstallprompt` event, Settings shows a localized installation action; choosing it opens Chrome's native install dialog. The action disappears after use or installation. If the prompt fails, it falls back to the Google Play URL. The site has no custom installation banner. Actual Android prompt availability requires HTTPS and an eligible Chrome/Play device; desktop browsers and devices with the app installed may not offer it.
+The website's Settings page has a localized app-download section with direct App Store and Google Play links. These links open the store listings without waiting for browser install events. The native app does not show this section. The site has no custom installation banner or JavaScript install-prompt handling. Safari's Smart App Banner metadata and the Android related-app web manifest remain available for browser discovery.
 
-`EXPO_PUBLIC_APP_STORE_URL` overrides the URL used to derive the Safari app ID, and `EXPO_PUBLIC_GOOGLE_PLAY_URL` overrides the Android fallback URL. An explicitly empty value disables the respective installation promotion. The Android package and listing in `public/manifest.webmanifest` identify the production app. These values are embedded at export time, so changing them requires a new web export and deployment.
+`EXPO_PUBLIC_APP_STORE_URL` and `EXPO_PUBLIC_GOOGLE_PLAY_URL` override the store links. An explicitly empty value hides the respective link and disables its browser metadata. The App Store URL supplies the Safari app ID; the Android package and listing in `public/manifest.webmanifest` identify the production app. These values are embedded at export time, so changing them requires a new web export and deployment.
 
 Useful commands:
 

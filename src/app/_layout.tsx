@@ -7,7 +7,6 @@ import { AppStack } from '@/components/app-stack';
 import { useAppTheme } from '@/constants/app-theme';
 import { useAppColorScheme } from '@/hooks/use-app-color-scheme';
 import { TrackerProvider } from '@/state/tracker-context';
-import { NativeAppInstallProvider } from '@/state/native-app-install-context';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -34,23 +33,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <TrackerProvider>
         <ThemeProvider value={themedNavigation}>
-          <NativeAppInstallProvider>
-            <AppStack>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="view" options={{ headerRight: () => null }} />
-              <Stack.Screen
-                name="import"
-                options={{
-                  presentation: 'formSheet',
-                  // @ref LLP 0000#sharing-and-import
-                  sheetAllowedDetents: [1],
-                  sheetGrabberVisible: true,
-                }}
-              />
-              <Stack.Screen name="+not-found" />
-            </AppStack>
-            <StatusBar style="auto" />
-          </NativeAppInstallProvider>
+          <AppStack>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="view" options={{ headerRight: () => null }} />
+            <Stack.Screen
+              name="import"
+              options={{
+                presentation: 'formSheet',
+                // @ref LLP 0000#sharing-and-import
+                sheetAllowedDetents: [1],
+                sheetGrabberVisible: true,
+              }}
+            />
+            <Stack.Screen name="+not-found" />
+          </AppStack>
+          <StatusBar style="auto" />
         </ThemeProvider>
       </TrackerProvider>
     </GestureHandlerRootView>

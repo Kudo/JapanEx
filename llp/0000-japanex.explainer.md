@@ -40,7 +40,7 @@
 
 [observed] The web Settings tab explicitly targets `/settings`. Linking only to its route group opened the alphabetically first `about` route instead of Settings in the static web export (`src/components/tab-layout.web.tsx`).
 
-[observed] The website uses Safari's Smart App Banner for iOS and a web manifest preferring the production Google Play app for Android. A root provider retains eligible Play install events across navigation and exposes an installation action in Settings only while a prompt is available. That action consumes the event once, with a Google Play fallback if prompting fails; an installation event clears it. Native runtimes do not register browser listeners. Explicitly empty store URL overrides disable the corresponding web promotion (`public/manifest.webmanifest`, `src/constants/native-app-links.ts`, `src/state/native-app-install-context.tsx`, `src/screens/settings-screen.tsx`, and `src/app/+html.tsx`).
+[observed] Web Settings contains a localized app-download section with direct App Store and Google Play links. It does not depend on browser install events or add a banner above the site. The native component renders nothing. Safari's Smart App Banner metadata and the web manifest preferring the production Google Play app remain available for browser discovery. Explicitly empty store URL overrides hide the corresponding Settings link and disable its browser metadata (`src/components/app-store-links*`, `src/screens/settings-screen.tsx`, `src/constants/native-app-links.ts`, `public/manifest.webmanifest`, and `src/app/+html.tsx`).
 
 ### Tracker state and persistence
 
