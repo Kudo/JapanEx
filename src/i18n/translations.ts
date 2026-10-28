@@ -3,6 +3,7 @@ import type { AppLocale, ExperienceLevel, RegionCode } from '@/data/types';
 const strings = {
   en: {
     tabsMap: 'Map', tabsFlags: 'Flags', tabsSettings: 'Settings', appName: 'JapanEx',
+    getNativeApp: 'Get the JapanEx app', downloadAppStore: 'Download on the App Store', downloadGooglePlay: 'Get it on Google Play',
     score: 'Japan score', maxScore: 'out of 235', tapPrefecture: 'Tap a prefecture to record your experience.',
     zoomIn: 'Zoom in', zoomOut: 'Zoom out', resetView: 'Reset view', shareImage: 'Share result image',
     showFlags: 'Show flags', hideFlags: 'Hide flags',
@@ -31,6 +32,7 @@ const strings = {
   },
   ja: {
     tabsMap: '地図', tabsFlags: '旗', tabsSettings: '設定', appName: 'JapanEx',
+    getNativeApp: 'JapanExアプリをダウンロード', downloadAppStore: 'App Storeからダウンロード', downloadGooglePlay: 'Google Playで手に入れよう',
     score: '日本制県レベル', maxScore: '/ 235', tapPrefecture: '都道府県をタップして経験を記録します。',
     zoomIn: '拡大', zoomOut: '縮小', resetView: '表示を戻す', shareImage: '結果画像を共有',
     showFlags: '旗を表示', hideFlags: '旗を非表示',
@@ -59,6 +61,7 @@ const strings = {
   },
   'zh-Hant': {
     tabsMap: '地圖', tabsFlags: '旗幟', tabsSettings: '設定', appName: 'JapanEx',
+    getNativeApp: '下載JapanEx App', downloadAppStore: '從App Store下載', downloadGooglePlay: '從Google Play下載',
     score: '日本制縣等級', maxScore: '/ 235', tapPrefecture: '點選都道府縣以記錄你的經驗。',
     zoomIn: '放大', zoomOut: '縮小', resetView: '重設檢視', shareImage: '分享結果圖片',
     showFlags: '顯示旗幟', hideFlags: '隱藏旗幟',

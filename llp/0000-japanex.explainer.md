@@ -38,6 +38,8 @@
 
 [observed] Route modules remain thin. Shared stack behavior lives in `src/components/app-stack.tsx`; tab and stack route groups separate the map/flags experience from settings while allowing the map and flags tabs to share prefecture detail routes (`src/app` and `src/components/app-stack.tsx`).
 
+[observed] The website shows localized native-app installation links above the navigation stack, defaulting to JapanEx's App Store and Google Play URLs. Each URL can be overridden at web export time; an explicitly empty override hides that link. The Apple App Store URL also supplies the numeric app ID for Safari's Smart App Banner. The native banner component renders nothing (`src/constants/native-app-links.ts`, `src/components/native-app-banner*`, `src/app/_layout.tsx`, and `src/app/+html.tsx`).
+
 ### Tracker state and persistence
 
 [observed] `TrackerStateV1` is the core domain object. `src/state/tracker-state.ts` creates, scores, and validates it; `src/state/tracker-context.tsx` owns the in-memory instance and exposes mutations to the UI; `src/storage/tracker-storage*` persists validated JSON (`src/data/types.ts`, `src/state`, and `src/storage`).
