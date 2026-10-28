@@ -1,0 +1,62 @@
+{
+  "configVersion": 0,
+  "apple": {
+    "version": "1.0.0",
+    "info": {
+      "en-US": {
+        "title": "JapanEx",
+        "subtitle": "Track your Japan journey",
+        "description": "See your journey across Japan at a glance.\n\nJapanEx lets you record how deeply you have experienced each of Japan's 47 prefectures. Choose one of six levels—from never been to lived there—and watch your personal map and Japan score take shape.\n\nEXPLORE YOUR JAPAN\n• Tap the interactive map to update each prefecture\n• Record six experience levels: never been, passed through, alighted, visited, stayed overnight, or lived there\n• See your Japan score, from 0 to 235\n• Zoom and pan around the map for a closer look\n\nREDISCOVER EVERY PREFECTURE\n• Browse all 47 prefecture flags\n• Search and filter by region or experience level\n• View prefecture names in English, Japanese, or Traditional Chinese\n\nSHARE YOUR JOURNEY\n• Create a high-resolution image of your map\n• Send the image through your device's system share sheet\n• Share a view-only link without changing the recipient's saved progress\n\nPRIVATE AND OFFLINE-FIRST\nJapanEx requires no account and contains no ads or analytics. Your progress and optional display name are stored locally and may be included in your device backup if enabled. JapanEx does not sync them to its own servers. The map, flags, and prefecture data are bundled for offline use. You can choose to share a result image or view link.\n\nWhether you are planning your next trip, remembering past journeys, or working toward all 47 prefectures, JapanEx gives you a simple, visual record of your experiences across Japan.",
+        "keywords": [
+          "map",
+          "travel",
+          "prefecture",
+          "visited",
+          "trip",
+          "flag",
+          "offline",
+          "explore",
+          "region",
+          "experience"
+        ],
+        "promoText": "Turn your Japan travels into a personal map. Track all 47 prefectures across six experience levels, then share your journey as an image or view-only link.",
+        "marketingUrl": "https://japanex.expo.app/",
+        "supportUrl": "https://japanex.expo.app/support/",
+        "privacyPolicyUrl": "https://japanex.expo.app/privacy/"
+      },
+      "ja": {
+        "title": "JapanEx - 日本制県レベル",
+        "subtitle": "47都道府県の旅を記録",
+        "description": "日本での旅の経験を、ひと目で振り返ろう。\n\nJapanExは、47都道府県それぞれでの経験を6段階で記録し、自分だけの日本地図を作れるアプリです。「未訪問」から「居住」までレベルを選ぶと、地図と日本制県レベルにすぐ反映されます。\n\n自分だけの日本地図\n• 地図をタップして都道府県ごとの経験を更新\n• 未訪問、通過、降り立った、訪問、宿泊、居住の6段階で記録\n• 0から235までの日本制県レベルを表示\n• 拡大・縮小や移動に対応したインタラクティブな地図\n\n47都道府県をもっと身近に\n• 47都道府県の旗を一覧表示\n• 地方や経験レベルで検索・絞り込み\n• 日本語、繁体字中国語、英語の表示に対応\n\n旅の記録を共有\n• 現在の地図から高解像度の結果画像を作成\n• 端末の共有機能から画像を友人に送信\n• 相手の保存済みデータを変更しない閲覧専用リンクを共有できます\n\nプライバシーに配慮したオフライン設計\nJapanExはアカウント登録不要で、広告や解析機能もありません。進捗と任意の表示名は端末内に保存され、端末のバックアップが有効な場合はバックアップに含まれることがあります。JapanEx独自のサーバーには同期しません。地図、旗、都道府県データはアプリに同梱され、オフラインでも利用できます。結果画像や閲覧リンクは自分で共有できます。\n\n次の旅を計画するときも、これまでの旅を振り返るときも、47都道府県制覇を目指すときも。JapanExで、日本での経験をシンプルに楽しく記録しましょう。",
+        "keywords": [
+          "日本地図",
+          "旅行記録",
+          "訪問履歴",
+          "県の旗",
+          "オフライン"
+        ],
+        "promoText": "日本での旅を、自分だけの地図に。47都道府県の経験を6段階で記録し、結果画像や閲覧専用リンクで旅の記録を共有できます。",
+        "marketingUrl": "https://japanex.expo.app/",
+        "supportUrl": "https://japanex.expo.app/support/",
+        "privacyPolicyUrl": "https://japanex.expo.app/privacy/"
+      },
+      "zh-Hant": {
+        "title": "JapanEx - 日本制縣等級",
+        "subtitle": "記錄日本47都道府縣足跡",
+        "description": "一眼回顧你的日本足跡。\n\nJapanEx 讓你以六個等級記錄在日本47個都道府縣的體驗。從「沒去過」到「居住過」，選擇每個都道府縣的等級，專屬地圖與日本制縣等級就會隨之更新。\n\n建立你的日本地圖\n• 點選互動式地圖，更新每個都道府縣的體驗\n• 以沒去過、路過、停留轉乘、造訪、住宿、居住六個等級記錄\n• 查看0至235分的日本制縣等級\n• 可縮放與拖曳地圖，輕鬆查看細節\n\n重新認識47個都道府縣\n• 瀏覽47個都道府縣的旗幟\n• 依地區或體驗等級搜尋與篩選\n• 支援繁體中文、日文與英文介面\n\n分享你的旅程\n• 將目前的地圖製作成高解析度結果圖片\n• 透過裝置的系統分享介面傳送圖片\n• 分享唯讀檢視連結，不會變更對方已儲存的進度\n\n重視隱私，離線優先\nJapanEx 不需要註冊帳號，也沒有廣告或分析工具。進度與選填的顯示名稱儲存在裝置上；若啟用裝置備份，也可能包含在備份中。JapanEx 不會將這些資料同步至自有伺服器。地圖、旗幟與都道府縣資料皆內建於應用程式，離線時也能使用。你可以自行選擇分享結果圖片或檢視連結。\n\n無論是規劃下一趟旅行、回顧過去的足跡，或挑戰走遍47個都道府縣，JapanEx 都能讓你用簡單又直覺的方式記錄在日本的每一段體驗。",
+        "keywords": [
+          "旅遊地圖",
+          "旅行回憶",
+          "旗幟收藏",
+          "離線使用",
+          "造訪紀錄"
+        ],
+        "promoText": "把日本旅行足跡化成專屬地圖。以六個等級記錄47個都道府縣的體驗，再透過結果圖片或唯讀連結分享旅程。",
+        "marketingUrl": "https://japanex.expo.app/",
+        "supportUrl": "https://japanex.expo.app/support/",
+        "privacyPolicyUrl": "https://japanex.expo.app/privacy/"
+      }
+    },
+    "copyright": "2026 Kudo Chien"
+  }
+}

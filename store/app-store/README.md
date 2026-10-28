@@ -1,6 +1,18 @@
 # JapanEx App Store submission draft
 
-This pack is ready for publisher review. It has not been uploaded to App Store Connect.
+The iOS production build was uploaded through EAS Submit on 2026-09-27. The listing metadata in this pack was pushed to App Store Connect through EAS Metadata and read back for verification on 2026-09-27. Promotional text was added and read back on 2026-10-11. The app has not been submitted for public App Review.
+
+## EAS Metadata
+
+The root [`store.config.json`](../../store.config.json) contains the English (U.S.), Japanese, and Traditional Chinese listing text from this directory, plus the public marketing, support, and privacy URLs. Update the text files and the config together when copy changes. The config leaves out fields that still need a publisher decision: App Review contact, age rating, category, and release timing. It also omits `releaseNotes`, because Apple's **What's New** field is unavailable for a first version; keep the text files as drafts for a later update.
+
+The EAS Submit record is `29d7debf-f3c8-4b88-9042-a636a9f3826c` for iOS production build `eb88ae0a-d283-4d17-83c4-1ff2107238a3` (`1.0.0`, build `3`). The store config pins `apple.version` to `1.0.0`, matching the uploaded binary. The first metadata push without this value failed because EAS sent an empty `versionString`. A retry updated the version and created the Japanese and Traditional Chinese locales. New locales received only app-info fields on that pass, so a second push filled their description, keywords, marketing URL, and support URL. A subsequent metadata pull matched the local config for all seven checked fields in all three locales, plus the version and copyright.
+
+On 2026-10-11, `promoText` was added for `en-US`, `ja`, and `zh-Hant`. EAS Metadata lint found no issues, the push completed, and a fresh pull matched all three promotional texts exactly. The source copy is in each locale's `promotional-text.txt`.
+
+For later listing edits, run `npx eas-cli@latest metadata:lint --json`, then `npx eas-cli@latest metadata:push`. Pull the store state or review App Store Connect after the push, especially when adding a locale. EAS Metadata currently supports Apple only and does not upload screenshots or complete every App Store submission field. The [Expo guide](https://docs.expo.dev/deploy/app-stores-metadata/) requires a submitted and processed binary before pushing metadata.
+
+Test plan: check title, subtitle, promotional text, description, and keywords in each locale; confirm all three URLs open; inspect the final signed build and screenshots; verify the age-rating and privacy answers; then check App Store Connect for missing or rejected fields after the push. If lint or push reports an error, fix the named field and rerun lint before retrying the push. For this upload, EAS lint returned no issues, all three public URLs returned HTTP 200, and the post-push pull matched every field in the config.
 
 ## Listing copy
 
@@ -10,7 +22,7 @@ This pack is ready for publisher review. It has not been uploaded to App Store C
 | Japanese `ja` | `listings/ja/` |
 | Chinese (Traditional) `zh-Hant` | `listings/zh-Hant/` |
 
-Each locale has `name.txt`, `subtitle.txt`, `keywords.txt`, `description.txt`, and `release-notes.txt`. The descriptions and initial release notes are adapted from the matching Google Play draft. Names and subtitles are below 30 characters, descriptions below 4,000 characters, and keyword fields below 100 UTF-8 bytes. Recheck the final copy in App Store Connect before submission. Apple lists these field limits in its [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information) and [platform version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information) references.
+Each locale has `name.txt`, `subtitle.txt`, `promotional-text.txt`, `keywords.txt`, `description.txt`, and `release-notes.txt`. The descriptions and initial release notes are adapted from the matching Google Play draft. Names and subtitles are below 30 characters, promotional texts below 170 characters, descriptions below 4,000 characters, and keyword fields below 100 UTF-8 bytes. Recheck the final copy in App Store Connect before submission. Apple lists these field limits in its [app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information) and [platform version information](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information) references.
 
 ## App information
 
@@ -44,4 +56,4 @@ Suggested sequence for each size: map with representative levels, prefecture exp
 
 JapanEx does not require an account. The main Map tab lets reviewers tap a prefecture and choose one of six levels. The Flags tab supports search and region/level filters. Settings has language choice and Reset progress. The map, flags, and tracker work offline. Sharing a result image opens the system share sheet; a view link is read-only, and importing a shared state requires confirmation.
 
-The publisher still needs to supply App Review contact name, email, and phone; select availability and release timing; complete content-rights, age-rating, privacy, and export-compliance answers; and upload a newly signed build. Uploading to TestFlight or App Store Connect is separate from submitting the app for public review.
+The publisher confirmed App Review contact name Kudo Chien and email `kudo@csie.io`; Apple still requires a phone number in international format. The publisher also needs to select availability and release timing; complete content-rights, age-rating, privacy, and export-compliance answers; and verify the newly uploaded signed build. Uploading to TestFlight or App Store Connect is separate from submitting the app for public review.

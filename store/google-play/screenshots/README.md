@@ -26,3 +26,9 @@ Google's [preview-asset guidance](https://support.google.com/googleplay/android-
    - JapanEx settings showing the display name, English language selection, and view-link sharing controls.
 
 Upload the four files in filename order for each device type. The app data is intentionally identical across all three sets so the score and prefecture states remain consistent.
+
+## English phone upload set
+
+Use `designed/phone/en-US/` for the four navy-background Play phone screenshots. Each has a short headline above an unaltered app capture, retains the 1080 × 1920 opaque PNG format, and leaves 80% of the image height for the app UI. The existing `7-inch-tablet/en-US/` and `10-inch-tablet/en-US/` files remain the tablet upload sets. English screenshots are the only prepared screenshot locale.
+
+Run `python3 store/render-store-screenshots.py` from the repository root to regenerate the designed files and `store/store-screenshots-preview-en-US.png` (requires Pillow and macOS Arial Bold). The preview sheet is for review, not upload. Compare the underlying captures with the final signed Play build before submission.
