@@ -26,7 +26,9 @@ Shared links default to `https://japanex.expo.app/view`. Set `EXPO_PUBLIC_SHARE_
 
 The web export includes the Apple App Site Association and Android Digital Asset Links files for `japanex.expo.app`. The app config enables iOS Universal Links and verified Android App Links for `/view`.
 
-The website shows localized installation links for JapanEx on the [App Store](https://apps.apple.com/us/app/japanex/id6816584787) and [Google Play](https://play.google.com/store/apps/details?id=dev.expo.kudo.japanex), plus Safari's Smart App Banner. To override the default links for a preview, set `EXPO_PUBLIC_APP_STORE_URL` or `EXPO_PUBLIC_GOOGLE_PLAY_URL`; an explicitly empty value hides that link. A TestFlight URL can be used for the iOS link while testing, but does not enable the Safari banner. These values are embedded at export time, so changing them requires a new web export and deployment.
+The website uses Safari's Smart App Banner for iOS and a web manifest that prefers the native Google Play app on Android. When Chrome emits a Play `beforeinstallprompt` event, Settings shows a localized installation action; choosing it opens Chrome's native install dialog. The action disappears after use or installation. If the prompt fails, it falls back to the Google Play URL. The site has no custom installation banner. Actual Android prompt availability requires HTTPS and an eligible Chrome/Play device; desktop browsers and devices with the app installed may not offer it.
+
+`EXPO_PUBLIC_APP_STORE_URL` overrides the URL used to derive the Safari app ID, and `EXPO_PUBLIC_GOOGLE_PLAY_URL` overrides the Android fallback URL. An explicitly empty value disables the respective installation promotion. The Android package and listing in `public/manifest.webmanifest` identify the production app. These values are embedded at export time, so changing them requires a new web export and deployment.
 
 Useful commands:
 

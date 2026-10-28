@@ -41,6 +41,8 @@ export default function TabLayout() {
       <Tabs.Screen
         name="(settings)"
         options={{
+          // @ref LLP 0000#application-shell-and-navigation — target Settings rather than the group's first route.
+          href: '/settings',
           title: t(state.locale, 'tabsSettings'),
           tabBarIcon: ({ color }) => <TabBarIcon color={color} name="settings" />,
         }}

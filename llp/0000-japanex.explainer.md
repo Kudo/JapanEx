@@ -38,7 +38,9 @@
 
 [observed] Route modules remain thin. Shared stack behavior lives in `src/components/app-stack.tsx`; tab and stack route groups separate the map/flags experience from settings while allowing the map and flags tabs to share prefecture detail routes (`src/app` and `src/components/app-stack.tsx`).
 
-[observed] The website shows localized native-app installation links above the navigation stack, defaulting to JapanEx's App Store and Google Play URLs. Each URL can be overridden at web export time; an explicitly empty override hides that link. The Apple App Store URL also supplies the numeric app ID for Safari's Smart App Banner. The native banner component renders nothing (`src/constants/native-app-links.ts`, `src/components/native-app-banner*`, `src/app/_layout.tsx`, and `src/app/+html.tsx`).
+[observed] The web Settings tab explicitly targets `/settings`. Linking only to its route group opened the alphabetically first `about` route instead of Settings in the static web export (`src/components/tab-layout.web.tsx`).
+
+[observed] The website uses Safari's Smart App Banner for iOS and a web manifest preferring the production Google Play app for Android. A root provider retains eligible Play install events across navigation and exposes an installation action in Settings only while a prompt is available. That action consumes the event once, with a Google Play fallback if prompting fails; an installation event clears it. Native runtimes do not register browser listeners. Explicitly empty store URL overrides disable the corresponding web promotion (`public/manifest.webmanifest`, `src/constants/native-app-links.ts`, `src/state/native-app-install-context.tsx`, `src/screens/settings-screen.tsx`, and `src/app/+html.tsx`).
 
 ### Tracker state and persistence
 

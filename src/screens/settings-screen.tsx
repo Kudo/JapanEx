@@ -12,6 +12,7 @@ import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
 import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
+import { useNativeAppInstall } from '@/state/native-app-install-context';
 import { buildShareUrl } from '@/utils/share-state';
 
 export function SettingsScreen() {
@@ -42,6 +43,7 @@ function ReadySettingsScreen() {
   const contentStyle = useBoundedContentStyle(720);
   const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const router = useRouter();
+  const { canInstall, install } = useNativeAppInstall();
   const { state, score, setDisplayName, setLocale, resetLevels } = useTracker();
   const nameValue = useNativeState(state.displayName);
   const [status, setStatus] = useState('');
@@ -161,6 +163,9 @@ function ReadySettingsScreen() {
           style={styles.nativeHost}
         >
           <Column style={{ width: '100%' }} spacing={10}>
+            {canInstall ? (
+              <Button label={t(state.locale, 'installAndroidApp')} variant="outlined" onPress={install} />
+            ) : null}
             <Button label={t(state.locale, 'shareView')} onPress={shareLink} />
             <Button label={t(state.locale, 'copyViewLink')} variant="outlined" onPress={copyLink} />
             <Button

@@ -2,7 +2,7 @@ import { ScrollViewStyleReset, useServerDocumentContext } from 'expo-router/html
 import type { PropsWithChildren } from 'react';
 
 import { darkTheme, lightTheme, type AppTheme } from '@/constants/app-theme-values';
-import { APP_STORE_ID } from '@/constants/native-app-links';
+import { APP_STORE_ID, GOOGLE_PLAY_URL } from '@/constants/native-app-links';
 
 function themeVariables(theme: AppTheme) {
   return Object.entries(theme)
@@ -39,6 +39,7 @@ export default function RootHtml({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         {APP_STORE_ID ? <meta name="apple-itunes-app" content={`app-id=${APP_STORE_ID}`} /> : null}
+        {GOOGLE_PLAY_URL ? <link rel="manifest" href="/manifest.webmanifest" /> : null}
         <ScrollViewStyleReset />
         {headNodes}
         <style>{themeCss}</style>
