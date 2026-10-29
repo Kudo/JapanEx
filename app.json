@@ -4,7 +4,7 @@
     "slug": "japanex",
     "version": "1.0.0",
     "description": "Track how deeply you have experienced Japan's 47 prefectures.",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/app-icon-japanex-v3.png",
     "scheme": "japanex",
     "userInterfaceStyle": "automatic",

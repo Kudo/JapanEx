@@ -1,7 +1,7 @@
 import { BottomSheet, Button, Column, Picker, RNHostView, Text } from '@expo/ui';
 import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
-import { StyleSheet, useWindowDimensions } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
@@ -19,10 +19,9 @@ export function PrefectureSheet({ code, onDismiss }: PrefectureSheetProps) {
   const theme = useAppTheme();
   const router = useRouter();
   const { state, setLevel } = useTracker();
-  const { width } = useWindowDimensions();
   const prefecture = code ? PREFECTURES_BY_CODE[code] : null;
-  const contentWidth = Math.min(width - 32, 520);
 
+  // @ref LLP 0000#adaptive-window-layout
   return (
     <BottomSheet
       isPresented={Boolean(prefecture)}
@@ -34,7 +33,7 @@ export function PrefectureSheet({ code, onDismiss }: PrefectureSheetProps) {
         <Column
           alignment="center"
           spacing={14}
-          style={{ width: contentWidth, paddingHorizontal: 20, paddingVertical: 12 }}
+          style={{ width: '100%', paddingHorizontal: 20, paddingVertical: 12 }}
         >
           <Text
             textStyle={{

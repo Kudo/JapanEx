@@ -5,13 +5,14 @@ import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from 'react-n
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { t } from '@/i18n/translations';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle, useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 import { parseImportParams, type ImportParams } from '@/utils/share-state';
 
 export function ImportScreen() {
   const theme = useAppTheme();
   const cardStyle = useBoundedContentStyle(620, 40);
+  const contentStyle = useSafeContentStyle(Number.MAX_SAFE_INTEGER, 20);
   const router = useRouter();
   const { fontScale } = useWindowDimensions();
   const params = useLocalSearchParams<ImportParams>();
@@ -32,7 +33,7 @@ export function ImportScreen() {
         key={fontScale}
         style={{ backgroundColor: theme.background }}
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.screen}
+        contentContainerStyle={[styles.screen, contentStyle]}
       >
         <View
           style={[

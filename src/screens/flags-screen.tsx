@@ -13,7 +13,7 @@ import { FLAG_THUMBNAIL_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
 import { REGION_CODES, type ExperienceLevel, type RegionCode } from '@/data/types';
 import {
-  useBoundedContentStyle,
+  useSafeContentStyle,
   useViewportWidth,
 } from '@/hooks/use-bounded-content-width';
 import { experienceAccessibilityLabel, REGION_LABELS, t } from '@/i18n/translations';
@@ -24,7 +24,7 @@ export function FlagsScreen() {
   const { state } = useTracker();
   const width = useViewportWidth();
   const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
-  const contentStyle = useBoundedContentStyle(980);
+  const contentStyle = useSafeContentStyle(980, 18);
   const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');

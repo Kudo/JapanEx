@@ -10,7 +10,7 @@ import { AppStoreLinks } from '@/components/app-store-links';
 import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import { APP_LOCALE_OPTIONS, isAppLocale } from '@/i18n/locales';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { buildShareUrl } from '@/utils/share-state';
@@ -40,7 +40,7 @@ export function SettingsScreen() {
 
 function ReadySettingsScreen() {
   const theme = useAppTheme();
-  const contentStyle = useBoundedContentStyle(720);
+  const contentStyle = useSafeContentStyle(720, 18);
   const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const router = useRouter();
   const { state, score, setDisplayName, setLocale, resetLevels } = useTracker();

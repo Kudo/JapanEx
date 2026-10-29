@@ -10,13 +10,13 @@ import { useAppTheme } from '@/constants/app-theme';
 import { FLAG_ASSETS } from '@/data/flags';
 import { isPrefectureCode, PREFECTURES_BY_CODE } from '@/data/prefectures';
 import type { ExperienceLevel } from '@/data/types';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { LEVEL_LABELS, REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 
 export function PrefectureDetailScreen() {
   const theme = useAppTheme();
-  const contentStyle = useBoundedContentStyle(720);
+  const contentStyle = useSafeContentStyle(720, 20);
   const router = useRouter();
   const { code = '' } = useLocalSearchParams<{ code: string }>();
   const { state, setLevel } = useTracker();
@@ -28,7 +28,7 @@ export function PrefectureDetailScreen() {
         <ScrollView
           style={{ backgroundColor: theme.background }}
           contentInsetAdjustmentBehavior="automatic"
-          contentContainerStyle={styles.notFound}
+          contentContainerStyle={[styles.notFound, contentStyle]}
         >
           <RNText selectable style={[styles.notFoundText, { color: theme.text }]}>
             {t(state.locale, 'notFound')}

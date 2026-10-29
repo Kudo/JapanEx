@@ -1,6 +1,7 @@
 import { Button, Host } from '@expo/ui';
 import { Stack, useRouter } from 'expo-router';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -14,14 +15,14 @@ export default function NotFoundRoute() {
 
   return (
     <>
-      <View style={[styles.screen, { backgroundColor: theme.background }]}>
+      <SafeAreaView edges={['left', 'right']} style={[styles.screen, { backgroundColor: theme.background }]}>
         <Text selectable style={[styles.title, { color: theme.text }]}>
           {t(state.locale, 'notFound')}
         </Text>
         <Host matchContents seedColor={theme.accent}>
           <Button label={t(state.locale, 'returnHome')} onPress={() => router.replace('/')} />
         </Host>
-      </View>
+      </SafeAreaView>
       <Stack.Title>{t(state.locale, 'notFound')}</Stack.Title>
       <LanguageStackToolbar />
     </>

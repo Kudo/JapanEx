@@ -6,7 +6,7 @@
 **Role:** Root
 **Author:** Codex / Kudo Chien
 **Date:** 2026-08-18
-**Revised:** 2026-10-29 (stable SDK 58 upgrade observed; design constraints confirmed by Kudo Chien on 2026-08-18)
+**Revised:** 2026-10-29 (stable SDK 58 and adaptive window layout observed; design constraints confirmed by Kudo Chien on 2026-08-18)
 
 ## Summary
 
@@ -71,6 +71,14 @@
 [observed] On the SDK 58 Android production AAB at 2× text, the long display-name placeholder wrapped inside the fixed-height native field and its second line was clipped. A shorter localized placeholder plus a separate, wrapping hint keeps the explanation visible outside the field. A locally rebuilt Release APK rendered Settings at 1× and at 2× in English, Japanese, and Traditional Chinese without that clipping; a long entered name remained usable through horizontal scrolling (`src/screens/settings-screen.tsx` and `src/i18n/translations.ts`).
 
 [observed] The import screen remounts its scroll content when the system font scale changes. An open iOS Release sheet otherwise retained stale spacing after a live accessibility-size change; rebuilding the content remeasured the mixed React Native and Expo UI layout (`src/screens/import-screen.tsx`).
+
+### Adaptive window layout
+
+[observed] Screen content reserves both horizontal safe-area insets inside scroll and list content containers, including the left rail in iPhone Duo Split View. The shared layout hook reads the current safe-area frame and insets on each render, caps the usable content width, and adds the rail space outside that cap. Flags chooses its column count from the usable width. Import cards also subtract the horizontal safe areas. Native navigation remains in Expo Router's `Stack` and `NativeTabs`, and the app configuration allows rotation (`src/hooks/use-bounded-content-width.ts`, `src/utils/layout.ts`, `src/screens`, and `app.json`).
+
+[observed] Prefecture sheet columns use the width offered by the native sheet, rather than computing a fixed width from the entire app window. This allows the system to constrain a sheet to one side of a partially folded display (`src/components/prefecture-sheet.tsx` and `src/components/read-only-prefecture-sheet.tsx`).
+
+[observed] Layout tests cover a standard phone, rails on either side, unfolded width limits, changes between window sizes, and an empty viewport. Pure layout tests do not validate system bar placement or the fold region (`src/utils/layout.test.mjs`).
 
 ### Sharing and import
 

@@ -10,7 +10,7 @@ import { ResultCard } from '@/components/result-card';
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, shareResult } from '@/utils/result-export';
@@ -28,7 +28,7 @@ type MapScreenProps = {
 
 export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const theme = useAppTheme();
-  const contentStyle = useBoundedContentStyle(820);
+  const contentStyle = useSafeContentStyle(820, 18);
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');

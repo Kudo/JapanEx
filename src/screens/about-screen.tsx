@@ -7,12 +7,12 @@ import { useAppTheme } from '@/constants/app-theme';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { PREFECTURES } from '@/data/prefectures';
 import { t } from '@/i18n/translations';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { useTracker } from '@/state/tracker-context';
 
 export function AboutScreen() {
   const theme = useAppTheme();
-  const contentStyle = useBoundedContentStyle(760);
+  const contentStyle = useSafeContentStyle(760, 18);
   const { state } = useTracker();
 
   return (

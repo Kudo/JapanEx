@@ -7,14 +7,14 @@ import { ReadOnlyPrefectureSheet } from '@/components/read-only-prefecture-sheet
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
-import { useBoundedContentStyle } from '@/hooks/use-bounded-content-width';
+import { useBoundedContentStyle, useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { getInitialLocale } from '@/state/tracker-state';
 import { encodeLevels, parseSharedStateParams, type SharedStateParams } from '@/utils/share-state';
 
 export function SharedViewScreen() {
   const theme = useAppTheme();
-  const contentStyle = useBoundedContentStyle(820);
+  const contentStyle = useSafeContentStyle(820, 18);
   const errorCardStyle = useBoundedContentStyle(620, 36);
   const router = useRouter();
   const params = useLocalSearchParams<SharedStateParams>();
