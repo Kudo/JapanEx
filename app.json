@@ -2,7 +2,7 @@
   "expo": {
     "name": "JapanEx",
     "slug": "japanex",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Track how deeply you have experienced Japan's 47 prefectures.",
     "orientation": "default",
     "icon": "./assets/images/app-icon-japanex-v3.png",
