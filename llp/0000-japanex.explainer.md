@@ -64,6 +64,8 @@
 
 [observed] The Flags screen sets its root width explicitly to fill the native `FlatList` viewport. With flex alone, an iPadOS 18 Release simulator rendered the two-column gallery and filters in a clipped half-width area; the explicit width restored the full two-column layout on iPadOS 18 and also rendered correctly on iPadOS 26 and iPhone (`src/screens/flags-screen.tsx`).
 
+[observed] Flag card styling and pressed feedback live on an inner React Native `View`, while the `Link asChild` pressable carries only a static flex style. Router's slot merges child style props as objects; a style callback on the linked pressable lost the card's padding, border, background, and row layout. The web search field uses React Native `TextInput` with the React search string as its value, keeping the visible query synchronized with filtering (`src/screens/flags-screen.tsx`).
+
 ### Adaptive accessibility layout
 
 [observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).
@@ -115,6 +117,8 @@
 [observed] The Map screen shows localized progress while it prepares the result image, then clears that progress before opening the native share sheet (`src/screens/map-screen.tsx` and `src/i18n/translations.ts`).
 
 [observed] Native capture waits for the offscreen SVG layout event in addition to its React ref before calling `toDataURL`; the iOS SVG bridge can return no image while the native view is still mounting. An empty callback result is treated as a capture error before writing a file (`src/screens/map-screen.tsx`, `src/components/result-card.tsx`, and `src/utils/svg-capture.ts`).
+
+[observed] Web capture receives its readiness layout event from the offscreen React Native `View` wrapper. The web SVG element does not emit that event, so waiting only for the SVG callback left export in preparation until its timeout (`src/screens/map-screen.tsx`).
 
 [confirmed] (Kudo Chien, 2026-08-18) Export must continue to produce a 2048×2048 PNG, and the assets needed for core map and flag rendering must remain bundled for offline use. The internal rendering and capture mechanisms may change if they preserve that behavior.
 

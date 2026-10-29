@@ -195,8 +195,12 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
         ) : null}
       </ScrollView>
 
+      {/* @ref LLP 0000#result-rendering-and-export — web SVG does not emit React Native layout events. */}
       {isExporting ? (
-        <View style={[styles.exportSurface, { left: -renderSize * 2, width: renderSize, height: renderSize }]}>
+        <View
+          onLayout={process.env.EXPO_OS === 'web' ? handleResultLayout : undefined}
+          style={[styles.exportSurface, { left: -renderSize * 2, width: renderSize, height: renderSize }]}
+        >
           <ResultCard
             ref={handleResultRef}
             locale={state.locale}

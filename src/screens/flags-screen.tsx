@@ -1,8 +1,8 @@
-import { Host, Picker, TextInput, useNativeState } from '@expo/ui';
+import { Host, Picker } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
-import { FlatList, Keyboard, Pressable, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
+import { FlatList, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import type { SearchBarCommands } from 'react-native-screens';
 
 import { LevelIndicator } from '@/components/level-indicator';
@@ -25,7 +25,6 @@ export function FlagsScreen() {
   const width = useViewportWidth();
   const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const contentStyle = useSafeContentStyle(980, 18);
-  const searchValue = useNativeState('');
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');
   const [level, setLevel] = useState<'all' | `${ExperienceLevel}`>('all');
@@ -85,7 +84,7 @@ export function FlagsScreen() {
             {process.env.EXPO_OS === 'web' ? (
               <Host matchContents seedColor={theme.accent} style={styles.filterHost}>
                 <TextInput
-                  value={searchValue}
+                  value={search}
                   onChangeText={setSearch}
                   placeholder={t(state.locale, 'searchPlaceholder')}
                   autoCapitalize="none"
@@ -163,43 +162,49 @@ export function FlagsScreen() {
               <Pressable
                 accessibilityRole="button"
                 accessibilityLabel={experienceAccessibilityLabel(state.locale, item.names[state.locale], state.levels[item.code])}
-                style={({ pressed }) => [
-                  styles.card,
-                  columns === 1 ? styles.listCard : styles.gridCard,
-                  largeText && columns === 1 && styles.listCardLarge,
-                  {
-                    backgroundColor: theme.surface,
-                    borderColor: theme.border,
-                    borderTopColor: LEVEL_COLORS[state.levels[item.code]],
-                  },
-                  pressed && styles.pressed,
-                ]}
+                style={styles.cardLink}
               >
-                <View
-                  style={[
-                    styles.flagFrame,
-                    columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
-                  ]}
-                >
-                  <Image
-                    source={FLAG_THUMBNAIL_ASSETS[item.code]}
-                    contentFit="contain"
-                    style={styles.flag}
-                    accessibilityLabel={`${item.names[state.locale]} ${t(state.locale, 'flag')}`}
-                  />
-                </View>
-              <View style={[styles.cardBody, largeText && styles.cardBodyLarge]}>
-                <View style={[styles.nameRow, largeText && styles.nameRowLarge]}>
-                  <Text numberOfLines={largeText ? undefined : 1} style={[styles.name, { color: theme.text }]}>
-                      {item.names[state.locale]}
-                    </Text>
-                    <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                {({ pressed }) => (
+                  <View
+                    style={[
+                      styles.card,
+                      columns === 1 ? styles.listCard : styles.gridCard,
+                      largeText && columns === 1 && styles.listCardLarge,
+                      {
+                        backgroundColor: theme.surface,
+                        borderColor: theme.border,
+                        borderTopColor: LEVEL_COLORS[state.levels[item.code]],
+                      },
+                      pressed && styles.pressed,
+                    ]}
+                  >
+                    <View
+                      style={[
+                        styles.flagFrame,
+                        columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
+                      ]}
+                    >
+                      <Image
+                        source={FLAG_THUMBNAIL_ASSETS[item.code]}
+                        contentFit="contain"
+                        style={styles.flag}
+                        accessibilityLabel={`${item.names[state.locale]} ${t(state.locale, 'flag')}`}
+                      />
+                    </View>
+                    <View style={[styles.cardBody, largeText && styles.cardBodyLarge]}>
+                      <View style={[styles.nameRow, largeText && styles.nameRowLarge]}>
+                        <Text numberOfLines={largeText ? undefined : 1} style={[styles.name, { color: theme.text }]}>
+                          {item.names[state.locale]}
+                        </Text>
+                        <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                      </View>
+                      <Text style={[styles.region, { color: theme.secondaryText }]}>
+                        {REGION_LABELS[state.locale][item.region]}
+                      </Text>
+                      <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
+                    </View>
                   </View>
-                  <Text style={[styles.region, { color: theme.secondaryText }]}>
-                    {REGION_LABELS[state.locale][item.region]}
-                  </Text>
-                  <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
-                </View>
+                )}
               </Pressable>
             </Link>
           </View>
@@ -269,6 +274,8 @@ const styles = StyleSheet.create({
   countText: { fontSize: 13, fontWeight: '900', fontVariant: ['tabular-nums'] },
   cardSeparator: { height: 24 },
   cardCell: { flex: 1 },
+  // @ref LLP 0000#prefecture-data-map-and-flags — keep callback styles out of Link's slot.
+  cardLink: { flex: 1 },
   card: {
     flex: 1,
     borderWidth: 1,
