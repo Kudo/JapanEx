@@ -18,8 +18,9 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: theme.surface,
           borderTopColor: theme.border,
+          minHeight: 60,
         },
-        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600', lineHeight: 16, flexShrink: 0 },
         tabBarHideOnKeyboard: true,
         sceneStyle: { backgroundColor: theme.background },
       }}

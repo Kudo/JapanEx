@@ -1,10 +1,11 @@
 import { Host, Picker } from '@expo/ui';
 import { Image } from 'expo-image';
 import { Link, Stack } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { FlatList, Keyboard, Pressable, StyleSheet, Text, TextInput, useWindowDimensions, View } from 'react-native';
 import type { SearchBarCommands } from 'react-native-screens';
 
+import { GalleryLayout } from '@/components/gallery-layout';
 import { LevelIndicator } from '@/components/level-indicator';
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
 import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
@@ -12,24 +13,45 @@ import { LEVEL_COLORS, useAppTheme } from '@/constants/app-theme';
 import { FLAG_THUMBNAIL_ASSETS } from '@/data/flags';
 import { PREFECTURES } from '@/data/prefectures';
 import { REGION_CODES, type ExperienceLevel, type RegionCode } from '@/data/types';
+import { useAdaptivePanes } from '@/hooks/use-adaptive-panes';
 import {
   useSafeContentStyle,
   useViewportWidth,
 } from '@/hooks/use-bounded-content-width';
 import { experienceAccessibilityLabel, REGION_LABELS, t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
+import { shouldStackFlagCard } from '@/utils/layout';
+
+const MAX_CONTENT_WIDTH = 980;
+const CONTENT_PADDING = 18;
+const COLUMN_GAP = 14;
 
 export function FlagsScreen() {
   const theme = useAppTheme();
   const { state } = useTracker();
   const width = useViewportWidth();
-  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
-  const contentStyle = useSafeContentStyle(980, 18);
+  const adaptive = useAdaptivePanes();
+  const [galleryWidth, setGalleryWidth] = useState(0);
+  const [filterHeight, setFilterHeight] = useState(0);
+  const scrollOffset = useRef(0);
+  const { fontScale } = useWindowDimensions();
+  const largeText = fontScale >= LARGE_TEXT_FONT_SCALE;
+  const stackFilters = largeText || adaptive;
+  const contentStyle = useSafeContentStyle(MAX_CONTENT_WIDTH, CONTENT_PADDING);
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState<'all' | RegionCode>('all');
   const [level, setLevel] = useState<'all' | `${ExperienceLevel}`>('all');
   const searchBarRef = useRef<SearchBarCommands | null>(null);
-  const columns = width >= 820 ? 2 : 1;
+  const columns = (adaptive ? galleryWidth : width) >= 820 ? 2 : 1;
+  const cardWidth = (Math.min(adaptive ? galleryWidth : width, MAX_CONTENT_WIDTH) - CONTENT_PADDING * 2 - COLUMN_GAP * (columns - 1)) / columns;
+  const stackedCard = columns === 1 && (largeText || shouldStackFlagCard(cardWidth, fontScale));
+  const headerHeight = adaptive ? 0 : filterHeight + 18;
+  const restoreScroll = useCallback((list: FlatList<(typeof PREFECTURES)[number]> | null) => {
+    const offset = scrollOffset.current;
+    if (list && offset > 0) {
+      requestAnimationFrame(() => list.scrollToOffset({ offset: offset + headerHeight, animated: false }));
+    }
+  }, [headerHeight]);
 
   const dismissSearchKeyboard = () => {
     searchBarRef.current?.blur();
@@ -50,166 +72,177 @@ export function FlagsScreen() {
     });
   }, [level, region, search, state.levels]);
 
+  const filters = (
+    <View
+      onLayout={(event) => setFilterHeight(event.nativeEvent.layout.height)}
+      style={[
+        styles.filterPanel,
+        { backgroundColor: theme.hero, borderColor: theme.border },
+      ]}
+    >
+      <View style={[styles.filterHeading, largeText && styles.filterHeadingLarge]}>
+        <Text style={[styles.filterTitle, { color: theme.heroText }]}>
+          {t(state.locale, 'flagCollection')}
+        </Text>
+        <View style={[styles.countBadge, { backgroundColor: theme.accent }]}>
+          <Text style={[styles.countText, { color: theme.heroText }]}>
+            {filteredPrefectures.length}
+          </Text>
+        </View>
+      </View>
+      {process.env.EXPO_OS === 'web' ? (
+        <Host matchContents seedColor={theme.accent} style={styles.filterHost}>
+          <TextInput
+            value={search}
+            onChangeText={setSearch}
+            placeholder={t(state.locale, 'searchPlaceholder')}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={{
+              width: '100%',
+              height: 48,
+              paddingHorizontal: 14,
+              backgroundColor: theme.surface,
+              borderColor: theme.border,
+              borderWidth: 1,
+              borderRadius: 14,
+            }}
+          />
+        </Host>
+      ) : null}
+      <View style={[styles.filterControls, stackFilters && styles.filterControlsLarge]}>
+        <Host
+          matchContents={{ vertical: true }}
+          seedColor={theme.accent}
+          style={[styles.filterControlHost, stackFilters && styles.filterControlHostLarge]}
+        >
+          <Picker
+            selectedValue={region}
+            onValueChange={(value) => {
+              dismissSearchKeyboard();
+              setRegion(value as typeof region);
+            }}
+            testID="region-filter"
+          >
+            <Picker.Item value="all" label={t(state.locale, 'allRegions')} />
+            {REGION_CODES.map((regionCode) => (
+              <Picker.Item
+                key={regionCode}
+                value={regionCode}
+                label={REGION_LABELS[state.locale][regionCode]}
+              />
+            ))}
+          </Picker>
+        </Host>
+        <Host
+          matchContents={{ vertical: true }}
+          seedColor={theme.accent}
+          style={[styles.filterControlHost, stackFilters && styles.filterControlHostLarge]}
+        >
+          <Picker
+            selectedValue={level}
+            onValueChange={(value) => {
+              dismissSearchKeyboard();
+              setLevel(value as typeof level);
+            }}
+            testID="level-filter"
+          >
+            <Picker.Item value="all" label={t(state.locale, 'allLevels')} />
+            {([0, 1, 2, 3, 4, 5] as ExperienceLevel[]).map((value) => (
+              <Picker.Item
+                key={value}
+                value={`${value}`}
+                label={`${t(state.locale, 'level')} ${value}`}
+              />
+            ))}
+          </Picker>
+        </Host>
+      </View>
+    </View>
+  );
+
   return (
     <>
-      <FlatList
-        style={[styles.screen, { backgroundColor: theme.background }]}
-        alwaysBounceVertical
-        key={`flags-${columns}`}
-        data={filteredPrefectures}
-        numColumns={columns}
-        keyExtractor={(item) => item.code}
-        contentInsetAdjustmentBehavior="always"
-        showsVerticalScrollIndicator={false}
-        columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
-        contentContainerStyle={[styles.content, contentStyle]}
-        ItemSeparatorComponent={FlagCardSeparator}
-        ListHeaderComponent={
-          <View
-            style={[
-              styles.filterPanel,
-              { backgroundColor: theme.hero, borderColor: theme.border },
-            ]}
-          >
-            <View style={[styles.filterHeading, largeText && styles.filterHeadingLarge]}>
-              <Text style={[styles.filterTitle, { color: theme.heroText }]}>
-                {t(state.locale, 'flagCollection')}
-              </Text>
-              <View style={[styles.countBadge, { backgroundColor: theme.accent }]}>
-                <Text style={[styles.countText, { color: theme.heroText }]}>
-                  {filteredPrefectures.length}
-                </Text>
-              </View>
-            </View>
-            {process.env.EXPO_OS === 'web' ? (
-              <Host matchContents seedColor={theme.accent} style={styles.filterHost}>
-                <TextInput
-                  value={search}
-                  onChangeText={setSearch}
-                  placeholder={t(state.locale, 'searchPlaceholder')}
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  style={{
-                    width: '100%',
-                    height: 48,
-                    paddingHorizontal: 14,
-                    backgroundColor: theme.surface,
-                    borderColor: theme.border,
-                    borderWidth: 1,
-                    borderRadius: 14,
-                  }}
-                />
-              </Host>
-            ) : null}
-            <View style={[styles.filterControls, largeText && styles.filterControlsLarge]}>
-              <Host
-                matchContents={{ vertical: true }}
-                seedColor={theme.accent}
-                style={[styles.filterControlHost, largeText && styles.filterControlHostLarge]}
-              >
-                <Picker
-                  selectedValue={region}
-                  onValueChange={(value) => {
-                    dismissSearchKeyboard();
-                    setRegion(value as typeof region);
-                  }}
-                  testID="region-filter"
+      <GalleryLayout filters={filters}>
+        <FlatList
+          ref={restoreScroll}
+          style={[styles.screen, { backgroundColor: theme.background }]}
+          alwaysBounceVertical
+          onLayout={(event) => setGalleryWidth(event.nativeEvent.layout.width)}
+          onScroll={(event) => {
+            scrollOffset.current = Math.max(0, event.nativeEvent.contentOffset.y - headerHeight);
+          }}
+          scrollEventThrottle={16}
+          key={`flags-${columns}`}
+          data={filteredPrefectures}
+          numColumns={columns}
+          keyExtractor={(item) => item.code}
+          contentInsetAdjustmentBehavior="always"
+          showsVerticalScrollIndicator={false}
+          columnWrapperStyle={columns > 1 ? styles.columnWrapper : undefined}
+          contentContainerStyle={[styles.content, adaptive ? styles.paneContent : contentStyle]}
+          ItemSeparatorComponent={FlagCardSeparator}
+          ListHeaderComponent={adaptive ? undefined : filters}
+          ListEmptyComponent={
+            <Text style={[styles.empty, { color: theme.secondaryText }]}>
+              {t(state.locale, 'noMatches')}
+            </Text>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.cardCell}>
+              <Link href={`/prefecture/${item.code}`} asChild>
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel={experienceAccessibilityLabel(state.locale, item.names[state.locale], state.levels[item.code])}
+                  style={styles.cardLink}
                 >
-                  <Picker.Item value="all" label={t(state.locale, 'allRegions')} />
-                  {REGION_CODES.map((regionCode) => (
-                    <Picker.Item
-                      key={regionCode}
-                      value={regionCode}
-                      label={REGION_LABELS[state.locale][regionCode]}
-                    />
-                  ))}
-                </Picker>
-              </Host>
-              <Host
-                matchContents={{ vertical: true }}
-                seedColor={theme.accent}
-                style={[styles.filterControlHost, largeText && styles.filterControlHostLarge]}
-              >
-                <Picker
-                  selectedValue={level}
-                  onValueChange={(value) => {
-                    dismissSearchKeyboard();
-                    setLevel(value as typeof level);
-                  }}
-                  testID="level-filter"
-                >
-                  <Picker.Item value="all" label={t(state.locale, 'allLevels')} />
-                  {([0, 1, 2, 3, 4, 5] as ExperienceLevel[]).map((value) => (
-                    <Picker.Item
-                      key={value}
-                      value={`${value}`}
-                      label={`${t(state.locale, 'level')} ${value}`}
-                    />
-                  ))}
-                </Picker>
-              </Host>
-            </View>
-          </View>
-        }
-        ListEmptyComponent={
-          <Text style={[styles.empty, { color: theme.secondaryText }]}>
-            {t(state.locale, 'noMatches')}
-          </Text>
-        }
-        renderItem={({ item }) => (
-          <View style={styles.cardCell}>
-            <Link href={`/prefecture/${item.code}`} asChild>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityLabel={experienceAccessibilityLabel(state.locale, item.names[state.locale], state.levels[item.code])}
-                style={styles.cardLink}
-              >
-                {({ pressed }) => (
-                  <View
-                    style={[
-                      styles.card,
-                      columns === 1 ? styles.listCard : styles.gridCard,
-                      largeText && columns === 1 && styles.listCardLarge,
-                      {
-                        backgroundColor: theme.surface,
-                        borderColor: theme.border,
-                        borderTopColor: LEVEL_COLORS[state.levels[item.code]],
-                      },
-                      pressed && styles.pressed,
-                    ]}
-                  >
+                  {({ pressed }) => (
                     <View
                       style={[
-                        styles.flagFrame,
-                        columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
+                        styles.card,
+                        columns === 1 ? styles.listCard : styles.gridCard,
+                        stackedCard && styles.listCardLarge,
+                        {
+                          backgroundColor: theme.surface,
+                          borderColor: theme.border,
+                          borderTopColor: LEVEL_COLORS[state.levels[item.code]],
+                        },
+                        pressed && styles.pressed,
                       ]}
                     >
-                      <Image
-                        source={FLAG_THUMBNAIL_ASSETS[item.code]}
-                        contentFit="contain"
-                        style={styles.flag}
-                        accessibilityLabel={`${item.names[state.locale]} ${t(state.locale, 'flag')}`}
-                      />
-                    </View>
-                    <View style={[styles.cardBody, largeText && styles.cardBodyLarge]}>
-                      <View style={[styles.nameRow, largeText && styles.nameRowLarge]}>
-                        <Text numberOfLines={largeText ? undefined : 1} style={[styles.name, { color: theme.text }]}>
-                          {item.names[state.locale]}
-                        </Text>
-                        <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                      <View
+                        style={[
+                          styles.flagFrame,
+                          columns === 1 ? styles.listFlagFrame : styles.gridFlagFrame,
+                        ]}
+                      >
+                        <Image
+                          source={FLAG_THUMBNAIL_ASSETS[item.code]}
+                          contentFit="contain"
+                          style={styles.flag}
+                          accessibilityLabel={`${item.names[state.locale]} ${t(state.locale, 'flag')}`}
+                        />
                       </View>
-                      <Text style={[styles.region, { color: theme.secondaryText }]}>
-                        {REGION_LABELS[state.locale][item.region]}
-                      </Text>
-                      <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
+                      <View style={[styles.cardBody, stackedCard && styles.cardBodyLarge]}>
+                        <View style={[styles.nameRow, largeText && styles.nameRowLarge]}>
+                          <Text numberOfLines={largeText ? undefined : 1} style={[styles.name, { color: theme.text }]}>
+                            {item.names[state.locale]}
+                          </Text>
+                          <Text selectable style={[styles.code, { color: theme.accent }]}> {item.code}</Text>
+                        </View>
+                        <Text style={[styles.region, { color: theme.secondaryText }]}>
+                          {REGION_LABELS[state.locale][item.region]}
+                        </Text>
+                        <LevelIndicator level={state.levels[item.code]} locale={state.locale} />
+                      </View>
                     </View>
-                  </View>
-                )}
-              </Pressable>
-            </Link>
-          </View>
-        )}
-      />
+                  )}
+                </Pressable>
+              </Link>
+            </View>
+          )}
+        />
+      </GalleryLayout>
       {process.env.EXPO_OS !== 'web' ? (
         <Stack.SearchBar
           ref={searchBarRef}
@@ -236,11 +269,12 @@ const styles = StyleSheet.create({
   screen: { flex: 1, width: '100%' },
   content: {
     alignSelf: 'center',
-    paddingHorizontal: 18,
+    paddingHorizontal: CONTENT_PADDING,
     paddingTop: 14,
     paddingBottom: 54,
   },
-  columnWrapper: { gap: 14 },
+  paneContent: { width: '100%' },
+  columnWrapper: { gap: COLUMN_GAP },
   filterHost: { alignSelf: 'stretch' },
   filterControls: {
     flexDirection: 'row',

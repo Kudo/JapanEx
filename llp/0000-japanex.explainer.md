@@ -66,9 +66,11 @@
 
 [observed] Flag card styling and pressed feedback live on an inner React Native `View`, while the `Link asChild` pressable carries only a static flex style. Router's slot merges child style props as objects; a style callback on the linked pressable lost the card's padding, border, background, and row layout. The web search field uses React Native `TextInput` with the React search string as its value, keeping the visible query synchronized with filtering (`src/screens/flags-screen.tsx`).
 
+[observed] Android map labels handle selection explicitly because native SVG text intercepts touches through its containing group (`src/components/map-regions.tsx`).
+
 ### Adaptive accessibility layout
 
-[observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, and `src/screens/settings-screen.tsx`).
+[observed] At accessibility text scales around 1.8 or greater, the map score card, map zoom controls, Settings summary, and Flags filter controls stack vertically so their labels and values do not overlap. The shared threshold is 1.75 to account for platform font-scale rounding. Flag cards also stack when their available width cannot fit the image and scaled text side by side. The Settings name field grows to fit scaled text. Level indicators can wrap their text, while decorative numeric seals cap their font growth to fit inside the circle. The surrounding screens remain scrollable (`src/constants/accessibility-layout.ts`, `src/components/tracker-snapshot.tsx`, `src/components/japan-map.tsx`, `src/components/level-indicator.tsx`, `src/screens/flags-screen.tsx`, `src/utils/layout.ts`, and `src/screens/settings-screen.tsx`).
 
 [observed] On the SDK 58 Android production AAB at 2× text, the long display-name placeholder wrapped inside the fixed-height native field and its second line was clipped. A shorter localized placeholder plus a separate, wrapping hint keeps the explanation visible outside the field. A locally rebuilt Release APK rendered Settings at 1× and at 2× in English, Japanese, and Traditional Chinese without that clipping; a long entered name remained usable through horizontal scrolling (`src/screens/settings-screen.tsx` and `src/i18n/translations.ts`).
 
@@ -79,6 +81,10 @@
 [observed] Screen content reserves both horizontal safe-area insets inside scroll and list content containers, including the left rail in iPhone Duo Split View. The shared layout hook reads the current safe-area frame and insets on each render, caps the usable content width, and adds the rail space outside that cap. Flags chooses its column count from the usable width. Import cards also subtract the horizontal safe areas. Native navigation remains in Expo Router's `Stack` and `NativeTabs`, and the app configuration allows rotation (`src/hooks/use-bounded-content-width.ts`, `src/utils/layout.ts`, `src/screens`, and `app.json`).
 
 [observed] Prefecture sheet columns use the width offered by the native sheet, rather than computing a fixed width from the entire app window. This allows the system to constrain a sheet to one side of a partially folded display (`src/components/prefecture-sheet.tsx` and `src/components/read-only-prefecture-sheet.tsx`).
+
+[observed] On supported wide iOS windows, Map and Flags use Expo UI's native `ArrangementView` to place map and overview, or filters and gallery, in separate panes around the fold. Compact windows, older iOS, Android, and web retain the compact layout (`src/components/native-arrangement.ios.tsx`, `src/components/adaptive-columns*`, `src/components/gallery-layout*`, and `src/hooks/use-adaptive-panes.ts`).
+
+[observed] Map camera and Flags filter state live above the adaptive layout so changing layouts preserves zoom, pan, and filters. Flags also restores its gallery scroll position after a layout remount (`src/components/tracker-snapshot.tsx`, `src/screens/flags-screen.tsx`).
 
 [observed] Layout tests cover a standard phone, rails on either side, unfolded width limits, changes between window sizes, and an empty viewport. Pure layout tests do not validate system bar placement or the fold region (`src/utils/layout.test.mjs`).
 

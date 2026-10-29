@@ -1,6 +1,8 @@
+import { useState, type ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, useWindowDimensions, View } from 'react-native';
 
-import { JapanMap } from '@/components/japan-map';
+import { AdaptiveColumns } from '@/components/adaptive-columns';
+import { JapanMap, useJapanMapCamera } from '@/components/japan-map';
 import { LevelIndicator } from '@/components/level-indicator';
 import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
@@ -16,6 +18,8 @@ type TrackerSnapshotProps = {
   scoreLabel: string;
   maxScoreLabel: string;
   onSelect: (code: PrefectureCode) => void;
+  footer?: ReactNode;
+  scroll?: boolean;
 };
 
 export function TrackerSnapshot({
@@ -28,66 +32,85 @@ export function TrackerSnapshot({
   scoreLabel,
   maxScoreLabel,
   onSelect,
+  footer,
+  scroll = false,
 }: TrackerSnapshotProps) {
   const theme = useAppTheme();
+  const camera = useJapanMapCamera();
+  const [helperHeight, setHelperHeight] = useState(0);
   const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
   const markedPrefectures = Object.values(levels).filter((level) => level > 0).length;
   const remainingProgress = 235 - score;
 
-  return (
-    <View style={styles.container}>
-      <View style={[styles.heroCard, { backgroundColor: theme.hero }]}>
-        <View style={[styles.heroCircle, { borderColor: theme.heroMuted }]} />
-        <View style={[styles.heroTopRow, largeText && styles.heroTopRowLarge]}>
-          <View style={[styles.heroCopy, largeText && styles.heroCopyLarge]}>
-            <Text style={[styles.eyebrow, { color: theme.heroMuted }]}>{scoreLabel}</Text>
-            <View style={[styles.scoreRow, largeText && styles.scoreRowLarge]}>
-              <Text selectable maxFontSizeMultiplier={2} style={[styles.score, { color: theme.heroText }]}>
-                {score}
+  const header = (
+    <View style={[styles.heroCard, { backgroundColor: theme.hero }]}>
+      <View style={[styles.heroCircle, { borderColor: theme.heroMuted }]} />
+      <View style={[styles.heroTopRow, largeText && styles.heroTopRowLarge]}>
+        <View style={[styles.heroCopy, largeText && styles.heroCopyLarge]}>
+          <Text style={[styles.eyebrow, { color: theme.heroMuted }]}>{scoreLabel}</Text>
+          <View style={[styles.scoreRow, largeText && styles.scoreRowLarge]}>
+            <Text selectable maxFontSizeMultiplier={2} style={[styles.score, { color: theme.heroText }]}>
+              {score}
+            </Text>
+            <Text maxFontSizeMultiplier={2} style={[styles.maxScore, { color: theme.heroMuted }]}>{maxScoreLabel}</Text>
+          </View>
+        </View>
+        <View style={[styles.prefectureSeal, largeText && styles.prefectureSealLarge, { backgroundColor: theme.accent }]}>
+          {isReady ? (
+            <>
+              <Text selectable maxFontSizeMultiplier={1.5} style={[styles.sealCount, { color: theme.heroText }]}>
+                {markedPrefectures}
               </Text>
-              <Text maxFontSizeMultiplier={2} style={[styles.maxScore, { color: theme.heroMuted }]}>{maxScoreLabel}</Text>
-            </View>
-          </View>
-          <View style={[styles.prefectureSeal, largeText && styles.prefectureSealLarge, { backgroundColor: theme.accent }]}>
-            {isReady ? (
-              <>
-                <Text selectable maxFontSizeMultiplier={1.5} style={[styles.sealCount, { color: theme.heroText }]}>
-                  {markedPrefectures}
-                </Text>
-                <Text maxFontSizeMultiplier={1.5} style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
-              </>
-            ) : (
-              <ActivityIndicator color={theme.heroText} />
-            )}
-          </View>
-        </View>
-        <View style={[styles.progressTrack, { backgroundColor: theme.heroMuted }]}>
-          <View
-            style={[
-              styles.progressSegment,
-              { backgroundColor: theme.gold, flexGrow: score },
-            ]}
-          />
-          <View style={[styles.progressSegment, { flexGrow: remainingProgress }]} />
+              <Text maxFontSizeMultiplier={1.5} style={[styles.sealTotal, { color: theme.heroText }]}>/ 47</Text>
+            </>
+          ) : (
+            <ActivityIndicator color={theme.heroText} />
+          )}
         </View>
       </View>
-
-      <View style={[styles.paperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        <Text style={[styles.helper, { color: theme.secondaryText }]}>{helperText}</Text>
-        <JapanMap
-          levels={levels}
-          locale={locale}
-          showFlags={showFlags}
-          onSelect={onSelect}
+      <View style={[styles.progressTrack, { backgroundColor: theme.heroMuted }]}>
+        <View
+          style={[
+            styles.progressSegment,
+            { backgroundColor: theme.gold, flexGrow: score },
+          ]}
         />
-      </View>
-
-      <View style={[styles.legendPanel, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-        {([5, 4, 3, 2, 1, 0] as ExperienceLevel[]).map((level) => (
-          <LevelIndicator key={level} level={level} locale={locale} />
-        ))}
+        <View style={[styles.progressSegment, { flexGrow: remainingProgress }]} />
       </View>
     </View>
+  );
+
+  const map = (
+    <View style={[styles.paperCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+      <Text onLayout={(event) => setHelperHeight(event.nativeEvent.layout.height)}
+        style={[styles.helper, { color: theme.secondaryText }]}>{helperText}</Text>
+      <JapanMap
+        levels={levels}
+        locale={locale}
+        showFlags={showFlags}
+        onSelect={onSelect}
+        camera={camera}
+        surroundingHeight={helperHeight + 28 + 14 + 54}
+      />
+    </View>
+  );
+
+  return (
+    <AdaptiveColumns
+      scroll={scroll}
+      header={header}
+      primary={map}
+      secondary={
+        <View style={styles.container}>
+          <View style={[styles.legendPanel, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+            {([5, 4, 3, 2, 1, 0] as ExperienceLevel[]).map((level) => (
+              <LevelIndicator key={level} level={level} locale={locale} />
+            ))}
+          </View>
+          {footer}
+        </View>
+      }
+    />
   );
 }
 

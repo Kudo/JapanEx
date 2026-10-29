@@ -1,5 +1,5 @@
 import { Button, Column, Host, Row } from '@expo/ui';
-import { useMemo, useState } from 'react';
+import { useContext, useMemo, useState } from 'react';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -12,6 +12,7 @@ import Svg, { Rect } from 'react-native-svg';
 
 import { MapFlags } from '@/components/map-flags';
 import { MapRegions } from '@/components/map-regions';
+import { MapPaneHeightContext } from '@/components/map-pane-height';
 import { LARGE_TEXT_FONT_SCALE } from '@/constants/accessibility-layout';
 import { useAppTheme } from '@/constants/app-theme';
 import type { AppLocale, ExperienceLevel, PrefectureCode } from '@/data/types';
@@ -28,22 +29,36 @@ type JapanMapProps = {
   locale: AppLocale;
   showFlags: boolean;
   onSelect: (code: PrefectureCode) => void;
+  camera: ReturnType<typeof useJapanMapCamera>;
+  surroundingHeight?: number;
 };
 
-export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps) {
-  const theme = useAppTheme();
-  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
+// @ref LLP 0000#adaptive-window-layout — camera values survive pane remounts.
+export function useJapanMapCamera() {
   const [zoomLevel, setZoomLevel] = useState(MIN_ZOOM);
-  const [mapFrameWidth, setMapFrameWidth] = useState(0);
   const scale = useSharedValue(MIN_ZOOM);
-  const savedScale = useSharedValue(MIN_ZOOM);
   const translationX = useSharedValue(0);
   const translationY = useSharedValue(0);
+  const mapWidth = useSharedValue(320);
+  return { zoomLevel, setZoomLevel, scale, translationX, translationY, mapWidth };
+}
+
+export function JapanMap({ levels, locale, showFlags, onSelect, camera, surroundingHeight = 0 }: JapanMapProps) {
+  const theme = useAppTheme();
+  const largeText = useWindowDimensions().fontScale >= LARGE_TEXT_FONT_SCALE;
+  const paneHeight = useContext(MapPaneHeightContext);
+  const [controlsHeight, setControlsHeight] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const maximumSize = paneHeight ? Math.max(240, Math.min(680, paneHeight - surroundingHeight - controlsHeight - 12)) : 680;
+  // Constrain both dimensions; aspectRatio retained the old height when SwiftUI narrowed the pane.
+  const mapSize = Math.min(containerWidth, maximumSize);
+  const { zoomLevel, setZoomLevel, scale, translationX, translationY, mapWidth } = camera;
+  const [mapFrameWidth, setMapFrameWidth] = useState(0);
+  const savedScale = useSharedValue(MIN_ZOOM);
   const savedTranslationX = useSharedValue(0);
   const savedTranslationY = useSharedValue(0);
   const pinchFocalX = useSharedValue(0);
   const pinchFocalY = useSharedValue(0);
-  const mapWidth = useSharedValue(320);
   const canPan = zoomLevel > MIN_ZOOM;
 
   const gesture = useMemo(() => {
@@ -127,6 +142,7 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
     savedTranslationX,
     savedTranslationY,
     scale,
+    setZoomLevel,
     translationX,
     translationY,
   ]);
@@ -156,6 +172,10 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
   };
 
   const handleMapLayout = (width: number) => {
+    if (width <= 0) return;
+    const ratio = width / mapWidth.get();
+    translationX.set(translationX.get() * ratio);
+    translationY.set(translationY.get() * ratio);
     mapWidth.set(width);
     setMapFrameWidth(width);
   };
@@ -183,12 +203,13 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
   );
 
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.wrapper} onLayout={(event) => setContainerWidth(event.nativeEvent.layout.width)}>
       <GestureDetector gesture={gesture}>
         <View
           onLayout={(event) => handleMapLayout(event.nativeEvent.layout.width)}
           style={[
             styles.mapFrame,
+            { width: mapSize, height: mapSize },
             { backgroundColor: theme.ocean, borderColor: theme.border },
           ]}
         >
@@ -214,6 +235,7 @@ export function JapanMap({ levels, locale, showFlags, onSelect }: JapanMapProps)
       </GestureDetector>
 
       <Host
+        onLayout={(event) => setControlsHeight(event.nativeEvent.layout.height)}
         matchContents={largeText ? { vertical: true } : true}
         seedColor={theme.accent}
         style={largeText && styles.zoomControlsLarge}
@@ -248,10 +270,7 @@ const styles = StyleSheet.create({
   },
   zoomControlsLarge: { alignSelf: 'stretch' },
   mapFrame: {
-    width: '100%',
-    maxWidth: 680,
     marginHorizontal: 'auto',
-    aspectRatio: 1,
     borderRadius: 24,
     borderWidth: 1,
     overflow: 'hidden',

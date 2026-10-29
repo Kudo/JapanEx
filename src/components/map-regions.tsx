@@ -85,12 +85,13 @@ export function MapRegions({
         );
       })}
 
-      <G pointerEvents="none">
+      <G pointerEvents={process.env.EXPO_OS === 'android' && onSelect ? 'box-none' : 'none'}>
         {PREFECTURES.map((prefecture) => {
           const { label } = annotations[prefecture.code];
 
           return (
-            <G key={prefecture.code}>
+            // @ref LLP 0000#prefecture-data-map-and-flags — Android SVG text intercepts taps through its group.
+            <G key={prefecture.code} onPress={process.env.EXPO_OS === 'android' && onSelect ? () => onSelect(prefecture.code) : undefined}>
               <SvgText
                 x={label.x}
                 y={label.y}

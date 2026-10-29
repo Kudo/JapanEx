@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { getBoundedContentWidth, getSafeContentStyle } from './layout.ts';
+import { getBoundedContentWidth, getSafeContentStyle, supportsAdaptivePanes, shouldStackFlagCard } from './layout.ts';
 
 describe('getBoundedContentWidth()', () => {
   it('should use the viewport width when it is below the maximum', () => {
@@ -18,6 +18,53 @@ describe('getBoundedContentWidth()', () => {
 
   it('should return zero when the inset is larger than the viewport', () => {
     assert.equal(getBoundedContentWidth(30, 620, 40), 0);
+  });
+});
+
+describe('Adapting native panes to the current window', () => {
+  it('should enable native arrangements on a supported regular-width window', () => {
+    assert.equal(supportsAdaptivePanes('ios', '27.1', 600), true);
+    assert.equal(supportsAdaptivePanes('ios', '28.0', 951), true);
+  });
+
+  it('should keep folded and split view windows in the compact layout', () => {
+    for (const width of [0, 385, 469, 599]) {
+      assert.equal(supportsAdaptivePanes('ios', '27.1', width), false);
+    }
+  });
+
+  it('should retain the existing layout on older iOS, Android, and web', () => {
+    assert.equal(supportsAdaptivePanes('ios', '27.0', 951), false);
+    assert.equal(supportsAdaptivePanes('android', 37, 951), false);
+    assert.equal(supportsAdaptivePanes('web', '27.1', 951), false);
+  });
+
+  it('should avoid native panes when the platform version or width is unavailable', () => {
+    assert.equal(supportsAdaptivePanes('ios', 'unknown', 951), false);
+    assert.equal(supportsAdaptivePanes('ios', '27.1', NaN), false);
+  });
+});
+
+describe('Fitting flag card metadata', () => {
+  it('should retain rows when the flag and metadata fit at the default text size', () => {
+    assert.equal(shouldStackFlagCard(375, 1), false);
+    assert.equal(shouldStackFlagCard(354, 1), false);
+  });
+
+  it('should stack a narrow phone card before its level badge overflows', () => {
+    assert.equal(shouldStackFlagCard(284, 1), true);
+  });
+
+  it('should account for enlarged text before the accessibility layout threshold', () => {
+    assert.equal(shouldStackFlagCard(375, 1.5), true);
+    assert.equal(shouldStackFlagCard(419, 1.5), true);
+    assert.equal(shouldStackFlagCard(420, 1.5), false);
+  });
+
+  it('should preserve the minimum text budget with small text or an empty viewport', () => {
+    assert.equal(shouldStackFlagCard(339, 0.8), true);
+    assert.equal(shouldStackFlagCard(340, 0.8), false);
+    assert.equal(shouldStackFlagCard(0, 1), true);
   });
 });
 

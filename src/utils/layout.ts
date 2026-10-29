@@ -19,3 +19,14 @@ export function getSafeContentStyle(
     paddingRight: horizontalPadding + insets.right,
   };
 }
+
+// @ref LLP 0000#adaptive-window-layout
+export function supportsAdaptivePanes(platform: string, version: number | string, width: number): boolean {
+  return platform === 'ios' && Number.parseFloat(String(version)) >= 27.1 && width >= 600;
+}
+
+export function shouldStackFlagCard(cardWidth: number, fontScale: number): boolean {
+  const flagAndSpacingWidth = 180;
+  const minimumTextWidth = 160 * Math.max(1, fontScale);
+  return cardWidth < flagAndSpacingWidth + minimumTextWidth;
+}

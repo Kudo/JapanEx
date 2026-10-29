@@ -1,7 +1,7 @@
 import { Button, Column, Host } from '@expo/ui';
 import * as Clipboard from 'expo-clipboard';
 import { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, PixelRatio, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, PixelRatio, StyleSheet, Text, View } from 'react-native';
 import type Svg from 'react-native-svg';
 
 import { LanguageStackToolbar } from '@/components/language-stack-toolbar';
@@ -10,7 +10,6 @@ import { ResultCard } from '@/components/result-card';
 import { TrackerSnapshot } from '@/components/tracker-snapshot';
 import { useAppTheme } from '@/constants/app-theme';
 import type { PrefectureCode } from '@/data/types';
-import { useSafeContentStyle } from '@/hooks/use-bounded-content-width';
 import { t } from '@/i18n/translations';
 import { useTracker } from '@/state/tracker-context';
 import { createResultAsset, shareResult } from '@/utils/result-export';
@@ -28,7 +27,6 @@ type MapScreenProps = {
 
 export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
   const theme = useAppTheme();
-  const contentStyle = useSafeContentStyle(820, 18);
   const { state, score, isReady, hasStorageError } = useTracker();
   const [selectedCode, setSelectedCode] = useState<PrefectureCode | null>(null);
   const [status, setStatus] = useState('');
@@ -121,16 +119,67 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
     setStatus(t(state.locale, 'linkCopied'));
   };
 
+  const actions = (
+    <>
+      <View
+        style={[
+          styles.actionPanel,
+          { backgroundColor: theme.surface, borderColor: theme.border },
+        ]}
+      >
+        <Host
+          matchContents={{ vertical: true }}
+          seedColor={theme.accent}
+          style={styles.nativeHost}
+        >
+          <Column style={{ width: '100%' }} spacing={10}>
+            <Button
+              label={t(state.locale, 'shareImage')}
+              disabled={isExporting}
+              onPress={handleShareResult}
+            />
+            <Button
+              label={t(state.locale, 'copyViewLink')}
+              variant="outlined"
+              onPress={copyLink}
+            />
+          </Column>
+        </Host>
+        {exportPhase === 'preparing' ? (
+          <View style={styles.exportProgress}>
+            <ActivityIndicator color={theme.accent} />
+            <Text
+              accessibilityLiveRegion="polite"
+              style={[styles.exportProgressText, { color: theme.secondaryText }]}
+            >
+              {t(state.locale, 'preparingImage')}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+
+      {status ? (
+        <Text selectable style={[styles.status, { color: theme.secondaryText }]}>
+          {status}
+        </Text>
+      ) : null}
+      {hasStorageError ? (
+        <Text
+          selectable
+          accessibilityRole="alert"
+          style={[styles.status, { color: theme.danger }]}
+        >
+          {t(state.locale, 'persistenceError')}
+        </Text>
+      ) : null}
+    </>
+  );
+
   return (
     <>
-      <ScrollView
-        style={[styles.screen, { backgroundColor: theme.background }]}
-        alwaysBounceVertical
-        contentInsetAdjustmentBehavior="always"
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.content, contentStyle]}
-      >
+      <View style={[styles.screen, { backgroundColor: theme.background }]}>
         <TrackerSnapshot
+          scroll
           levels={state.levels}
           locale={state.locale}
           score={score}
@@ -140,60 +189,9 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
           scoreLabel={t(state.locale, 'score')}
           maxScoreLabel={t(state.locale, 'maxScore')}
           onSelect={setSelectedCode}
+          footer={actions}
         />
-
-        <View
-          style={[
-            styles.actionPanel,
-            { backgroundColor: theme.surface, borderColor: theme.border },
-          ]}
-        >
-          <Host
-            matchContents={{ vertical: true }}
-            seedColor={theme.accent}
-            style={styles.nativeHost}
-          >
-            <Column style={{ width: '100%' }} spacing={10}>
-              <Button
-                label={t(state.locale, 'shareImage')}
-                disabled={isExporting}
-                onPress={handleShareResult}
-              />
-              <Button
-                label={t(state.locale, 'copyViewLink')}
-                variant="outlined"
-                onPress={copyLink}
-              />
-            </Column>
-          </Host>
-          {exportPhase === 'preparing' ? (
-            <View style={styles.exportProgress}>
-              <ActivityIndicator color={theme.accent} />
-              <Text
-                accessibilityLiveRegion="polite"
-                style={[styles.exportProgressText, { color: theme.secondaryText }]}
-              >
-                {t(state.locale, 'preparingImage')}
-              </Text>
-            </View>
-          ) : null}
-        </View>
-
-        {status ? (
-          <Text selectable style={[styles.status, { color: theme.secondaryText }]}>
-            {status}
-          </Text>
-        ) : null}
-        {hasStorageError ? (
-          <Text
-            selectable
-            accessibilityRole="alert"
-            style={[styles.status, { color: theme.danger }]}
-          >
-            {t(state.locale, 'persistenceError')}
-          </Text>
-        ) : null}
-      </ScrollView>
+      </View>
 
       {/* @ref LLP 0000#result-rendering-and-export — web SVG does not emit React Native layout events. */}
       {isExporting ? (
@@ -224,13 +222,6 @@ export function MapScreen({ showFlags, onToggleFlags }: MapScreenProps) {
 const styles = StyleSheet.create({
   nativeHost: { alignSelf: 'stretch' },
   screen: { flex: 1 },
-  content: {
-    alignSelf: 'center',
-    paddingHorizontal: 18,
-    paddingTop: 14,
-    paddingBottom: 54,
-    gap: 18,
-  },
   actionPanel: {
     borderWidth: 1,
     borderRadius: 22,
