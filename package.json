@@ -3,42 +3,42 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "@expo/ui": "~58.0.7",
-    "expo": "^58.0.0-preview.7",
-    "expo-build-properties": "~58.0.7",
-    "expo-clipboard": "~58.0.1",
-    "expo-constants": "~58.0.7",
-    "expo-dev-client": "~58.0.7",
-    "expo-device": "~58.0.2",
-    "expo-file-system": "~58.0.2",
-    "expo-font": "~58.0.2",
-    "expo-image": "~58.0.6",
-    "expo-image-manipulator": "~58.0.8",
-    "expo-linking": "~58.0.7",
-    "expo-localization": "~58.0.1",
-    "expo-router": "~58.0.8",
-    "expo-sharing": "~58.0.10",
-    "expo-splash-screen": "~58.0.1",
-    "expo-sqlite": "~58.0.6",
-    "expo-status-bar": "~58.0.1",
-    "expo-symbols": "~58.0.2",
-    "expo-system-ui": "~58.0.2",
-    "expo-web-browser": "~58.0.2",
+    "@expo/ui": "~58.0.25",
+    "expo": "~58.0.21",
+    "expo-build-properties": "~58.0.11",
+    "expo-clipboard": "~58.0.4",
+    "expo-constants": "~58.0.14",
+    "expo-dev-client": "~58.0.17",
+    "expo-device": "~58.0.5",
+    "expo-file-system": "~58.0.13",
+    "expo-font": "~58.0.11",
+    "expo-image": "~58.0.18",
+    "expo-image-manipulator": "~58.0.16",
+    "expo-linking": "~58.0.15",
+    "expo-localization": "~58.0.5",
+    "expo-router": "~58.0.28",
+    "expo-sharing": "~58.0.21",
+    "expo-splash-screen": "~58.0.12",
+    "expo-sqlite": "~58.0.14",
+    "expo-status-bar": "~58.0.4",
+    "expo-symbols": "~58.0.4",
+    "expo-system-ui": "~58.0.7",
+    "expo-web-browser": "~58.0.7",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-native": "0.88.0-rc.1",
-    "react-native-gesture-handler": "~3.2.1",
-    "react-native-reanimated": "4.7.0",
-    "react-native-safe-area-context": "~5.9.1",
-    "react-native-screens": "~4.28.0",
-    "react-native-svg": "15.15.5",
-    "react-native-web": "~0.21.0",
+    "react-native": "0.88.1",
+    "react-native-gesture-handler": "~3.3.0",
+    "react-native-reanimated": "4.7.1",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "react-native-svg": "15.16.0",
+    "react-native-web": "^0.21.4",
     "react-native-worklets": "0.13.0"
   },
   "devDependencies": {
     "@types/react": "~19.3.0",
     "eslint": "^9.39.5",
-    "eslint-config-expo": "~58.0.2",
+    "eslint-config-expo": "~58.0.4",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -53,22 +53,5 @@
     "verify": "node scripts/validate-data.mjs && node --experimental-strip-types --test src/utils/*.test.mjs && tsc --noEmit && expo lint",
     "export:web": "expo export --platform web"
   },
-  "private": true,
-  "patchedDependencies": {
-    "@expo/ui@58.0.7": "patches/@expo%2Fui@58.0.7.patch"
-  },
-  "expo": {
-    "autolinking": {
-      "android": {
-        "buildFromSource": [
-          "expo-ui"
-        ]
-      },
-      "ios": {
-        "buildFromSource": [
-          "ExpoUI"
-        ]
-      }
-    }
-  }
+  "private": true
 }

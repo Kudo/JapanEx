@@ -6,7 +6,7 @@
 **Role:** Root
 **Author:** Codex / Kudo Chien
 **Date:** 2026-08-18
-**Revised:** 2026-09-26 (release-readiness behavior observed; design constraints confirmed by Kudo Chien on 2026-08-18)
+**Revised:** 2026-10-29 (stable SDK 58 upgrade observed; design constraints confirmed by Kudo Chien on 2026-08-18)
 
 ## Summary
 
@@ -128,7 +128,7 @@
 
 [confirmed] (Kudo Chien, 2026-08-18) Platform-specific implementations are permitted when required by platform capabilities or Expo limitations. User-visible behavior should otherwise remain consistent across iOS, Android, and web.
 
-[observed] Expo SDK 58 (preview) is pinned throughout the project, and repository instructions require consulting the exact versioned Expo 58 documentation before changing code (`package.json` and `AGENTS.md`).
+[observed] The project uses stable Expo SDK 58.0.21 and its compatible React Native 0.88.1 packages. Expo UI 58.0.25 includes the universal percentage-dimension layout support previously provided by the local 58.0.7 patch, so that patch and the source-build overrides are removed. Repository instructions require consulting the exact versioned Expo 58 documentation before changing code (`package.json` and `AGENTS.md`).
 
 ## Verification contract
 
